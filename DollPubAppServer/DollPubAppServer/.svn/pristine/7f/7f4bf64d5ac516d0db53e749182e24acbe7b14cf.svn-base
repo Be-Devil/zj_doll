@@ -1,0 +1,104 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service;
+
+import com.imlianai.dollpub.domain.coinfactory.MachinePushCoin;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.domain.user.UserBase;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+/**
+ * 推币机相关服务
+ * @author wurui
+ * @create 2018-03-28 10:38
+ **/
+public interface PushCoinMachineService {
+
+    /**
+     * 上机
+     * @param uid
+     * @param busId
+     * @param customer
+     * @return
+     */
+    BaseRespVO apply(long uid, int busId, Customer customer);
+
+    /**
+     * 投币
+     * @param uid
+     * @param busId
+     * @param customer
+     * @return
+     */
+    BaseRespVO putCoin(long uid, int busId,Customer customer);
+
+    /**
+     * 操作(摆动)
+     * @param uid
+     * @param busId
+     * @return
+     */
+    BaseRespVO operate(long uid,int busId);
+
+    /**
+     * 主动下机
+     * @param uid
+     * @param busId
+     * @return
+     */
+    BaseRespVO finish(long uid,int busId);
+
+
+    /**
+     * 结果 1秒一次
+     */
+    void resultHandle(final DollBus dollBus,final String deviceId, final String coin);
+
+    /**
+     * 最终结果
+     */
+    void resultFinal();
+
+    /**
+     * 每秒查询光眼计数
+     */
+    void perSecondUpdateOutCoin();
+
+    MachinePushCoin getOptRecordRouter(int groupId,long optId);
+
+    MachinePushCoin getOptRecord(long optId);
+
+
+    BaseRespVO getPushCoinStatus(int busId);
+
+    /**
+     * 商户通知
+     * @param customer
+     * @param optId
+     */
+    void customerResultNotice(Customer customer, long optId);
+
+    /**
+     * 返回用户当前币数
+     * @param uid
+     * @return
+     */
+    int getUserCoin(long uid);
+
+    /**
+     * 判断用户是否可投币
+     * @param uid
+     * @param busId
+     * @return
+     */
+    boolean isCanPushCoin(long uid,int busId);
+
+
+    /**
+     * 处理推币机消费
+     * @param uid
+     * @param busId
+     * @return
+     */
+    int consumeHandle(long uid, int busId);
+
+}

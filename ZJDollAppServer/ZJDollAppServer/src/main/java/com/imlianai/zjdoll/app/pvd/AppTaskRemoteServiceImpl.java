@@ -1,0 +1,438 @@
+package com.imlianai.zjdoll.app.pvd;
+
+import java.util.TimerTask;
+
+import javax.annotation.Resource;
+
+import com.alibaba.dubbo.config.annotation.Service;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.SysTimerHandle;
+import com.imlianai.zjdoll.app.iface.IAppTaskRemoteService;
+import com.imlianai.zjdoll.app.modules.core.egg.service.EggMachineService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.zjdoll.app.modules.support.busowner.service.BusOwnerService;
+import com.imlianai.zjdoll.app.modules.support.event.invite20180320.service.Event20180320InviteEnergyService;
+import com.imlianai.zjdoll.app.modules.support.event.newyearRecharge20180207.service.EventNewyearRecharge20180207Service;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.service.EventTwistedEgg20180305Service;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.service.EventTwistedEggMachineService;
+import com.imlianai.zjdoll.app.modules.support.redpacket.service.RedpacketService;
+import com.imlianai.zjdoll.app.modules.support.xxrecharge.service.XxingRechargeService;
+import com.imlianai.zjdoll.app.schedule.*;
+
+/**
+ * Created by sam on 17-7-25.
+ */
+@Service(interfaceClass = IAppTaskRemoteService.class)
+public class AppTaskRemoteServiceImpl implements IAppTaskRemoteService {
+	private final BaseLogger logger = BaseLogger.getLogger(this.getClass());
+
+	@Resource
+	DollBusTask dollBusTask;
+	@Resource
+	DollExchangeTask dollExchangeTask;
+	@Resource
+	HandleWeekRewardTask handleWeekRewardTask;
+	@Resource
+	DollShippingTask dollShippingTask;
+	@Resource
+	WeekMonthCardTask weekMonthCardTask;
+	@Resource
+	RedpacketService redpacketService;
+	@Resource
+	EventNewyearRecharge20180207Service eventNewyearRecharge20180207Service;
+	@Resource
+	MsgTask msgTask;
+	@Resource
+	DailytaskTask dailytaskTask;
+	@Resource
+	EventTwistedEggMachineService eventTwistedEggMachineService;
+	@Resource
+	EventTwistedEgg20180305Service eventTwistedEgg20180305Service;
+	@Resource
+	TradeChargeService tradeChargeService;
+	@Resource
+	XxingRechargeService xxingRechargeService;
+
+	@Resource
+	private Event20180320InviteEnergyService inviteEnergyService;
+	@Resource
+	BusOwnerTask busOwnerTask;
+	@Resource
+	BusOwnerService busOwnerService;
+
+	@Resource
+	EggMachineService eggMachineService;
+
+	@Resource
+	private PushCoinOptTask pushCoinOptTask;
+
+	@Override
+	public void testTaskMsg() {
+		logger.info("testTaskMsg now:" + DateUtils.getNowTime());
+		msgTask.keyWordUpdate();
+	}
+	
+	@Override
+	public void busHandleOptInvalid() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("busHandleOptInvalid now:" + DateUtils.getNowTime());
+					dollBusTask.handleBusInvalidOpt();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+		
+	}
+
+	@Override
+	public void handleExchange() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleExchange now:" + DateUtils.getNowTime());
+					dollExchangeTask.handleExchange();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void handleWeekReward() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleWeekReward now:" + DateUtils.getNowTime());
+					handleWeekRewardTask.handleReward();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+	
+	@Override
+	public void handleDollShipping() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleDollShipping now:" + DateUtils.getNowTime());
+					dollShippingTask.handleDollShipping();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void pushWeekMonthCardMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("pushWeekMonthCardMsg now:" + DateUtils.getNowTime());
+					weekMonthCardTask.pushRemindRewardMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void redPacketDoPayWechatMoney() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("redPacketDoPayWechatMoney now:" + DateUtils.getNowTime());
+					redpacketService.doPayWechatMoneySchedule();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void redPacketDoPayWechatMoneyResultCheck() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("redPacketDoPayWechatMoneyResultCheck now:" + DateUtils.getNowTime());
+					redpacketService.doPayWechatMoneyResultCheckSchedule();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void newYearEventPushRankingMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("newYearEventPushRankingMsg now:" + DateUtils.getNowTime());
+					eventNewyearRecharge20180207Service.newYearEventPushRankingMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void newYearEventEndPushMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("newYearEventEndPushMsg now:" + DateUtils.getNowTime());
+					eventNewyearRecharge20180207Service.newYearEventEndPushMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+	
+	@Override
+	public void newYearEvent10Msg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("newYearEvent10Msg now:" + DateUtils.getNowTime());
+					eventNewyearRecharge20180207Service.handleMsgTask();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void pushDailytaskMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("pushDailytaskMsg now:" + DateUtils.getNowTime());
+					dailytaskTask.pushDailytaskMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void twistedEggMachineEvery15MinsMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("twistedEggMachineEvery15MinsMsg now:" + DateUtils.getNowTime());
+					eventTwistedEggMachineService.twistedEggMachineEvery15MinsMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void twistedEggMachineRankingMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("twistedEggMachineRankingMsg now:" + DateUtils.getNowTime());
+					eventTwistedEggMachineService.twistedEggMachineRankingMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void twistedEggUpdateStatusTask() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("twistedEggUpdateStatusTask now:" + DateUtils.getNowTime());
+					eventTwistedEgg20180305Service.twistedEggUpdateStatusTask();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void twistedEggEvery5MinsTask() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("twistedEggEvery5MinsTask now:" + DateUtils.getNowTime());
+					eventTwistedEgg20180305Service.twistedEggEvery5MinsTask();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void handleCHargePush() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleCHargePush now:" + DateUtils.getNowTime());
+					tradeChargeService.handleFirstPush();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+		
+	}
+
+	@Override
+	public void handleInviteEnergyTask() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleInviteEnergyTask now:" + DateUtils.getNowTime());
+					inviteEnergyService.sendMsg20Min();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void handleInviteEnergyEndTask() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleInviteEnergyEndTask now:" + DateUtils.getNowTime());
+					inviteEnergyService.eventEndMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void xinxingRechargeQuery() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("xinxingRechargeQuery now:" + DateUtils.getNowTime());
+					xxingRechargeService.xinxingRechargeQuery();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void busOwnerTask() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("busOwnerTask now:" + DateUtils.getNowTime());
+					busOwnerTask.busOwnerTask();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void busOwnerPushRankingMsg() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("busOwnerPushRankingMsg now:" + DateUtils.getNowTime());
+					busOwnerService.pushRankingMsg();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void eggMachineHandleReward() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("eggMachineHandleReward now:" + DateUtils.getNowTime());
+					eggMachineService.autoHandleReward();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void handlePushCoinTimeOutRecord() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handlePushCoinTimeOutRecord now:" + DateUtils.getNowTime());
+					pushCoinOptTask.handleTimeOutRecord();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+
+	@Override
+	public void handleDollShippingInvalid() {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					logger.info("handleDollShippingInvalid now:" + DateUtils.getNowTime());
+					dollShippingTask.handleDollShippingInvalid();
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+	}
+}

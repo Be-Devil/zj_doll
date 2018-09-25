@@ -1,0 +1,484 @@
+package com.imlianai.zjdoll.app.modules.core.trade.cmd;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Component;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.domain.share.ShareInfo;
+import com.imlianai.zjdoll.domain.trade.ChargeWay;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.trade.TradeCharge;
+import com.imlianai.zjdoll.domain.trade.TradeChargeType;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.common.entity.HttpEntity;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LoginCheck;
+import com.imlianai.rpc.support.utils.HttpUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.controller.RootCmd;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.domain.ChargeCatalog;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.domain.ChargeCatalog.ChargeCatalogType;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.service.ChargeCatalogService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.trade.util.BillIdUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.util.ali.AliPay;
+import com.imlianai.zjdoll.app.modules.core.trade.util.ali.AliPayUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.util.ali.config.AliPaySaisiConfig;
+import com.imlianai.zjdoll.app.modules.core.trade.util.common.HttpConnection;
+import com.imlianai.zjdoll.app.modules.core.trade.util.common.Rsa;
+import com.imlianai.zjdoll.app.modules.core.trade.util.common.XmlUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.util.weixin.WeiXinPayUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.util.weixin.WeixinPreOrderRes;
+import com.imlianai.zjdoll.app.modules.core.trade.util.weixin.config.WeiXinPayConfig;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.CatalogListReqVO;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.CatalogListRespVO;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.CatalogPayReqVO;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.CatalogRespVO;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.ChargeGetChargeBillReqVO;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.ChargeGetChargeBillRespVO;
+import com.imlianai.zjdoll.app.modules.publics.log.service.LogService;
+import com.imlianai.zjdoll.app.modules.support.share.service.ShareService;
+import com.imlianai.zjdoll.app.modules.support.share.vo.ShareInfoRespVo;
+import com.imlianai.zjdoll.app.modules.support.shipping.constants.ShippingConstants;
+import com.imlianai.zjdoll.app.modules.support.version.service.VersionService;
+
+/**
+ * 
+ * @author tensloveq
+ */
+@Component("charge")
+@Api("充值相关")
+public class CmdHandleCharge extends RootCmd {
+
+	@Resource
+	private LogService logService;
+
+	@Resource
+	ShareService shareService;
+
+	@Resource
+	private ChargeCatalogService chargeCatalogService;
+
+	@Resource
+	private TradeChargeService tradeChargeService;
+
+	@Resource
+	private TradeService tradeService;
+
+	@Resource
+	private VersionService versionService;
+
+	@ApiHandle
+	@Path("api/charge/list")
+	@ApiOperation(value = "【1.0.0】获取充值列表接口", notes = "在其他地方获取快捷充值列表需要传isQuickPay=1", httpMethod = "POST", response = CatalogListRespVO.class)
+	public BaseRespVO list(CatalogListReqVO vo) {
+		int chargeOsType = vo.getOsType();
+		CatalogListRespVO respVo = new CatalogListRespVO();
+		boolean isAudit=false;
+		if (versionService.isAudit(vo.getOsType(), vo.getChannel(),
+				vo.getVersion())&&chargeOsType==1) {
+			chargeOsType = 3;
+			isAudit=true;
+			respVo.setApplePay(true);
+		}
+		if (vo.getIsPay4Other() == 1) {// 亲密付列表
+			List<ChargeCatalog> catalogs = chargeCatalogService.getCatalogs(
+					ChargeCatalogType.PAY_4_OTHER.type, 0);
+			respVo.setCatalogs(catalogs);
+		} else {
+			if (vo.getIsQuickPay() == 0) {// 普通充值列表
+				List<ChargeCatalog> catalogs = chargeCatalogService
+						.getCatalogs(chargeOsType, 0);
+				respVo.setCatalogs(catalogs);
+
+				List<ChargeCatalog> specialCatalogs = new ArrayList<ChargeCatalog>(); // 特惠充值
+				// 首冲充值列表
+				List<ChargeCatalog> firstCatalogs = chargeCatalogService
+						.getFirstPayCatalogs(chargeOsType, vo.getUid());
+				// 月卡，周卡
+				List<ChargeCatalog> weekMonthCardCatalogs = chargeCatalogService
+						.getWeekMonthCardCatalogs(chargeOsType, vo.getUid());
+				if (!StringUtil.isNullOrEmpty(weekMonthCardCatalogs)) {
+					specialCatalogs.addAll(weekMonthCardCatalogs);
+				}
+				if (!StringUtil.isNullOrEmpty(firstCatalogs)) {
+					specialCatalogs.addAll(firstCatalogs);
+				}
+				respVo.setSpecialCatalogs(specialCatalogs);
+
+			} else {// 快捷充值列表
+					// 房间快速充值
+				List<ChargeCatalog> catalogs = chargeCatalogService
+						.getQuickCatalogs(chargeOsType);
+				try {
+					List<ChargeCatalog> firstCatalogs = chargeCatalogService
+							.getFirstPayCatalogs(chargeOsType, vo.getUid());
+					if (!StringUtil.isNullOrEmpty(firstCatalogs)) {
+						catalogs.set(0, firstCatalogs.get(0));
+					}
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+				respVo.setCatalogs(catalogs);
+			}
+		}
+		if (isAudit) {
+			List<ChargeCatalog> list=respVo.getCatalogs();
+			if (vo.getOsType()>0&&!StringUtil.isNullOrEmpty(list)) {
+				int startCode=2000;
+				int initCode=2000;
+				String channelString=vo.getChannel();
+				String lastCode="1";
+				try {
+					lastCode=channelString.split("store")[1];
+					if (!StringUtil.isNullOrEmpty(lastCode)) {
+						startCode=Integer.parseInt(lastCode)*1000;
+					}else{
+						startCode=2000;
+					}
+				} catch (Exception e) {
+					startCode=2000;
+				}
+				//因为默认内购编码以2001开始，需要减去2000
+				startCode=startCode-initCode;
+				for (ChargeCatalog chargeCatalog : list) {
+					chargeCatalog.setCode(startCode+chargeCatalog.getCode());
+				}
+			}
+		}
+		TradeAccount account = tradeService.getAccount(vo.getUid());
+		if (account != null) {
+			respVo.setCoin(account.getCoin());
+		}
+		return respVo;
+	}
+
+	@ApiHandle
+	@Path("api/charge/order")
+	@ApiOperation(value = "【1.0.0】获取支付订单接口", notes = "", httpMethod = "POST", response = ChargeGetChargeBillRespVO.class)
+	public BaseRespVO order(ChargeGetChargeBillReqVO vo) {
+		boolean isShipping=false;
+		if (vo.getCode()==null&&vo.getOrderNum()!=null&&vo.getOrderNum()>0) {
+			vo.setCode(ShippingConstants.SHIPPING_CATALOG_CODE);
+			isShipping=true;
+		}else if(vo.getCode()!=null&&vo.getCode()>0){//常规充值
+			
+		}else {
+			return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+		}
+		// 校验商品
+		ChargeCatalog catalog = chargeCatalogService.getCatalog(vo.getCode());
+		if (catalog != null) {
+			TradeCharge c = new TradeCharge(vo.getUid(), ChargeWay.getType(vo
+					.getChargeType()), vo.getCode(), catalog.getPrice(),
+					vo.getChannel(), vo.getOsType(), vo.getImei());
+			if (isShipping) {
+				c.setOrderNum(vo.getOrderNum());
+				c.setChargeType(TradeChargeType.SHIPPING_BILL.type);
+			}
+			// 生成订单号
+			long orderId = tradeChargeService.add(c);
+			if (orderId <= 0) {
+				return BaseRespVO.getBaseRespVO(ResCodeEnum.SYSTEM_ERROR);
+			}
+			String outId = BillIdUtil.getOutsideBillId(orderId);
+			logger.info("/api/charge/order orderId:" + orderId + " outId:"
+					+ outId);
+			if (ChargeWay.WEXIN.type == vo.getChargeType()) {// 微信支付
+				String xmlRes = WeiXinPayUtil.createOrderXml(vo, vo.getUid(),
+						outId, catalog, vo.getImei());
+				logger.info("微信预订单请求 xmlRes:" + xmlRes);
+				if (StringUtils.isBlank(xmlRes)) {
+					return BaseRespVO.getBaseRespVO(ResCodeEnum.SYSTEM_ERROR);
+				}
+				HttpEntity resp = HttpUtil.Post(WeiXinPayConfig.unifiedOrder,
+						xmlRes);
+				logger.info("resp:" + resp.getHtml());
+				try {
+					Map<String, String> xmlMap = XmlUtil.doXMLParse(resp
+							.getHtml());
+					WeixinPreOrderRes wxRes = WeiXinPayUtil
+							.createPrepayOrderInfo(xmlMap);
+					tradeChargeService.addLog(orderId, vo.getUid(), xmlRes,
+							JSON.toJSONString(wxRes));
+					ChargeGetChargeBillRespVO respVO = new ChargeGetChargeBillRespVO();
+					respVO.setWxRes(wxRes);
+					return respVO;
+				} catch (Exception e) {
+					logger.error("uid=" + vo.getUid() + ",parse xml error xml="
+							+ xmlRes + ", msg=" + e.getMessage(), e);
+				}
+			} else if (ChargeWay.ALI.type == vo.getChargeType()) {
+				ChargeGetChargeBillRespVO respVO = new ChargeGetChargeBillRespVO();
+				String info;
+				try {
+					info = AliPay.getNewOrderInfo(catalog, outId);
+					String sign = Rsa.sign(info, AliPay.privateKey);
+					sign = URLEncoder.encode(sign, "UTF-8");
+					info += "&sign=\"" + sign + "\"&" + "sign_type=\"RSA\"";
+					respVO.setAliRes(info);
+					tradeChargeService.addLog(orderId, vo.getUid(), info, null);
+				} catch (UnsupportedEncodingException e) {
+					PrintException.printException(logger, e);
+				}
+				return respVO;
+			} else {
+				return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+			}
+		} else {
+			return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+		}
+		return new BaseRespVO();
+	}
+	
+	@ApiHandle
+	@Path("api/charge/code")
+	@ApiOperation(value = "【1.0.0】获取商品明细接口", notes = "", httpMethod = "POST", response = CatalogRespVO.class)
+	public BaseRespVO code(ChargeGetChargeBillReqVO vo) {
+		// 校验商品
+		ChargeCatalog catalog = chargeCatalogService.getCatalog(vo.getCode());
+		if (catalog != null) {
+			return new CatalogRespVO(catalog);
+		} else {
+			return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+		}
+	}
+
+	@ApiHandle
+	@Path("api/charge/orderH5")
+	@ApiOperation(value = "【1.0.0】获取H5支付订单接口", notes = "", httpMethod = "POST", response = ChargeGetChargeBillRespVO.class)
+	public BaseRespVO orderH5(ChargeGetChargeBillReqVO vo) {
+		boolean isShipping=false;
+		if (vo.getCode()==null&&vo.getOrderNum()!=null&&vo.getOrderNum()>0) {
+			vo.setCode(ShippingConstants.SHIPPING_CATALOG_CODE);
+			isShipping=true;
+		}else if(vo.getCode()!=null&&vo.getCode()>0){//常规充值
+			
+		}else {
+			return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+		}
+		// 校验商品
+		ChargeCatalog catalog = chargeCatalogService.getCatalog(vo.getCode());
+		if (catalog != null) {
+			ChargeWay chargeWay=ChargeWay.getType(vo
+					.getChargeType());
+			if(vo.getChargeType()==ChargeWay.WEXIN.type){
+				chargeWay=ChargeWay.WEXIN_H5;
+			}
+			TradeCharge c = new TradeCharge(vo.getUid(), chargeWay, vo.getCode(), catalog.getPrice(),
+					vo.getChannel(), vo.getOsType(), vo.getImei());
+			if (isShipping) {
+				c.setOrderNum(vo.getOrderNum());
+				c.setChargeType(TradeChargeType.SHIPPING_BILL.type);
+			}
+			// 生成订单号
+			long orderId = tradeChargeService.add(c);
+			if (orderId <= 0) {
+				return BaseRespVO.getBaseRespVO(ResCodeEnum.SYSTEM_ERROR);
+			}
+			String outId = BillIdUtil.getOutsideBillId(orderId);
+			logger.info("/api/charge/orderH5 orderId:" + orderId + " outId:"
+					+ outId);
+			if (ChargeWay.WEXIN.type == vo.getChargeType()) {// 微信支付
+
+				// 创建微信预支付订单
+				String orderXml = WeiXinPayUtil.createOrderXml4H5(vo,
+						vo.getUid(), outId, catalog, vo.getImei());
+				String wxOrderXml = null;
+				try {
+					logger.info("init orderId:" + orderId + " xml:" + orderXml);
+					wxOrderXml = HttpConnection.doPost(
+							WeiXinPayConfig.unifiedOrder, orderXml);
+				} catch (IOException e) {
+					logger.error(
+							"outId=" + outId + ",uid=" + vo.getUid()
+									+ ",wxOrderXml=" + wxOrderXml + ",msg="
+									+ e.getMessage(), e);
+				}
+				logger.info("orderId:" + orderId + ",outId=" + outId + ",uid="
+						+ vo.getUid() + ",wxOrderXml=" + wxOrderXml);
+				// 加入日志
+				tradeChargeService.addLog(orderId, vo.getUid(), orderXml,
+						wxOrderXml);
+				try {
+					Map<String, String> xmlMap = XmlUtil.doXMLParse(wxOrderXml);
+					if (xmlMap == null
+							|| !StringUtils.equals(xmlMap.get("return_code"),
+									"SUCCESS")) {
+						logger.info("orderId:" + orderId + ",outId=" + outId
+								+ ",uid=" + vo.getUid() + " msg"
+								+ "下单失败,请稍后再试[错误原因:" + xmlMap.get("return_msg")
+								+ "]");
+						logger.error("orderId:" + orderId + ",outId=" + outId
+								+ ",uid=" + vo.getUid() + " msg"
+								+ "下单失败,请稍后再试[错误原因:" + xmlMap.get("return_msg")
+								+ "]");
+						return new BaseRespVO(0, false,
+								xmlMap.get("return_msg"));
+					}
+					String resultCode = xmlMap.get("result_code");
+					if (!StringUtils.equals(resultCode, "SUCCESS")) {
+						logger.info("orderId:" + orderId + ",outId=" + outId
+								+ ",uid=" + vo.getUid() + "下单失败,请稍后再试[错误原因:"
+								+ xmlMap.get("err_code_des") + "]");
+						logger.error("orderId:" + orderId + ",outId=" + outId
+								+ ",uid=" + vo.getUid() + "下单失败,请稍后再试[错误原因:"
+								+ xmlMap.get("err_code_des") + "]");
+						return new BaseRespVO(0, false,
+								xmlMap.get("err_code_des"));
+					}
+					// 返回结果
+					if (!StringUtil.isNullOrEmpty(xmlMap.get("mweb_url"))) {
+						ChargeGetChargeBillRespVO respVO = new ChargeGetChargeBillRespVO();
+						String url = xmlMap.get("mweb_url");
+						respVO.setPayUrl("http://www.mengquww.com/pay.jsp?redUrl="
+								+ URLEncoder.encode(url));
+						return respVO;
+					} else {
+						return new BaseRespVO(0, false, "微信系统繁忙，请稍后再试");
+					}
+				} catch (Exception e) {
+					logger.error("orderId:" + orderId + ",outId=" + outId
+							+ ",uid=" + vo.getUid() + ",parse xml error xml="
+							+ wxOrderXml + ", msg=" + e.getMessage(), e);
+					return new BaseRespVO(0, false, "下单失败,请稍后再试");
+				}
+
+			} else if (ChargeWay.ALI.type == vo.getChargeType()) {
+				ChargeGetChargeBillRespVO respVO = new ChargeGetChargeBillRespVO();
+				String info;
+				String html = AliPayUtil.getAlipayOrder(
+						AliPaySaisiConfig.appId, AliPaySaisiConfig.rsaPrivate,
+						AliPaySaisiConfig.reaPublicAliPay, catalog, outId);
+				int billId = tradeChargeService.addAlipayH5Body(orderId, html,
+						vo.getUid(), catalog.getPrice());
+				respVO.setPayUrl(AliPaySaisiConfig.payH5Url + billId);
+				return respVO;
+			} else {
+				return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+			}
+		} else {
+			return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+		}
+	}
+
+	@ApiHandle
+	@Path("api/charge/orderJS")
+	@ApiOperation(value = "【1.0.0】获取支付订单接口", notes = "", httpMethod = "POST", response = ChargeGetChargeBillRespVO.class)
+	public BaseRespVO orderJS(ChargeGetChargeBillReqVO vo) {
+
+		// 校验商品
+		ChargeCatalog catalog = chargeCatalogService.getCatalog(vo.getCode());
+		if (catalog != null) {
+			ChargeWay way=ChargeWay.WEXIN;
+			TradeCharge c = new TradeCharge(vo.getUid(), way, vo.getCode(), catalog.getPrice(),
+					"", 0, "");
+			// 生成订单号
+			long orderId = tradeChargeService.add(c);
+			if (orderId <= 0) {
+				return BaseRespVO.getBaseRespVO(ResCodeEnum.SYSTEM_ERROR);
+			}
+			String outId = BillIdUtil.getOutsideBillId(orderId);
+			if (ChargeWay.WEXIN.type == vo.getChargeType()) {// 微信支付
+				String xmlRes = WeiXinPayUtil.createOrderXml4JS(vo,
+						vo.getOpenId(), vo.getUid(), outId, catalog,
+						vo.getImei());
+				logger.info("微信预订单请求 xmlRes:" + xmlRes);
+				if (StringUtils.isBlank(xmlRes)) {
+					return BaseRespVO.getBaseRespVO(ResCodeEnum.SYSTEM_ERROR);
+				}
+				HttpEntity resp = HttpUtil.Post(WeiXinPayConfig.unifiedOrder,
+						xmlRes);
+				logger.info("resp:" + resp.getHtml());
+				try {
+					Map<String, String> xmlMap = XmlUtil.doXMLParse(resp
+							.getHtml());
+					WeixinPreOrderRes wxRes = WeiXinPayUtil
+							.createPrepayOrderInfo4JS(xmlMap);
+					tradeChargeService.addLog(orderId, vo.getUid(), xmlRes,
+							JSON.toJSONString(wxRes));
+					ChargeGetChargeBillRespVO respVO = new ChargeGetChargeBillRespVO();
+					respVO.setWxRes(wxRes);
+					return respVO;
+				} catch (Exception e) {
+					logger.error("uid=" + vo.getUid() + ",parse xml error xml="
+							+ xmlRes + ", msg=" + e.getMessage(), e);
+				}
+			} else if (ChargeWay.ALI.type == vo.getChargeType()) {
+				ChargeGetChargeBillRespVO respVO = new ChargeGetChargeBillRespVO();
+				String info;
+				try {
+					info = AliPay.getNewOrderInfo(catalog, outId);
+					String sign = Rsa.sign(info, AliPay.privateKey);
+					sign = URLEncoder.encode(sign, "UTF-8");
+					info += "&sign=\"" + sign + "\"&" + "sign_type=\"RSA\"";
+					respVO.setAliRes(info);
+					tradeChargeService.addLog(orderId, vo.getUid(), info, null);
+				} catch (UnsupportedEncodingException e) {
+					PrintException.printException(logger, e);
+				}
+				return respVO;
+			} else {
+				return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+			}
+		} else {
+			return new BaseRespVO(ResCodeEnum.PARA_ERROR);
+		}
+		return new BaseRespVO();
+	}
+
+	
+	@ApiHandle
+	@LoginCheck
+	@Path("/api/charge/payMyBill")
+	@ApiOperation(value = "【1.1.0】获取亲密付分享信息接口", notes = "获取亲密付分享信息", httpMethod = "POST", response = ShareInfoRespVo.class)
+	public BaseRespVO payMyBill(CatalogPayReqVO vo) {
+		ShareInfo shareInfo = shareService.getShareInfo("pay_4_me");
+		if (shareInfo != null) {
+			shareInfo.setLink(shareInfo.getLink() + "uid=" + vo.getUid()
+					+ "&itemCode=" + vo.getCode());
+			ShareInfoRespVo respVo = new ShareInfoRespVo(shareInfo);
+			return respVo;
+		}
+		return new BaseRespVO(ResCodeEnum.NOT_DATA);
+	}
+
+	public static void main(String[] args) {
+		String outId = "mq" + System.currentTimeMillis();
+		ChargeGetChargeBillReqVO vo = new ChargeGetChargeBillReqVO();
+		vo.setIp("183.40.131.96");
+		vo.setUid(10000l);
+		ChargeCatalog catalog = new ChargeCatalog();
+		catalog.setName("100币");
+		catalog.setPrice(1);
+		String orderXml = WeiXinPayUtil.createOrderXml4H5(vo, vo.getUid(),
+				outId, catalog, "1");
+		String wxOrderXml = null;
+		try {
+			System.out.println("init xml:" + orderXml);
+			wxOrderXml = HttpConnection.doPost(WeiXinPayConfig.unifiedOrder,
+					orderXml);
+			System.out.println("wxOrderXml:" + wxOrderXml);
+		} catch (IOException e) {
+			System.out.println("outId=" + outId + ",uid=" + vo.getUid()
+					+ ",wxOrderXml=" + wxOrderXml + ",msg=" + e.getMessage());
+		}
+	}
+
+}

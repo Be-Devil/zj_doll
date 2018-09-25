@@ -1,0 +1,37 @@
+package com.imlianai.dollpub.app.modules.core.pinball.vo;
+
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+
+/**
+ * @author wurui
+ * @create 2018-07-13 22:41
+ **/
+public class OperatePinballReqVo extends BaseReqVO {
+    private int busId;
+    private int bet;
+    private int force;
+
+    public int getBusId() {
+        return busId;
+    }
+
+    public void setBusId(int busId) {
+        this.busId = busId;
+    }
+
+    public int getBet() {
+        return bet;
+    }
+
+    public void setBet(int bet) {
+        this.bet = bet;
+    }
+
+    public int getForce() {
+        return force;
+    }
+
+    public void setForce(int force) {
+        this.force = force;
+    }
+}

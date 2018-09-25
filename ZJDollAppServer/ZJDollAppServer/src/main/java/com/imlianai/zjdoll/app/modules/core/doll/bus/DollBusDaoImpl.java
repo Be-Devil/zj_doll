@@ -1,0 +1,108 @@
+package com.imlianai.zjdoll.app.modules.core.doll.bus;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Repository;
+
+import com.imlianai.zjdoll.constants.DollCacheConst;
+import com.imlianai.zjdoll.domain.doll.BusOperatingRecord;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.rpc.support.manager.aspect.annotations.CacheWipe;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+
+@Repository
+public class DollBusDaoImpl implements DollBusDao {
+	@Resource
+	private JdbcHandler jdbcHandler;
+
+	@Override
+	public int updateConversationId(int busId, String conversationId) {
+		return jdbcHandler.executeSql(
+				"update doll_bus set conversationId=? where busId=?",
+				conversationId, busId);
+	}
+	@Override
+	public int updateBusValid(int busId,int valid,String remark){
+		return jdbcHandler.executeSql("update doll_bus set valid=?, reason=?,modUser='app自动下架', modTime=now() where busId=? limit 1",valid,remark,busId);
+	}
+
+	@Override
+	public List<DollBus> getAllDollBus() {
+		return jdbcHandler.queryBySql(DollBus.class, "select * from doll_bus order by `index` asc");
+	}
+
+	@Override
+	public List<DollBus> getDollBus(Integer type) {
+		StringBuilder sbSQL = new StringBuilder("select * from doll_bus where valid=1");
+		if(type != null && type.intValue() >= 0) {
+			sbSQL.append(" and busType=?");
+			sbSQL.append(" order by `index` asc");
+			return jdbcHandler.queryBySql(DollBus.class, sbSQL.toString(), type);
+		}
+		sbSQL.append(" order by `index` asc");
+		return jdbcHandler.queryBySql(DollBus.class, sbSQL.toString());
+	}
+
+	@Override
+	public List<DollBus> getDollBus(List<Integer> busIds) {
+		if (StringUtil.isNullOrEmpty(busIds)) {
+			return new ArrayList<>();
+		}
+		String busids = "";
+		for (int i = 0; i < busIds.size(); i++) {
+			if (i > 0) {
+				busids += ",";
+			}
+			busids += busIds.get(i);
+		}
+		String sql = "select * from doll_bus where busId in (?)";
+		return jdbcHandler.queryBySql(DollBus.class, sql, busids);
+	}
+
+	@Override
+	public DollBus getDollBus(int busId) {
+		return jdbcHandler.queryOneBySql(DollBus.class,
+				"select * from doll_bus where busId=? ", busId);
+	}
+
+	@Override
+	public BusOperatingRecord getBusOperatingRecord(int busId) {
+		return jdbcHandler.queryOneBySql(BusOperatingRecord.class,
+				"select * from bus_operating_record where busId=?", busId);
+	}
+
+	@Override
+	@CacheWipe(key=DollCacheConst.BUS_OPERATING_RECORD,pkField="busId")
+	public int addBusOperatingRecord(int busId, long uid, long optId, long logId) {
+		return jdbcHandler
+				.executeSql(
+						"insert into bus_operating_record (busId,uid,optId,logId,startTime,endTime,releaseTime) value(?,?,?,?,now(),null,DATE_ADD(now(),INTERVAL 45 SECOND))  on duplicate key update uid=?,optId=?,logId=?,startTime=now(),endTime=null,releaseTime=DATE_ADD(now(),INTERVAL 45 SECOND)",
+						busId, uid, optId, logId, uid, optId, logId);
+	}
+
+	@Override
+	@CacheWipe(key=DollCacheConst.BUS_OPERATING_RECORD,pkField="busId")
+	public int closeBusOperatingRecord(int busId,long optId) {
+		return jdbcHandler.executeSql("update bus_operating_record set endTime=now() ,releaseTime=DATE_ADD(now(),INTERVAL 14 SECOND) where busId=? and optId=?", busId,optId);
+	}
+
+	@Override
+	@CacheWipe(key=DollCacheConst.BUS_OPERATING_RECORD,pkField="busId")
+	public int removeBusOperatingRecord(int busId,long optId) {
+		return jdbcHandler.executeSql("delete from bus_operating_record where busId=? and optId=?", busId,optId);
+	}
+
+	@Override
+	public List<BusOperatingRecord> getInvaildRecord() {
+		return jdbcHandler.queryBySql(BusOperatingRecord.class, "select * from bus_operating_record where releaseTime<=now()");
+	}
+
+	@Override
+	public void updateBusWatchCount(int busId, int num) {
+		jdbcHandler.executeSql("update doll_bus set watchNum=watchNum+? where busId=? and watchNum+?>=0", num,busId,num);
+	}
+}

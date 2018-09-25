@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.imlianai:dollpub-iface-message:1.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/dollpub-iface-message/1.0.0-SNAPSHOT/dollpub-iface-message-1.0.0-20180716.123826-250.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/dollpub-iface-message/1.0.0-SNAPSHOT/dollpub-iface-message-1.0.0-20180716.123826-250-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/dollpub-iface-message/1.0.0-SNAPSHOT/dollpub-iface-message-1.0.0-20180716.123826-250-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

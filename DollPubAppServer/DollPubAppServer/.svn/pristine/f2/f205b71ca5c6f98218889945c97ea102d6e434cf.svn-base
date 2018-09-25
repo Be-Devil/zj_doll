@@ -1,0 +1,15 @@
+package com.imlianai.dollpub.app.modules.core.dice.consts;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 11:53
+ **/
+public class DiceConsts {
+
+
+    /**
+     * 摇骰子并回馈点数
+     */
+    public static final byte[] SHAKE_RETURN = {(byte)0x7a,(byte)0x03,(byte)0x02,(byte)0x01,(byte)0x06,(byte)0x55};
+
+}

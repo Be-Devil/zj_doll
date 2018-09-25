@@ -1,0 +1,337 @@
+package com.imlianai.zjdoll.app.modules.publics.msg.utils;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.log4j.Logger;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.imlianai.rpc.support.common.entity.HttpEntity;
+import com.imlianai.rpc.support.utils.HttpUtil;
+import com.ctrip.framework.apollo.util.PropertiesUtil;
+import com.imlianai.rpc.support.utils.MD5_HexUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.util.common.CommonUtil;
+
+/**
+ * 实时通信工具类
+ * 
+ * @author Max
+ * 
+ */
+public class IMCommonUtil {
+
+	private static final Logger logger = Logger.getLogger(IMCommonUtil.class);
+	private static String AppID = PropertiesUtil.getString("application","leanCloud.AppID");//"IJ1XzwbrhjsuW1xw1vFhpeBq-gzGzoHsz";
+	private static String AppKey = PropertiesUtil.getString("application","leanCloud.AppKey");//"zuEMOsqlFe1L8lHAfGnCvUle";//
+	private static String AppKeyMaster = PropertiesUtil.getString("application","leanCloud.AppKeyMaster");//"zzDzWMK1rGckuKCORSTorm38";//
+	private static String baseUrl = PropertiesUtil.getString("application","leanCloud.baseUrl");
+	private static String pushBaseUrl =PropertiesUtil.getString("application","leanCloud.pushBaseUrl");//"https://ij1xzwbr.push.lncld.net";//
+	
+	// 创建聊天室
+	public static final String createRoomUrlNew = baseUrl
+			+ "/1.1/classes/_Conversation";
+	public static final String createRoomUrl = baseUrl
+			+ "/1.1/classes/_Conversation";
+	// 发送消息
+	public static final String sendMsgUrlNew = baseUrl + "/1.1/rtm/messages";
+	public static final String sendMsgUrl = baseUrl + "/1.1/rtm/messages";
+	// 发送广播消息
+	public static final String sendBrocastUrlNew = baseUrl
+			+ "/1.1/rtm/broadcast";
+	public static final String sendBrocastUrl = baseUrl + "/1.1/rtm/broadcast";
+	// 发送推送
+	public static final String sendPushUrlNew = pushBaseUrl + "/1.1/push";
+	public static final String sendPushUrl = baseUrl + "/1.1/push";
+	// 查询消息
+	public static final String queryMsgUrl = baseUrl + "/1.1/rtm/messages/logs";
+	// 踢下线
+	public static final String kickOffUrl = baseUrl + "/1.1/rtm/client/kick";
+	// 判断用户是否在线
+	public static final String isOnlineUrl = baseUrl + "/1.1/rtm/online";
+	// 用户禁言
+	public static final String blockUserUrl = baseUrl
+			+ "/1.1/rtm/conversation/blacklist";
+
+	/**
+	 * 发起leancloud post请求
+	 * 
+	 * @param url
+	 * @param postData
+	 */
+
+	/**
+	 * 发起leancloud post请求
+	 * 
+	 * @param url
+	 * @param postData
+	 */
+	public static Map<String, Object> postData(String url, String postData) {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		headers.put("X-LC-Key", AppKey);
+		headers.put("Content-Type", "application/json");
+		logger.info("开始请求 url:" + url + " " + postData);
+		HttpEntity httpEntity = HttpUtil.Post(url, postData, "utf-8", headers);
+		logger.info("postData" + httpEntity + " " + httpEntity.getCode()
+				+ "url:" + url + " postData:" + postData
+				+ " httpEntity.getHtml():" + httpEntity.getHtml());
+		if (httpEntity.getCode() >= 300 || httpEntity.getCode() < 200) {
+			logger.error("postDataMasterRepeat 第" + 1 + "次请求失败 url:" + url
+					+ " postData:" + postData + " headers:" + headers);
+			return postDataRepeat(url, postData, 1);
+		}
+		String res = httpEntity.getHtml();
+		Map<String, Object> resMap = JSON.parseObject(res,
+				new TypeReference<Map<String, Object>>() {
+				});
+		return resMap;
+	}
+
+	/**
+	 * 重复发送post请求
+	 * 
+	 * @param url
+	 * @param postData
+	 * @param times
+	 * @return
+	 */
+	private static Map<String, Object> postDataRepeat(String url,
+			String postData, int times) {
+		times++;
+		if (times > 3) {
+			logger.error("postDataRepeat 多次请求失败停止请求 url:" + url + " postData:"
+					+ postData);
+			return null;
+		}
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		headers.put("X-LC-Key", AppKey);
+		headers.put("Content-Type", "application/json");
+		logger.info("开始请求 url:" + url + " " + postData);
+		HttpEntity httpEntity = HttpUtil.Post(url, postData, "utf-8", headers);
+		logger.info("postData" + httpEntity + " " + httpEntity.getCode()
+				+ "url:" + url + " postData:" + postData
+				+ " httpEntity.getHtml():" + httpEntity.getHtml());
+		if (httpEntity.getCode() >= 300 || httpEntity.getCode() < 200) {
+			logger.error("postDataMasterRepeat 第" + times + "次请求失败 url:" + url
+					+ " postData:" + postData + " headers:" + headers);
+			return postDataRepeat(url, postData, times);
+		}
+		String res = httpEntity.getHtml();
+		Map<String, Object> resMap = JSON.parseObject(res,
+				new TypeReference<Map<String, Object>>() {
+				});
+		return resMap;
+	}
+
+	/**
+	 * post masterKey签名的请求
+	 * 
+	 * @param url
+	 * @param postData
+	 * @return
+	 */
+	public static Map<String, Object> postDataMaster(String url, String postData) {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		long tm = System.currentTimeMillis();
+		String signString = MD5_HexUtil.md5Hex(tm + AppKeyMaster);
+		headers.put("X-LC-Sign", signString + "," + tm + ",master");
+		headers.put("Content-Type", "application/json");
+		HttpEntity httpEntity = HttpUtil.Post(url, postData, "utf-8", headers);
+		logger.info(httpEntity + " " + httpEntity.getCode() + "开始请求 url:" + url
+				+ " " + postData);
+		if (httpEntity.getCode() != 200) {
+			logger.error("postDataMasterRepeat 第" + 1 + "次请求失败 url:" + url
+					+ " postData:" + postData + " headers:" + headers);
+			return postDataMasterRepeat(url, postData, 1);
+		}
+		String res = httpEntity.getHtml();
+		logger.info(res);
+		Map<String, Object> resMap = JSON.parseObject(res,
+				new TypeReference<Map<String, Object>>() {
+				});
+		return resMap;
+	}
+
+	/**
+	 * post masterKey签名的请求
+	 * 
+	 * @param url
+	 * @param postData
+	 * @param times
+	 * @return
+	 */
+	private static Map<String, Object> postDataMasterRepeat(String url,
+			String postData, int times) {
+		if (times > 3) {
+			logger.error("postDataMasterRepeat 多次请求失败停止请求 url:" + url
+					+ " postData:" + postData);
+			return null;
+		}
+		times++;
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		long tm = System.currentTimeMillis();
+		String signString = MD5_HexUtil.md5Hex(tm + AppKeyMaster);
+		headers.put("X-LC-Sign", signString + "," + tm + ",master");
+		headers.put("Content-Type", "application/json");
+		HttpEntity httpEntity = HttpUtil.Post(url, postData, "utf-8", headers);
+		logger.info(httpEntity + " " + httpEntity.getCode() + "开始请求 url:" + url
+				+ " " + postData);
+		if (httpEntity.getCode() != 200) {
+			logger.error("postDataMasterRepeat 第" + (times) + "次请求失败 url:"
+					+ url + " postData:" + postData + " headers:" + headers);
+			return postDataMasterRepeat(url, postData, times);
+		}
+		String res = httpEntity.getHtml();
+		logger.info(res);
+		Map<String, Object> resMap = JSON.parseObject(res,
+				new TypeReference<Map<String, Object>>() {
+				});
+		return resMap;
+	}
+
+	public static List<Object> getDataMaster(String url,
+			Map<String, Object> getData) {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		long tm = System.currentTimeMillis();
+		String signString = MD5_HexUtil.md5Hex(tm + AppKeyMaster);
+		headers.put("X-LC-Sign", signString + "," + tm + ",master");
+		headers.put("Content-Type", "application/json");
+		String getString = "";
+		Set<String> keySet = getData.keySet();
+		for (String key : keySet) {
+			getString += "&" + key + "=" + getData.get(key);
+		}
+		if (!getString.equals("")) {
+			getString = getString.substring(1);
+			url = url + "?" + getString;
+		}
+		HttpEntity httpEntity = HttpUtil.Get(url, "utf-8", headers);
+		String res = httpEntity.getHtml();
+		List<Object> resMap = JSON.parseObject(res,
+				new TypeReference<List<Object>>() {
+				});
+		return resMap;
+	}
+
+	public static String getDataMasterString(String url,
+			Map<String, Object> getData) {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		long tm = System.currentTimeMillis();
+		String signString = MD5_HexUtil.md5Hex(tm + AppKeyMaster);
+		headers.put("X-LC-Sign", signString + "," + tm + ",master");
+		headers.put("Content-Type", "application/json");
+		String getString = "";
+		Set<String> keySet = getData.keySet();
+		for (String key : keySet) {
+			getString += "&" + key + "=" + getData.get(key);
+		}
+		if (!getString.equals("")) {
+			getString = getString.substring(1);
+			url = url + "?" + getString;
+		}
+		HttpEntity httpEntity = HttpUtil.Get(url, "utf-8", headers);
+		String res = httpEntity.getHtml();
+		return res;
+	}
+
+	/**
+	 * delete masterKey签名的请求
+	 * 
+	 * @param url
+	 * @param deteleData
+	 * @return
+	 */
+	public static boolean deleteDataMaster(String url, Map<String, Object> data) {
+		Map<String, String> headers = new HashMap<String, String>();
+		headers.put("X-LC-Id", AppID);
+		long tm = System.currentTimeMillis();
+		String signString = MD5_HexUtil.md5Hex(tm + AppKeyMaster);
+		headers.put("X-LC-Sign", signString + "," + tm + ",master");
+		headers.put("Content-Type", "application/json");
+		Set<String> keySet = data.keySet();
+		String keyString = "";
+		for (String key : keySet) {
+			keyString += "&" + key + "=" + data.get(key);
+		}
+		if (!keyString.equals("")) {
+			keyString = keyString.substring(1);
+			url = url + "?" + keyString;
+		}
+		HttpEntity httpEntity = HttpUtil.Delete(url, headers);
+		logger.info(httpEntity + " " + httpEntity.getCode() + "开始请求 url:" + url
+				+ " " + data);
+		if (httpEntity.getCode() != 200) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * 获取MasterKey签名
+	 */
+	public static void getSign() {
+		long tm = System.currentTimeMillis();
+		String signString = MD5_HexUtil.md5Hex(tm + AppKeyMaster);
+	}
+
+	/**
+	 * 使用Hmac-sha1签名
+	 * 
+	 * @param encryptText
+	 * @return
+	 */
+	public static byte[] getSign(String encryptText) {
+		try {
+			return HMACSHA1.HmacSHA1Encrypt(AppID + ":" + encryptText,
+					AppKeyMaster);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	public static String getSign2(String encryptText) {
+		try {
+			logger.info("getSign2:" + AppID + ":" + encryptText);
+			return HMACSHA1.getSignature(AppID + ":" + encryptText,
+					AppKeyMaster);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * 发起云信post请求
+	 * 
+	 * @param url
+	 * @param postData
+	 */
+	public static Map<String, Object> postData(String url,
+			Map<String, String> postDataMap) {
+		return postData(url, CommonUtil.createUrlParamFormat(postDataMap));
+	}
+
+	/**
+	 * 判断此次返回是否成功
+	 * 
+	 * @param resMap
+	 * @return
+	 */
+	public static boolean isSuccessRespone(Map<String, Object> resMap) {
+		if (resMap != null && resMap.get("code") != null
+				&& 200 == (Integer) resMap.get("code")) {
+			return true;
+		}
+		return false;
+	}
+
+}

@@ -1,0 +1,109 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service.impl;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.coinfactory.PushCoinVirtualUtil;
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinVirtualMachineDao;
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinVirtualOptRouterDao;
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinVirtualRoomDao;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinUnity3DService;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.EntryVirtualRoomReqVO;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.app.modules.core.doll.record.DollRecordDao;
+import com.imlianai.dollpub.app.modules.core.doll.record.DollRecordService;
+import com.imlianai.dollpub.app.modules.core.user.customer.service.CustomerService;
+import com.imlianai.dollpub.domain.coinfactory.VirtualPushCoinRoom;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-06-30 11:07
+ **/
+@Service
+public class PushCoinUnity3DServiceImpl implements PushCoinUnity3DService {
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+
+    @Resource
+    private DollBusService dollBusService;
+
+    //全表
+    @Resource
+    private PushCoinVirtualMachineDao pushCoinVirtualMachineDao;
+
+    //带分表
+    @Resource
+    private PushCoinVirtualOptRouterDao pushCoinVirtualOptRouterDao;
+
+    @Resource
+    private PushCoinVirtualRoomDao pushCoinVirtualRoomDao;
+
+    @Resource
+    private CustomerService customerService;
+
+
+    @Override
+    public BaseRespVO apply(long uid, int busId, Customer customer) {
+
+        logger.info("虚拟机器上机,机器ID=>"+busId+",上机用户=>" + uid + ",商户=>" + JSON.toJSONString(customer));
+
+
+
+
+
+
+
+
+
+
+        return null;
+    }
+
+    @Override
+    public BaseRespVO putCoin(long uid, int busId, Customer customer) {
+        return null;
+    }
+
+    @Override
+    public BaseRespVO operate(long uid, int busId) {
+        return null;
+    }
+
+    @Override
+    public BaseRespVO finish(long uid, int busId) {
+        return null;
+    }
+
+    @Override
+    public BaseRespVO entryVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO) {
+        DollBus dollBus = dollBusService.getDollBus(reqVO.getBusId());
+        if (dollBus != null && dollBus.getVirtual() == 1){
+            Customer customer = customerService.getCustomer(reqVO.getAppId());
+            if (customer != null){
+                int authType = PushCoinVirtualUtil.getRandomType();
+                if (authType > 0){
+                    VirtualPushCoinRoom virtualPushCoinRoom = new VirtualPushCoinRoom();
+                    virtualPushCoinRoom.setAuthType(authType);
+                    virtualPushCoinRoom.setBusId(reqVO.getBusId());
+                    virtualPushCoinRoom.setCustomerId(customer.getId());
+                    virtualPushCoinRoom.setUid(reqVO.getUid());
+                    if(pushCoinVirtualRoomDao.addWatchRecord(virtualPushCoinRoom) > 0){
+                        BaseRespVO respVO = new BaseRespVO(200,true,"数据请求成功");
+                        respVO.setData(authType);
+                        return respVO;
+                    }
+                }
+                return new BaseRespVO(0,false,"生成认证类型错误");
+            }else{
+                return new BaseRespVO(0,false,"当前商户不存在");
+            }
+        }
+        return new BaseRespVO(0,false,"机器不存在或类型不正确.");
+    }
+}

@@ -1,0 +1,105 @@
+package com.imlianai.dollpub.app.modules.support.shopkeeper.service;
+
+import com.imlianai.dollpub.app.modules.support.shopkeeper.dto.ShopkeeperDayRankDTO;
+import com.imlianai.dollpub.domain.shopkeeper.ShopkeeperQRCode;
+import com.imlianai.dollpub.domain.shopkeeper.ShopkeeperWithdrawRecord;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+import java.util.List;
+
+/**
+ * 店主service
+ * @author wurui
+ * @create 2018-04-26 15:24
+ **/
+public interface ShopkeeperService {
+
+    /**
+     * 初始化店主
+     * @param uid 被邀请者
+     * @param inviteUid 邀请者
+     */
+    void initShopkeeper(long uid, long inviteUid);
+
+    /**
+     * 判断是否为店主
+     * @param uid
+     * @return
+     */
+    boolean isShopkeeper(long uid);
+
+    /**
+     * 获取店主二维码信息
+     * @param uid
+     * @return
+     */
+    ShopkeeperQRCode getShopkeeperQRCode(long uid);
+
+    /**
+     * 获取店主日榜单
+     * @return
+     */
+    List<ShopkeeperDayRankDTO> getShopkeeperDayRank();
+
+    /**
+     * 处理邀请关系
+     * @param uid
+     * @param inviteUid
+     */
+    void inviteHandle(long uid, long inviteUid);
+
+
+    /**
+     * 处理充值分成
+     * @param uid
+     * @param chargeMoney 重置金额 单位:分
+     */
+    void chargeHandle(long uid, int chargeMoney);
+
+    /**
+     * 获取店主钱包信息
+     * @param uid
+     */
+    BaseRespVO getShopkeeperWalletInfo(long uid);
+
+    /**
+     * 申请提现 单位 分
+     * @param uid
+     * @param money
+     */
+    BaseRespVO applyWithdraw(long uid, int money);
+
+    /**
+     * 获取店主提现记录
+     * @param uid
+     * @return
+     */
+    List<ShopkeeperWithdrawRecord> getWithdrawRecord(long uid);
+
+    /**
+     * 每日收入补机器人逻辑
+     */
+    void incomeRobot();
+
+    /**
+     * 更新店主状态
+     * @param status
+     */
+    int updateShopkeeperStatus(int status,long uid);
+    
+    /**
+     * 获取待发放的记录
+     * @param size
+     * @return
+     */
+	ShopkeeperWithdrawRecord getRecordToPay(int size);
+	
+	/**
+	 * 更新支付状态
+	 * @param id
+	 * @param payState
+	 * @return
+	 */
+	public int updatePayState(int id,int payState);
+
+}

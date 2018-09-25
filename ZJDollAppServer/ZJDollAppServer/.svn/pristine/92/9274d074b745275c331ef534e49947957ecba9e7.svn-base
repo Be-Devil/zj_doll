@@ -1,0 +1,27 @@
+package com.imlianai.zjdoll.app.modules.publics.oauth.weixin.config;
+
+public class OauthWeiXinConfig {
+
+	// 增景娃娃大战appId
+	public static final String APP_ID = "wx9e078cf0495a2184";
+
+	// 增景娃娃大战SECRET
+	public static final String SECRET = "0e16b2cd479b9f1ea2b549df32166a97";
+
+	// 获取用户信息的url
+	public static final String GET_USER_INFO_URL = "https://api.weixin.qq.com/sns/userinfo";
+
+	// 抓取图片存放位置
+	public static final String BUCKET_NAME = "lianai-mishuo";
+
+	public static final String KEY_FLAG = "weixin";
+	
+	//公众号 萌趣抓娃娃
+	public static final String ACCOUNT_APP_ID = "wx85cf26e3d3d976ec";
+	public static final String ACCOUNT_SECRET = "c7c919fc337283efbeb35e30099337b1";
+	
+	//公众号 萌趣抓娃娃助手
+	public static final String ZS_ACCOUNT_APP_ID = "wxc68eccf842b1eeb0";
+	public static final String ZS_ACCOUNT_SECRET = "1b7e59fb8b70b8969eb52b4ede2d80da";
+	
+}

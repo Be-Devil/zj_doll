@@ -1,0 +1,64 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service.impl;
+
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinFruitsConfigDao;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinFruitService;
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-06-19 10:18
+ **/
+@Service
+public class PushCoinFruitServiceImpl implements PushCoinFruitService {
+
+
+    @Resource
+    private PushCoinFruitsConfigDao pushCoinFruitsConfigDao;
+
+    @Override
+    public BaseRespVO addConfig(PushCoinFruitsConfig pushCoinFruitsConfig) {
+
+        if (!StringUtil.isNullOrEmpty(pushCoinFruitsConfig)){
+            int flag = pushCoinFruitsConfigDao.insert(pushCoinFruitsConfig);
+            if (flag > 0){
+                BaseRespVO vo = new BaseRespVO(200,true,"保存配置成功");
+                vo.setData(flag);
+                return vo;
+            }
+        }
+        return new BaseRespVO(0,false,"保存配置失败");
+    }
+
+    @Override
+    public BaseRespVO delConfig(int id) {
+
+        int flag = pushCoinFruitsConfigDao.delete(id);
+        if (flag > 0){
+            return new BaseRespVO(200,true,"删除配置成功");
+        }
+
+        return new BaseRespVO(0,false,"删除配置失败");
+    }
+
+    @Override
+    public BaseRespVO updateConfig(PushCoinFruitsConfig pushCoinFruitsConfig) {
+        int flag = pushCoinFruitsConfigDao.update(pushCoinFruitsConfig);
+        if (flag > 0){
+            return new BaseRespVO(200,true,"修改配置成功");
+        }
+
+        return new BaseRespVO(0,false,"修改配置失败");
+    }
+
+    @Override
+    public BaseRespVO getConfig(int id) {
+        BaseRespVO vo = new BaseRespVO(200,true,"获取配置成功");
+        vo.setData(pushCoinFruitsConfigDao.selectConfig(id));
+        return vo;
+    }
+}

@@ -1,0 +1,123 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.util;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.entity.HttpEntity;
+import com.imlianai.rpc.support.utils.HttpUtil;
+import com.imlianai.rpc.support.utils.MD5_HexUtil;
+import com.imlianai.zjdoll.app.configs.AppUtils;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.DollUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.DollMachSignUtil;
+import com.imlianai.zjdoll.app.modules.core.push.vo.ApplyRespVO;
+
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
+/**
+ * @author wurui
+ * @create 2018-07-04 11:31
+ **/
+public class ZengjingVirtualUtils {
+
+    static String appid  ;
+    static String appkey ;
+
+    //测试环境
+    //static String appid = "030879";
+    //static String appkey = "jDMGGGeTMdzyWLeI";
+
+    private static String hostUrl = "http://www.realgamecloud.com";
+    private static String hostUrl_t = "http://119.29.208.205:6638/DollPubAppServer";
+
+    static{
+        if(AppUtils.isTestEnv()){
+            //测试环境 很帅很酷很屌很牛X
+            appid = "030879";
+            appkey = "jDMGGGeTMdzyWLeI";
+        }else{
+            //正式环境 很帅很酷很屌很牛X
+            appid = "370936";
+            appkey = "K9ZLwVj172pXYzX4";
+        }
+    }
+
+
+
+    protected static final BaseLogger logger = BaseLogger.getLogger(DollUtil.class);
+
+    protected static final HashSet<String> ADDITION_KEYS = new HashSet<String>(
+            Arrays.asList(new String[] { "sign", "app", "act" }));
+
+
+
+    private static String getHost(){
+        if(AppUtils.isTestEnv()){
+            return hostUrl_t;
+        }else{
+            return hostUrl;
+        }
+    }
+
+    private static String getSign(Map<String, Object> paraMap) {
+        String signText = DollMachSignUtil.createLinkString(DollMachSignUtil.paraFilter(paraMap));
+        String firstSign = MD5_HexUtil.md5Hex(signText);
+        return MD5_HexUtil.md5Hex(firstSign + appkey);
+    }
+
+
+    /**
+     * 进入房间
+     * @param uid
+     * @param busId
+     * @return
+     */
+    public static BaseRespVO entryVirtualCoinPushRoom(long uid, int busId) {
+        BaseRespVO vo = new BaseRespVO();
+        String tsString = System.currentTimeMillis() + "";
+        Map<String, Object> paraMap = new HashMap<String, Object>();
+        paraMap.put("appId", appid);
+        paraMap.put("ts", tsString);
+        paraMap.put("uid", uid);
+        paraMap.put("busId", busId);
+        paraMap.put("sign", getSign(paraMap));
+        String url = getHost() + "/api/pushCoinVirtual/entryRoom";
+        HttpEntity he = HttpUtil.Post(url, JSON.toJSONString(paraMap));
+        if (he != null){
+            String resString = he.getHtml();
+            vo = JSONObject.parseObject(resString,BaseRespVO.class);
+            return vo;
+        }
+        return vo;
+    }
+
+    /**
+     * 进入房间
+     * @param uid
+     * @param busId
+     * @return
+     */
+    public static BaseRespVO laveVirtualCoinPushRoom(long uid, int busId) {
+        BaseRespVO vo = new BaseRespVO();
+        String tsString = System.currentTimeMillis() + "";
+        Map<String, Object> paraMap = new HashMap<String, Object>();
+        paraMap.put("appId", appid);
+        paraMap.put("ts", tsString);
+        paraMap.put("uid", uid);
+        paraMap.put("busId", busId);
+        paraMap.put("sign", getSign(paraMap));
+        String url = getHost() + "/api/pushCoinVirtual/leave";
+        HttpEntity he = HttpUtil.Post(url, JSON.toJSONString(paraMap));
+        if (he != null){
+            String resString = he.getHtml();
+            vo = JSONObject.parseObject(resString,BaseRespVO.class);
+            return vo;
+        }
+        return vo;
+    }
+
+
+}

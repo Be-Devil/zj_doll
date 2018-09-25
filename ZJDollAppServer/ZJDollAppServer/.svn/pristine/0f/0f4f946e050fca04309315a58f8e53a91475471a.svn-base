@@ -1,0 +1,81 @@
+package com.imlianai.zjdoll.app.modules.core.push.controller;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.dollpub.app.iface.IAppPushCoinRemoteService;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.zjdoll.app.controller.RootCmd;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.ZengjingUtils;
+import com.imlianai.zjdoll.app.modules.core.push.vo.OperateReqVO;
+import com.imlianai.zjdoll.app.modules.core.push.vo.PushCoinBusQueryReqVO;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-05-17 22:01
+ **/
+@Component("pushCoin")
+public class CmdPushCoin extends RootCmd {
+
+    @Reference
+    private IAppPushCoinRemoteService iAppPushCoinRemoteService;
+
+    /**
+     * 上机
+     * @return
+     */
+    @ApiHandle
+    @Path("api/pushCoin/apply")
+    public Object apply(OperateReqVO vo){
+        //return iAppPushCoinRemoteService.apply(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+        return ZengjingUtils.apply(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+    }
+
+    /**
+     * 投币
+     * @return
+     */
+    @ApiHandle
+    @Path("api/pushCoin/push")
+    public Object push(OperateReqVO vo){
+        //return iAppPushCoinRemoteService.putCoin(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+        return ZengjingUtils.push(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+    }
+
+    /**
+     * 操作(摆动)
+     * @return
+     */
+    @ApiHandle
+    @Path("api/pushCoin/operate")
+    public Object operate(OperateReqVO vo){
+        //return iAppPushCoinRemoteService.operate(vo.getUid(),vo.getBusId());
+        return ZengjingUtils.operate(vo.getUid(),vo.getBusId());
+    }
+
+    /**
+     * 主动下机
+     * @return
+     */
+    @ApiHandle
+    @Path("api/pushCoin/finish")
+    public Object finish(OperateReqVO vo){
+        //return iAppPushCoinRemoteService.finish(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+        return ZengjingUtils.finish(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+    }
+
+    /**
+     * 查询流水
+     * @param vo
+     * @return
+     */
+    @ApiHandle
+    @Path("api/pushCoin/query")
+    public Object query(PushCoinBusQueryReqVO vo){
+        //return iAppPushCoinRemoteService.query(vo.getOptId(),vo.getCustomerId());
+        return ZengjingUtils.query(vo.getOptId(),vo.getCustomerId());
+    }
+
+
+}

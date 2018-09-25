@@ -1,0 +1,190 @@
+package com.imlianai.zjdoll.app.modules.core.trade.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.google.common.collect.Lists;
+import org.springframework.stereotype.Service;
+
+import com.imlianai.zjdoll.constants.JumpTarget;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.trade.ChargeState;
+import com.imlianai.zjdoll.domain.trade.ChargeWay;
+import com.imlianai.zjdoll.domain.trade.TradeCharge;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.domain.UserFirstChargeTarget;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.utils.CatalogUtils;
+import com.imlianai.zjdoll.app.modules.core.trade.dao.TradeChargeDAO;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.zjdoll.app.modules.core.trade.util.ali.domain.AlipayH5Body;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+
+@Service
+public class TradeChargeServiceImpl implements TradeChargeService {
+
+	@Resource
+	private MsgService msgService;
+	@Resource
+	private TradeChargeDAO tradeChargeDAO;
+
+	@Override
+	public long add(TradeCharge c) {
+		return tradeChargeDAO.add(c);
+	}
+
+	@Override
+	public int updateState(long id, ChargeState state) {
+		return tradeChargeDAO.updateState(id, state);
+	}
+
+	@Override
+	public TradeCharge getById(long id) {
+		return tradeChargeDAO.getById(id);
+	}
+
+	@Override
+	public void addLog(long chargeId, long uid, String createParams,
+			String httpParams) {
+		tradeChargeDAO.addLog(chargeId, uid, createParams, httpParams);
+	}
+
+	@Override
+	public void updatelog(long chargeId, String callBackValue) {
+		tradeChargeDAO.updatelog(chargeId, callBackValue);
+	}
+
+	@Override
+	public TradeCharge getByOtherId(String otherId, ChargeWay way) {
+		return tradeChargeDAO.getByOtherId(otherId, way);
+	}
+
+	@Override
+	public long addTemp(TradeCharge c) {
+		return tradeChargeDAO.addTemp(c);
+	}
+
+	@Override
+	public TradeCharge getTempByOtherId(String otherId, ChargeWay way) {
+		return tradeChargeDAO.getTempByOtherId(otherId, way);
+	}
+
+	@Override
+	public long hasChargeSpecialAmt(long uid, int amt) {
+		return tradeChargeDAO.hasChargeSpecialAmt(uid, amt);
+	}
+
+	@Override
+	public int addAlipayH5Body(long id, String body,long uid,int price) {
+		return tradeChargeDAO.addAlipayH5Body(id, body, uid, price);
+	}
+
+	@Override
+	public AlipayH5Body getAlipayH5Body(long id) {
+		return tradeChargeDAO.getAlipayH5Body(id);
+	}
+
+	@Override
+	public int hasCharge(long uid) {
+		return tradeChargeDAO.hasCharge(uid);
+	}
+
+	@Override
+	public int addUserFirstChargeMsg(long uid) {
+		return tradeChargeDAO.addUserFirstChargeMsg(uid);
+	}
+
+	@Override
+	public int delUserFirstChargeMsg(long uid) {
+		return tradeChargeDAO.delUserFirstChargeMsg(uid);
+	}
+
+	@Override
+	public void getUserFirstChargeMsg() {
+		List<Long> uidsList= tradeChargeDAO.getUserFirstChargeMsg();
+		if (!StringUtil.isNullOrEmpty(uidsList)) {
+			String bodyString = "恭喜小主获得首充大礼包，快来领取吧~~";
+			for (Long uid : uidsList) {
+				MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type, bodyString, "小主太幸运啦，天降首充大礼包!", "http://sglive.imlianai.com/cmsdoll/20180319202706667", "首充福利，6元享80币，劲划算！", JumpTarget.CHARGE.target, "领取福利");
+				msg.setJumpCharge();
+				msg.setPush("小主太幸运啦！天降首充大礼包！", "首充福利，6元享80币，劲划算！");
+				msgService.pushUMengMsg(msg);
+				tradeChargeDAO.incUserFirstChargeMsg(uid, 72);
+			}
+		}
+	}
+
+	@Override
+	public List<TradeCharge> getListByUidsAndTime(List<Long> uIds, String start, String end) {
+		return tradeChargeDAO.getListByUidsAndTime(uIds,start,end);
+	}
+
+	@Override
+	public int isFirstChargePushTarget(long uid) {
+		return tradeChargeDAO.isFirstChargePushTarget(uid);
+	}
+
+	@Override
+	public int addFirstChargeTarget(long uid, int type, int nextPushHour) {
+		return tradeChargeDAO.addFirstChargeTarget(uid, type, nextPushHour);
+	}
+
+	@Override
+	public int removeFirstChargeTarget(long uid) {
+		return tradeChargeDAO.removeFirstChargeTarget(uid);
+	}
+
+	@Override
+	public void handleFirstPush(){
+		List<UserFirstChargeTarget> list=tradeChargeDAO.getUserFirstChargeTarget();
+		if (!StringUtil.isNullOrEmpty(list)) {
+			for (UserFirstChargeTarget userFirstChargeTarget : list) {
+				if (userFirstChargeTarget!=null) {
+					String bodyString = "恭喜小主成为今日幸运儿，获得1次限时充值优惠特权，充值20元可获赠75游戏币！点击领取>>";
+					if (userFirstChargeTarget.getPushCount()==0) {
+						if (userFirstChargeTarget.getCode()==CatalogUtils.code20) {
+							bodyString = "恭喜小主成为今日幸运儿，获得1次限时充值优惠特权，充值20元可获赠75游戏币！点击领取>>";
+						}else if (userFirstChargeTarget.getCode()==CatalogUtils.code50) {
+							bodyString = "恭喜小主成为今日幸运儿，获得1次限时充值优惠特权，充值50元可获赠175游戏币！点击领取>>";
+						}
+						tradeChargeDAO.addFirstChargeTarget(userFirstChargeTarget.getUid(), userFirstChargeTarget.getCode(), 6);
+					}else{
+						if (userFirstChargeTarget.getCode()==CatalogUtils.code20) {
+							bodyString = "小主的限时充值优惠特权还没领取哟，充值20元可额外获赠75游戏币！点击领取>>";
+						}else if (userFirstChargeTarget.getCode()==CatalogUtils.code50) {
+							bodyString = "小主的限时充值优惠特权还没领取哟，充值50元可额外获赠175游戏币！点击领取>>";
+						}
+						tradeChargeDAO.addFirstChargeTarget(userFirstChargeTarget.getUid(), userFirstChargeTarget.getCode(), 24);
+					}
+					MsgNotice msg = new MsgNotice(userFirstChargeTarget.getUid(), MsgType.NOTICE_SYS.type,
+							bodyString);
+					msg.setPushMsg(bodyString);
+					msg.setJumpCharge(userFirstChargeTarget.getCode());
+					msgService.pushUMengMsg(msg);
+				}
+			}
+		}
+	}
+	@Override
+	public void handleUserRegPush(long uid){
+		UserFirstChargeTarget UserFirstChargeTarget=tradeChargeDAO.getFirstChargeMsg(uid);
+		if (UserFirstChargeTarget!=null&&UserFirstChargeTarget.getNextPushTime()!=null&&DateUtils.minuteBetween(UserFirstChargeTarget.getNextPushTime())>0) {
+			String bodyString = "恭喜小主获得首充大礼包，快来领取吧~~";
+			MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type,
+					bodyString);
+			msg.setJumpCharge();
+			msg.setPush("小主太幸运啦！天降首充大礼包！", "首充福利，6元享80币，劲划算！");
+			msgService.pushUMengMsg(msg);
+			tradeChargeDAO.incUserFirstChargeMsg(uid, 72);
+			if (UserFirstChargeTarget.getPushCount()==3) {
+				tradeChargeDAO.delUserFirstChargeMsg(uid);
+			}
+		}
+	}
+	@Override
+	public UserFirstChargeTarget getUserFirstChargeTarget(long uid) {
+		return tradeChargeDAO.getUserFirstChargeTarget(uid);
+	}
+}

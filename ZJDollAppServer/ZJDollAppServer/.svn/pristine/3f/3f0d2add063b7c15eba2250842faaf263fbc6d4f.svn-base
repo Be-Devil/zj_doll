@@ -1,0 +1,178 @@
+package com.imlianai.zjdoll.app.modules.core.trade.service;
+
+import java.sql.SQLException;
+
+import com.imlianai.zjdoll.domain.trade.ChargeState;
+import com.imlianai.zjdoll.domain.trade.ChargeWay;
+import com.imlianai.zjdoll.domain.trade.TradeCharge;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.domain.UserFirstChargeTarget;
+import com.imlianai.zjdoll.app.modules.core.trade.util.ali.domain.AlipayH5Body;
+
+/**
+ * 交易充值相关
+ * 
+ * @author Max
+ * 
+ */
+public interface TradeChargeService {
+
+	/**
+	 * 新增充值记录
+	 * 
+	 * @param c
+	 * @return
+	 */
+	long add(TradeCharge c);
+
+	/**
+	 * 更新充值状态
+	 * 
+	 * @param id
+	 * @param state
+	 * @return
+	 * @throws SQLException
+	 */
+	int updateState(long id, ChargeState state);
+
+	/**
+	 * 拉取充值
+	 * 
+	 * @param id
+	 * @return
+	 * @throws SQLException
+	 */
+	TradeCharge getById(long id);
+
+	/**
+	 * 新增充值日志
+	 * 
+	 * @param chargeId
+	 * @param uid
+	 * @param createParams
+	 * @param httpParams
+	 */
+	void addLog(long chargeId, long uid, String createParams, String httpParams);
+
+	/**
+	 * 更新回调日志
+	 * 
+	 * @param chargeId
+	 * @param callBackValue
+	 */
+	void updatelog(long chargeId, String callBackValue);
+	/**
+	 * 通过第三方ID获取充值
+	 * 
+	 * @param otherId
+	 * @param way
+	 * @return
+	 * @throws SQLException
+	 */
+	TradeCharge getByOtherId(String otherId, ChargeWay way);
+
+	/**
+	 * 加入测试充值
+	 * 
+	 * @param c
+	 * @return
+	 */
+	long addTemp(TradeCharge c);
+
+	/**
+	 * 查询测试充值
+	 * 
+	 * @param otherId
+	 * @param way
+	 * @return
+	 */
+	TradeCharge getTempByOtherId(String otherId, ChargeWay way);
+	
+	/**
+	 * 是否有充值特定金额
+	 * @param uid
+	 * @param amt
+	 * @return
+	 */
+	public long hasChargeSpecialAmt(long uid,int amt);
+	
+	/**
+	 * 记录支付宝h5订单body
+	 * @param id
+	 * @param body
+	 * @return
+	 */
+	public int addAlipayH5Body(long id, String body,long uid,int price);
+	
+	/**
+	 * 获取订单内容
+	 * @param id
+	 * @return
+	 */
+	public AlipayH5Body getAlipayH5Body(long id);
+	
+	/**
+	 * 判断用户是否首冲
+	 * @param uid
+	 * @return
+	 */
+	public int hasCharge(long uid);
+	
+	/**
+	 * 添加用户首冲消息记录
+	 * @param uid
+	 * @return
+	 */
+	public int addUserFirstChargeMsg(long uid);
+	
+	/**
+	 * 删除用户首冲记录
+	 * @param uid
+	 * @return
+	 */
+	public int delUserFirstChargeMsg(long uid);
+	
+	/**
+	 * 首冲推送用户
+	 * @param uid
+	 * @return
+	 */
+	public int isFirstChargePushTarget(long uid);
+	
+	/**
+	 * 增加首冲推送资格
+	 * @param uid
+	 * @param type
+	 * @return
+	 */
+	public int addFirstChargeTarget(long uid, int type,int nextPushHour);
+	
+	/**
+	 * 取消首冲资格
+	 * @param uid
+	 * @return
+	 */
+	public int removeFirstChargeTarget(long uid);
+
+	/**
+	 * 处理首冲推送
+	 */
+	public void handleFirstPush();
+	
+	/**
+	 * 获取用户首冲资格
+	 * @param uid
+	 * @return
+	 */
+	public UserFirstChargeTarget getUserFirstChargeTarget(long uid);
+
+	/**
+	 * 用户登录首冲推送
+	 * @param uid
+	 */
+	public void handleUserRegPush(long uid);
+
+	/**
+	 * 获取首冲消息
+	 */
+	public void getUserFirstChargeMsg();
+}

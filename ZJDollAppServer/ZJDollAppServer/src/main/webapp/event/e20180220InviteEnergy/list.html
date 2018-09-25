@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>邀请奖励--能量获取记录</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="邀请奖励">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="邀请奖励">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/style.css" type="text/css"/>
+    <link rel="stylesheet" href="css/index.css" type="text/css"/>
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+
+</head>
+<body style="font-size: 12px;">
+<div id="app_list">
+    <section class="recordBox">
+        <div class="recordTop"></div>
+        <div class="recordCen">
+            <p class="recordCen_tle">仅3月24日-4月12日期间, 用 [邀请码] 邀请好友才获得能量值</p>
+            <div class="list_me">
+                <span class="userRak" v-text="list.rank > 0?'第'+ list.rank +'名' : '未上榜'"></span>
+                <span class="userPic">
+                    <img :src="list.headImg" alt=""/>
+                </span>
+                <span class="userName" v-text="list.name">
+
+                </span>
+                <span class="userNumber">
+                    <p v-text="list.totalEnergy"></p>
+                    <p>能量值</p>
+                </span>
+            </div>
+            <template v-for="(item,index) in list.recordList">
+                <ul class="recordList">
+                    <li class="userList">
+                        <!--<span class="userRak">{{ item.idl != null ? item.idl:""  }}</span>-->
+                        <span class="userName">
+                        <p>{{ item.remark }}</p>
+                        <p>{{ item.createTimeStr}}</p>
+                    </span>
+                        <span class="userNumber">
+                        <p>+{{ item.energy }}</p>
+                        <p>能量值</p>
+                     </span>
+                    </li>
+                </ul>
+            </template>
+        </div>
+        <div class="recordBon"></div>
+    </section>
+</div>
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>
+<script src="http://lianai-image-sys.qiniudn.com/js/font.js"></script>
+<script>
+    var SIGN_REGEXP = /([yMdhsm])(\1*)/g;
+    var padding = (s, len) => {
+        var len = len - (s + '').length;
+        for (var i = 0; i < len; i++) {
+            s = '0' + s;
+        }
+        return s;
+    }
+    var format = function (date) {
+        let pattern = 'yyyy-MM-dd hh:mm:ss'
+        return pattern.replace(SIGN_REGEXP, ($0) => {
+            switch ($0.charAt(0)) {
+                case 'y':
+                    return padding(date.getFullYear(), $0.length);
+                case 'M':
+                    return padding(date.getMonth() + 1, $0.length);
+                case 'd':
+                    return padding(date.getDate(), $0.length);
+                case 'w':
+                    return date.getDay() + 1;
+                case 'h':
+                    return padding(date.getHours(), $0.length);
+                case 'm':
+                    return padding(date.getMinutes(), $0.length);
+                case 's':
+                    return padding(date.getSeconds(), $0.length);
+            }
+        })
+    }
+</script>
+
+
+<script>
+
+
+    new Vue({
+        el: '#app_list',
+        data: {
+            uid: "",
+            loginKey: "",
+            len: 0,
+            list: {
+                rank: "",
+                name: "",
+                headImg: "",
+                totalEnergy: "",
+                recordList: []
+            }
+        },
+        methods: {
+            formatVue(date) {
+                return format(date)
+            },
+            loadHTML() {
+                var _ = this;
+                _.uid = _.request("uid");
+                _.loginKey = _.request("loginKey");
+                $.post("../../api/inviteEnergy/getRecordList", JSON.stringify({
+                    "uid": _.uid,
+                    "loginKey": _.loginKey
+                }), function (data) {
+                    var result = JSON.parse(data);
+                    if (result.state) {
+                        try {
+                            Object.assign(_.list, result);
+                            console.info(_.list);
+                            //alert(JSON.stringify(_.pageInfo));
+                            _.len = _.list.recordList.length;
+                            if (_.len !== 0) {
+                                _.list.recordList.forEach(function (value, index, array) {
+                                    value['idl'] = _.len;
+                                    _.len--;
+
+                                    if (value.createTime) {
+                                        value['createTimeStr'] = _.formatVue(new Date(value.createTime))
+                                    }
+                                })
+                            }
+                        } catch (err) {
+                            console.error(err.msg);
+                        }
+                    }
+                })
+            },
+            //参数
+            request(paramName) {
+                var url = location.href;
+                var paraString = url.substring(url.indexOf("?") + 1, url.length).split(
+                    "&");
+                var params = {}
+                for (i = 0; j = paraString[i]; i++) {
+                    params[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(
+                        j.indexOf("=") + 1, j.length);
+                }
+                var returnValue = params[paramName.toLowerCase()];
+                if (typeof(returnValue) == "undefined") {
+                    return "";
+                } else {
+                    return returnValue;
+                }
+            },
+        },
+        mounted() {
+            this.loadHTML();
+
+        }
+    });
+
+
+</script>

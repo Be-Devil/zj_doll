@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>增景RTMP</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="增景RTMP">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="增景RTMP">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="stylesheet" type="text/css" href="config/iview.css">
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="config/layui.css"  media="all">-->
+
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", YaHei, "微软雅黑", SimHei, "黑体";
+            font-size: 14px
+        }
+    </style>
+    <script src="https://cdn.bootcss.com/jquery/3.3.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!--<script src="config/layui.all.js" charset="utf-8"></script>-->
+    <script type="text/javascript" src="config/iview.min.js"></script>
+    <script type="text/javascript" src="config/ckplayer.js"></script>
+</head>
+
+<body>
+
+
+<div class="container" style="width: 100%" id="ZJ_PLAYER">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="row clearfix">
+                <div class="col-md-4 column" style="margin-top: 10px">
+                    <Card style="height:800px;">
+                        <p slot="title" style="height: 40px;width: 100%;margin-top: 20px">
+                            <i-input  v-model="inputUrl" placeholder="请输入播放地址,目前支持格式有：rtmp,m3u8,flv,mp4,f4v,webm,ogg" style="width: 480px;margin-right: 10px"></i-input>
+                            <i-button type="primary" icon="play" @click="play">播放</i-button>
+                        </p>
+                        <div id="video" style="height: 600px;margin-top: 10px"></div>
+                        <!-- 进度条 -->
+                    </Card>
+                </div>
+                <div class="col-md-8 column">
+                    <template>
+                        <Card style="height:800px;width: 100%;margin-top: 10px;">
+                            <!--<i-select v-model="choiceCustomerList" multiple filterable   @on-change="choiceCustomerHandle(choiceCustomerList)" style="width:93%;height: 70px;padding-top: 20px">-->
+                                <!--<i-option v-for="item in customerList" :value="item.appId" :key="item.appId">-->
+                                    <!--<span v-text="item.name"></span>-->
+                                    <!--<span style="float:right;color:#ccc" v-text="item.groupId"></span>-->
+                                <!--</i-option>-->
+                            <!--</i-select>-->
+                            <!--<i-button type="primary" icon="ios-search" style="float: right;margin-top: 20px" @click="refresh">刷新</i-button>-->
+                            <!--<Tag color="blue" style="width: 50px">机器</Tag>-->
+                            <!--<i-select v-model="choiceBusList" multiple filterable style="width:260px;height: 70px;padding-top: 20px">-->
+                                <!--<i-option v-for="item in busList" :value="item.appId">-->
+                                    <!--<span v-text="item.name"></span>-->
+                                    <!--<span style="float:right;color:#ccc" v-text="item.groupId"></span>-->
+                                <!--</i-option>-->
+                            <!--</i-select>-->
+
+                            <i-table height="650" border :content="self" :columns="columns" :data="historyData" ></i-table>
+                            <Page :total="dataCount" :page-size="pageSize" show-total class="paging" @on-change="changePage" style="margin-top: 10px;float: right"></Page>
+                        </Card>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+
+</html>
+
+<script>
+    var vm = new Vue({
+        el: '#ZJ_PLAYER',
+        data: {
+            self: this,
+            //zjDollPubUrl: "http://www.happycooltt.com",
+            zjDollPubUrl: "http://localhost:9002",
+
+            inputUrl: "",
+            isStart:true,
+
+            player: {},
+            videoObject: {
+                container: '#video', //容器的ID
+                variable: 'player',
+                autoplay: true, //是否自动播放
+                loaded: 'loadedHandler', //当播放器加载后执行的函数
+                flashplayer: false,
+                video: "",
+            },
+            ajaxHistoryData:[],
+            historyData: [],
+            dataCount:0,// 初始化信息总条数
+            pageSize:12,// 每页显示多少条
+
+            columns: [
+                {title: '机器ID', key: 'busId',align: 'center', width: 150,},
+                {title: '设备名', key: 'nickName', align: 'center', width: 150,},
+                {
+                    title: '正面流',
+                    key: 'stream1',
+                    align: 'center',
+                    width: 150,
+                    render: function (h, params) {
+                        return h('div', [
+                            h('Button', {
+                                props: {type: 'primary', size: 'small'},
+                                style: {marginRight: '8px'},
+                                on: {
+                                    click: function () {
+                                        vm.changeVideo(params.row.stream1)
+                                    }
+                                }
+                            }, '播放正面流'),
+                        ]);
+                    }
+                },
+                {
+                    title: '侧面流',
+                    key: 'stream2',
+                    width: 150,
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div', [
+                            h('Button', {
+                                props: {type: 'primary', size: 'small'},
+                                style: {marginRight: '8px'},
+                                on: {
+                                    click: function () {
+                                        vm.changeVideo(params.row.stream2)
+                                    }
+                                }
+                            }, '播放侧面流'),
+                        ]);
+                    }
+                },
+                {
+                    title: '是否上架',
+                    key: 'valid',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div',{style:{}},[h('p',params.row.valid===0?"下架":"上架")],params.row.valid)
+                    }
+                },
+                {
+                    title: '当前机器状态',
+                    key: 'status',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div',{style:{}},[h('p',params.row.status===0?"空闲":params.row.status===1?"游戏中":"故障")],params.row.valid)
+                    }
+                },
+                {
+                    title: '机器类型',
+                    key: 'type',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div',{style:{}},[h('p',params.row.type===0?"娃娃机":params.row.type===1?"推币机":"骰子机")],params.row.valid)
+                    }
+                },
+            ],
+
+            busList:[],
+            busId:"",
+            optId:""
+
+        },
+        methods: {
+
+            //动态获取uid和loginKey
+            request(paramName) {
+                var url = location.href;
+                var paraString = url.substring(url.indexOf("?") + 1, url.length).split(
+                    "&");
+                var params = {};
+                for (i = 0; j = paraString[i]; i++) {
+                    params[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(
+                        j.indexOf("=") + 1, j.length);
+                }
+                var returnValue = params[paramName.toLowerCase()];
+                if (typeof(returnValue) == "undefined") {
+                    return "";
+                } else {
+                    return returnValue;
+                }
+            },
+            getBusList(){
+                var _this = this;
+                //var param = JSON.stringify({"uid":"10000", "loginKey":"c10f91de68d240b1ad5ef41b056735b1"});
+                $.post("../api/doll/getDollBusList",function(data) {
+                    var result = JSON.parse(data);
+                    if(result.state) {
+                        _this.busList = result.data.busList;
+                        _this.handleListApproveHistory();
+                    }else {
+                        console.info(result.msg)
+                    }
+                });
+            },
+
+            // 获取历史记录信息
+            handleListApproveHistory(){
+                // 保存取到的所有数据
+                var _this = this;
+                _this.ajaxHistoryData = _this.busList
+                _this.dataCount = _this.busList.length;
+                // 初始化显示，小于每页显示条数，全显，大于每页显示条数，取前每页条数显示
+                if(_this.busList.length < _this.pageSize){
+                    _this.historyData = _this.ajaxHistoryData;
+                }else{
+                    _this.historyData = _this.ajaxHistoryData.slice(0,_this.pageSize);
+                }
+            },
+            //分页选择
+            changePage(index){
+                var _this = this;
+                var _start = ( index - 1 ) * _this.pageSize;
+                var _end = index * _this.pageSize;
+                _this.historyData = _this.ajaxHistoryData.slice(_start,_end);
+            },
+
+            //处理刚进入页面时
+            handleEntryPlayer(){
+                var _this = this;
+                if(_this.isStart){
+                    _this.isStart = false;
+                    console.info("进入平台机器管理页")
+                    if (_this.busList && _this.busList.length > 0){
+                        _this.inputUrl = _this.busList[0].stream1;
+                        if (_this.inputUrl !== ""){
+                            _this.videoObject.video = _this.inputUrl;
+                            this.player = new ckplayer(_this.videoObject);
+                            if (_this.player && _this.player !== {}) {
+                                console.info("初始化播放器")
+                            }
+                        }
+                    }
+                }
+            },
+            play(){
+                var _this = this;
+                if(_this.inputUrl && _this.inputUrl !== ""){
+                    _this.changeVideo(_this.inputUrl)
+                }else {
+                    alert("请输入有效的播放地址!");
+                }
+
+            },
+            changeVideo(videoUrl) {
+                console.info("开始播放:" + videoUrl)
+                var _this = this;
+                if (_this.player == null) {
+                    return;
+                }
+                _this.inputUrl = videoUrl;
+                _this.videoObject.video = videoUrl;
+                _this.player = null;
+                _this.player = new ckplayer();
+                _this.player.embed(_this.videoObject);
+            }
+        },
+        mounted() {
+            var _this = this;
+            _this.busId = _this.request("busId");
+            _this.optId = _this.request("optId");
+            console.info("busId=>" + _this.busId + ",optId=>" + _this.optId);
+            _this.getBusList()
+        }
+    });
+
+</script>

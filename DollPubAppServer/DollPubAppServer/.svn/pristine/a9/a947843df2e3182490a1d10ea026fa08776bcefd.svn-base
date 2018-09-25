@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity WebGL Player | Mengqu</title>
+    <style>
+    /* a style sheet needs to be present for cursor hiding and custom cursors to work. */
+    </style>
+    <script type="text/javascript">
+    function Reset() {
+ var canvas = document.getElementById("canvas"); 
+canvas.height= document.documentElement.clientHeight ;
+ canvas.width = canvas.height * 1242.0/2208.0;
+console.log(canvas.width );
+ } 
+    </script>
+  </head>
+  <body onload="Reset()" onresize="Reset()">
+    <canvas class="emscripten" id="canvas" oncontextmenu="event.preventDefault()" height="2208px" width="1242px"></canvas>
+    <div class="webgl-content"style="width: 100%; height: 100%" >
+      <div id="gameContainer" style="width: 100%; height: 100%"></div>
+    </div>
+    <script type='text/javascript'>
+  var Module = {
+    TOTAL_MEMORY: 268435456,
+    errorhandler: null,			// arguments: err, url, line. This function must return 'true' if the error is handled, otherwise 'false'
+    compatibilitycheck: null,
+    dataUrl: "Release/H52.data",
+    codeUrl: "Release/H52.js",
+    memUrl: "Release/H52.mem",
+    
+  };
+</script>
+<script src="Release/UnityLoader.js"></script>
+
+  </body>
+</html>

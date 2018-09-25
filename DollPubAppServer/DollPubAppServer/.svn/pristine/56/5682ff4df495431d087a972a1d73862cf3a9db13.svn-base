@@ -1,0 +1,71 @@
+package com.imlianai.dollpub.app.modules.support.robot.service;
+
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.support.robot.dao.DollRobotDao;
+import com.imlianai.dollpub.domain.user.UserBase;
+import com.imlianai.dollpub.domain.user.UserGeneral;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+
+@Service
+public class DollRobotServiceImpl implements DollRobotService {
+
+	private static final BaseLogger logger = BaseLogger.getLogger(DollRobotServiceImpl.class);
+
+	@Resource
+	private DollRobotDao dollRobotDao;
+
+	@Resource
+	private UserService userService;
+
+	private LinkedList<Long> robots = null;
+
+	@Override
+	public void initRobotUser() {
+		List<UserGeneral> list = dollRobotDao.getInitUserData();
+		if (!StringUtil.isNullOrEmpty(list)) {
+			for (UserGeneral userGeneral : list) {
+				if (userGeneral != null) {
+					UserBase userBase = new UserBase(13800138000L, "wwrobot");
+					UserGeneral user = new UserGeneral(userGeneral.getName(),
+							userGeneral.getHead(), userGeneral.getGender(), 18);
+					long uid = userService.initUser(userBase, user);
+					logger.info("uid=>" + uid);
+					dollRobotDao.addRobotPool(uid, userGeneral.getGender());
+				}
+			}
+		}
+	}
+
+	private void initRobotUidPoll() {
+		List<Long> list = dollRobotDao.getRobotPool();
+		if (!StringUtil.isNullOrEmpty(list)) {
+			Collections.shuffle(list);
+			robots = new LinkedList<>(list);
+		}
+	}
+
+	@Override
+	public Long getRandomRobotUid() {
+		if (robots == null) {
+			initRobotUidPoll();
+		}
+		Long uid = robots.poll();
+		if (uid == null) {
+			initRobotUidPoll();
+			uid = robots.poll();
+		}
+		if (uid != null) {
+			robots.add(uid);
+		}
+		return uid;
+
+	}
+
+}

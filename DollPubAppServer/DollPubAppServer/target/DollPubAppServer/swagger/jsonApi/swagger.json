@@ -1,0 +1,1457 @@
+{
+  "swagger" : "2.0",
+  "info" : {
+    "description" : "增景娃娃机项目文档",
+    "version" : "v1",
+    "title" : "增景娃娃机项目文档"
+  },
+  "basePath" : "/DollPubAppServer",
+  "tags" : [ {
+    "name" : "推币机"
+  }, {
+    "name" : "机器配置相关接口"
+  }, {
+    "name" : "商户发货相关接口"
+  }, {
+    "name" : "捉取结果回调"
+  }, {
+    "name" : "娃娃机操控相关接口"
+  } ],
+  "schemes" : [ "http" ],
+  "paths" : {
+    "/api/cmsPush/apply" : {
+      "post" : {
+        "tags" : [ "推币机" ],
+        "summary" : "上机",
+        "description" : "上机成功后返回操作ID",
+        "operationId" : "apply",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/操作推币机请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/推币机操作返回对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/cmsPush/finish" : {
+      "post" : {
+        "tags" : [ "推币机" ],
+        "summary" : "主动下机",
+        "description" : "主动下机操作",
+        "operationId" : "finish",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/操作推币机请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/cmsPush/getStatus" : {
+      "post" : {
+        "tags" : [ "推币机" ],
+        "summary" : "推币机状态",
+        "description" : "推币机状态",
+        "operationId" : "getStatus",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/操作推币机请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/cmsPush/operate" : {
+      "post" : {
+        "tags" : [ "推币机" ],
+        "summary" : "摆动",
+        "description" : "摆动",
+        "operationId" : "operate",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/操作推币机请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/cmsPush/push" : {
+      "post" : {
+        "tags" : [ "推币机" ],
+        "summary" : "投币",
+        "description" : "投币相当于上机，投币之后超过30秒未继续投币则自动结束上机",
+        "operationId" : "push",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/操作推币机请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/推币机操作返回对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/cmsPush/query" : {
+      "post" : {
+        "tags" : [ "推币机" ],
+        "summary" : "查询结果",
+        "description" : "查询结果",
+        "operationId" : "query",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/推币机操作结果查询请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/查询操作结果返回对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/setting/queryMachineSetting" : {
+      "post" : {
+        "tags" : [ "机器配置相关接口" ],
+        "summary" : "查询机器设置",
+        "description" : "查询机器设置",
+        "operationId" : "queryMachineSetting",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/机器相关设置查询请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/setting/setMachineBasicData" : {
+      "post" : {
+        "tags" : [ "机器配置相关接口" ],
+        "summary" : "发送机器基础数据设置指令",
+        "description" : "发送机器基础数据设置指令",
+        "operationId" : "setMachineBasicData",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/机器基础数据设置请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/setting/setMachineClawVoltage" : {
+      "post" : {
+        "tags" : [ "机器配置相关接口" ],
+        "summary" : "发送机器爪力电压设置指令",
+        "description" : "发送机器爪力电压设置指令",
+        "operationId" : "setMachineClawVoltage",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/机器爪力电压设置请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/shipping/order" : {
+      "post" : {
+        "tags" : [ "商户发货相关接口" ],
+        "summary" : "申请发货接口",
+        "description" : "申请发货",
+        "operationId" : "order",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃机列表请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/apply" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "申请上机接口",
+        "description" : "申请上机接口",
+        "operationId" : "apply",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃机上机操作请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/娃娃机上机操作响应对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/applyType" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "线下机上机接口(新版子)",
+        "description" : "线下机上机接口(新版子)",
+        "operationId" : "applyType",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/DollBusApplyTypeReqVO"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/娃娃机上机操作响应对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/control" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "娃娃机操作接口",
+        "description" : "娃娃机操作接口",
+        "operationId" : "control",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃机操作请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/downClaw" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "娃娃机下爪操作接口",
+        "description" : "娃娃机下爪操作接口",
+        "operationId" : "downClaw",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃机下爪请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/BaseRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/list" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "获取商户娃娃机列表接口",
+        "description" : "获取商户娃娃机列表",
+        "operationId" : "list",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃机列表请求对象"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/娃娃机列表响应对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/queryResult" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "查询捉取结果接口",
+        "description" : "查询捉取结果接口",
+        "operationId" : "queryResult",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃抓取结果请求"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/娃娃机抓取结果响应对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/querySetting" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "查询机器配置接口(弃用)",
+        "description" : "查询机器配置接口(弃用)",
+        "operationId" : "querySetting",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃设置查询"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/娃娃机设置响应对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/setting" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "设置机器配置接口(弃用)",
+        "description" : "设置机器配置接口(弃用)",
+        "operationId" : "setting",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃设置"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/娃娃机设置响应对象"
+            }
+          }
+        }
+      }
+    },
+    "/api/wawa/video" : {
+      "post" : {
+        "tags" : [ "娃娃机操控相关接口" ],
+        "summary" : "获取录播接口",
+        "description" : "获取录播",
+        "operationId" : "video",
+        "parameters" : [ {
+          "in" : "body",
+          "name" : "body",
+          "required" : false,
+          "schema" : {
+            "$ref" : "#/definitions/娃娃录播生成请求"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/DollVideoRespVO"
+            }
+          }
+        }
+      }
+    },
+    "/商户的回调地址" : {
+      "post" : {
+        "tags" : [ "捉取结果回调" ],
+        "summary" : "捉取结果回调",
+        "description" : "捉取结果回调",
+        "operationId" : "list",
+        "responses" : {
+          "200" : {
+            "description" : "successful operation",
+            "schema" : {
+              "$ref" : "#/definitions/操作记录传输对象"
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions" : {
+    "BaseRespVO" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        }
+      }
+    },
+    "DollBusApplyTypeReqVO" : {
+      "type" : "object",
+      "required" : [ "busId" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "type" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "上机下爪类型(1：默认抓力，2：强爪抓力)"
+        },
+        "remark" : {
+          "type" : "string",
+          "description" : "备注"
+        }
+      },
+      "description" : "请求对象"
+    },
+    "DollVideoRespVO" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        },
+        "saveRes" : {
+          "description" : "录播结果",
+          "$ref" : "#/definitions/SaveRet"
+        }
+      }
+    },
+    "SaveRet" : {
+      "type" : "object",
+      "properties" : {
+        "fname" : {
+          "type" : "string",
+          "description" : "文件名"
+        },
+        "error" : {
+          "type" : "string",
+          "description" : "错误原因"
+        },
+        "persistentID" : {
+          "type" : "string"
+        }
+      }
+    },
+    "娃娃录播生成请求" : {
+      "type" : "object",
+      "required" : [ "end", "start", "streamUrl" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "streamUrl" : {
+          "type" : "string",
+          "description" : "流地址"
+        },
+        "start" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "开始时间秒戳"
+        },
+        "end" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "结束时间秒戳"
+        }
+      }
+    },
+    "娃娃抓取结果请求" : {
+      "type" : "object",
+      "required" : [ "optId" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作id"
+        }
+      }
+    },
+    "娃娃机上机操作响应对象" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "消息"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作记录id"
+        },
+        "gameTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "游戏时间,单位秒"
+        },
+        "deviceId" : {
+          "type" : "string",
+          "description" : "设备id"
+        },
+        "success" : {
+          "type" : "boolean",
+          "default" : false
+        }
+      }
+    },
+    "娃娃机上机操作请求对象" : {
+      "type" : "object",
+      "required" : [ "busId", "uid" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "用户id"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "remark" : {
+          "type" : "string",
+          "description" : "备注"
+        }
+      }
+    },
+    "娃娃机下爪请求对象" : {
+      "type" : "object",
+      "required" : [ "busId", "optId", "type", "uid" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "用户id"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作id"
+        },
+        "type" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器操作指令:【0】默认爪，【1】弱爪，【2】强爪"
+        }
+      }
+    },
+    "娃娃机列表响应对象" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        },
+        "dollBusList" : {
+          "type" : "array",
+          "items" : {
+            "$ref" : "#/definitions/娃娃机数据传输对象"
+          }
+        }
+      }
+    },
+    "娃娃机列表请求对象" : {
+      "type" : "object",
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        }
+      }
+    },
+    "娃娃机抓取结果响应对象" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        },
+        "optRecord" : {
+          "description" : "结果",
+          "$ref" : "#/definitions/操作记录传输对象"
+        }
+      }
+    },
+    "娃娃机操作请求对象" : {
+      "type" : "object",
+      "required" : [ "busId", "optId", "type", "uid" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "用户id"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作id"
+        },
+        "type" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器操作指令:【1】向前移动，【2】向后移动，【3】向左移动，【4】向右移动，【6】下抓，【7】停止移动"
+        }
+      }
+    },
+    "娃娃机数据传输对象" : {
+      "type" : "object",
+      "properties" : {
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "dollId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "娃娃id"
+        },
+        "name" : {
+          "type" : "string",
+          "description" : "设备名称"
+        },
+        "deviceId" : {
+          "type" : "string",
+          "description" : "设备id"
+        },
+        "cover" : {
+          "type" : "string",
+          "description" : "封面"
+        },
+        "status" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "设备状态 0-空闲，1-游戏中,2-故障状态"
+        },
+        "stream1" : {
+          "type" : "string",
+          "description" : "正面流地址"
+        },
+        "stream2" : {
+          "type" : "string",
+          "description" : "侧面流地址"
+        },
+        "stream1Realy" : {
+          "type" : "string",
+          "description" : "正面流地址-操作者"
+        },
+        "stream2Realy" : {
+          "type" : "string",
+          "description" : "侧面流地址-操作者"
+        },
+        "type" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "virtual" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    },
+    "娃娃机设置响应对象" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "设备id"
+        },
+        "gameTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "游戏时间，单位秒"
+        },
+        "probability" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "捉力概率，出奖概率取值范围（1-250）,意义为平均捉中一次所需的累计游戏次数"
+        }
+      }
+    },
+    "娃娃设置" : {
+      "type" : "object",
+      "required" : [ "busId", "type", "value" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "type" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "设置类型 1-游戏时间 2-概率 3-礼品出口"
+        },
+        "value" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "设置值，游戏时间范围为5-60秒；概率范围为1-250；礼品出口0-左前 1-左后"
+        }
+      }
+    },
+    "娃娃设置查询" : {
+      "type" : "object",
+      "required" : [ "busId" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        }
+      }
+    },
+    "推币机操作结果查询请求对象" : {
+      "type" : "object",
+      "required" : [ "optId" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作流水ID"
+        }
+      }
+    },
+    "推币机操作返回对象" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作ID"
+        }
+      }
+    },
+    "操作推币机请求对象" : {
+      "type" : "object",
+      "required" : [ "busId" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器ID"
+        }
+      }
+    },
+    "操作记录传输对象" : {
+      "type" : "object",
+      "properties" : {
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "设备id"
+        },
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "用户id"
+        },
+        "result" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "抓取结果【1:成功,0:失败】"
+        },
+        "remark" : {
+          "type" : "string",
+          "description" : "备注"
+        }
+      }
+    },
+    "机器基础数据设置请求对象" : {
+      "type" : "object",
+      "required" : [ "advertMusicIntervalTime", "advertMusicOnOff", "airGrip", "bgMusic", "busId", "coin", "coinRetain", "exitPosition", "gameMusic", "gameType", "inning", "language", "photoEye", "playTime", "probability", "retain", "shake" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "language" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "语言(0为英文 ，1为中文),取值范围（0-1）"
+        },
+        "advertMusicOnOff" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "广告音乐开关(0音乐无，1音乐有),取值范围（0-1）"
+        },
+        "advertMusicIntervalTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "广告音乐间隔时间(当广告音乐开关为1有效),取值范围（0-30）"
+        },
+        "coin" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "币数(币数设置),取值范围（1-10）"
+        },
+        "inning" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "局数(局数设置),取值范围（1-10）"
+        },
+        "coinRetain" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "币数保留(0关机不保留，1关机保留),取值范围（0-1）"
+        },
+        "playTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "游戏时间,取值范围（5-60)"
+        },
+        "gameType" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "游戏模式,取值范围（1-6）"
+        },
+        "probability" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "出奖概率,取值范围（1-250）"
+        },
+        "exitPosition" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "礼品出口位置(0左后角，1左前角),取值范围（0-1）"
+        },
+        "airGrip" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "空中抓物(0为关，1为开),取值范围（0-1）"
+        },
+        "bgMusic" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "背景音乐"
+        },
+        "gameMusic" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "游戏音乐"
+        },
+        "photoEye" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "光眼电平(0为常开，1为常闭),取值范围（0-1）"
+        },
+        "shake" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "摇晃清分,取值范围（0-1）"
+        },
+        "retain" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "保留,取值范围（0-1）"
+        }
+      }
+    },
+    "机器爪力电压设置请求对象" : {
+      "type" : "object",
+      "required" : [ "busId", "closeClawSpeed", "dropDelayRatio", "dropDelayTime", "payingOffLengthTime", "riseDelay", "strongClawVoltage", "strongForceTime", "strongToWeakType", "weakClawBackVoltage", "weakClawVoltage", "weakForceTime", "winVoltage" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "strongClawVoltage" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "强爪电压,取值范围十进制（130-475）"
+        },
+        "weakClawVoltage" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "弱爪电压 ,取值范围十进制（20-200）"
+        },
+        "weakClawBackVoltage" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "弱爪后电压,取值范围十进制（20-400）"
+        },
+        "winVoltage" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "中奖电压,取值范围十进制（45-480）"
+        },
+        "strongForceTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "强力维持时间,取值范围（1-30）08表示0.8秒"
+        },
+        "weakForceTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "弱力维持时间,取值范围（1-30）08表示0.8秒"
+        },
+        "strongToWeakType" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "强变弱方式(0强爪时间后变弱抓 1碰到微动后变弱抓),取值范围（0-1）"
+        },
+        "payingOffLengthTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "放线长度时间,取值范围（5-100）,12表示1.2秒"
+        },
+        "closeClawSpeed" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "收爪速度,取值范围（0-20）"
+        },
+        "riseDelay" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "上升延时,取值范围（1-30）"
+        },
+        "dropDelayRatio" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "掉落延时比例，取值范围（0-99）"
+        },
+        "dropDelayTime" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "掉落延时时间，取值范围（1-30）"
+        }
+      }
+    },
+    "机器相关设置查询请求对象" : {
+      "type" : "object",
+      "required" : [ "busId", "type" ],
+      "properties" : {
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "uid"
+        },
+        "loginKey" : {
+          "type" : "string"
+        },
+        "ts" : {
+          "type" : "string",
+          "description" : "每次请求的秒时间戳"
+        },
+        "sign" : {
+          "type" : "string",
+          "description" : "签名"
+        },
+        "appId" : {
+          "type" : "string",
+          "description" : "商户id"
+        },
+        "type" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "查询类型[1:普通数据查询，2:爪力电压查询，3:机器马达速度]"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器id"
+        },
+        "customerId" : {
+          "type" : "integer",
+          "format" : "int32"
+        }
+      }
+    },
+    "查询操作结果返回对象" : {
+      "type" : "object",
+      "properties" : {
+        "result" : {
+          "type" : "integer",
+          "format" : "int32"
+        },
+        "state" : {
+          "type" : "boolean",
+          "description" : "请求状态 true-成功 false-失败",
+          "default" : false
+        },
+        "msg" : {
+          "type" : "string",
+          "description" : "错误信息"
+        },
+        "optId" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "操作ID"
+        },
+        "busId" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "机器ID"
+        },
+        "uid" : {
+          "type" : "integer",
+          "format" : "int64",
+          "description" : "用户ID"
+        },
+        "startTime" : {
+          "type" : "string",
+          "description" : "游戏开始时间(上机开始计算)"
+        },
+        "endTime" : {
+          "type" : "string",
+          "description" : "游戏结束时间(最后一次投币为准 ，超过xx秒未投币则自动结束)"
+        },
+        "intoCoin" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "投币个数"
+        },
+        "outCoin" : {
+          "type" : "integer",
+          "format" : "int32",
+          "description" : "出币个数"
+        }
+      }
+    }
+  }
+}

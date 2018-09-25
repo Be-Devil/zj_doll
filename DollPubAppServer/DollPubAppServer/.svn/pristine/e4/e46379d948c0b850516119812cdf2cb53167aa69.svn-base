@@ -1,0 +1,24 @@
+package com.imlianai.dollpub.app.modules.core.hoodle.service;
+
+import com.imlianai.dollpub.domain.doll.DollBus;
+
+import java.util.List;
+
+/**
+ * 弹珠机相关服务
+ * @author wurui
+ * @create 2018-07-13 22:04
+ **/
+public interface HoodleService {
+
+    /**
+     * 处理指令回调结果
+     * @param dollBus
+     * @param deviceId
+     * @param hexs
+     */
+    void handleResult(DollBus dollBus, final String deviceId, final List<String> hexs);
+
+
+
+}

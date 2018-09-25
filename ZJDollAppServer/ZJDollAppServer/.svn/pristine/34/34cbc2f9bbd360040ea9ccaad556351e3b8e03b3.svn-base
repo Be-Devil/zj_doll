@@ -1,0 +1,183 @@
+.maxBox,.top{
+    width:100%;
+    height:auto;
+    position: relative;
+}
+.paybtn{
+    position: absolute;
+    width:2.06rem;
+    height:0.86rem;
+    display: block;
+    background: url("http://lianai-image-sys.qiniudn.com/mq/payBtn.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    top:13rem;
+    left:50%;
+    margin-left:-1.03rem;
+}
+.listBox{
+    width: 100%;
+    height:auto;
+    background: url("http://lianai-image-sys.qiniudn.com/mq/bg_list.jpg") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    padding-top:0.35rem;
+    box-sizing: border-box;
+}
+.footer{
+    width:100%;
+    height:1.68rem;
+    background: url("http://lianai-image-sys.qiniudn.com/mq/footer.jpg") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.top_time{
+    position: absolute;
+    left:0;
+    bottom:0.1rem;
+    text-align: center;
+    height:0.56rem;
+    color:#711902;
+    font-size: 0.22rem;
+    width:100%;
+}
+.top_time>p{
+    display: inline-block;
+    height:100%;
+    line-height: 0.56rem;
+}
+.time{
+    width:0.36rem;
+    height:0.56rem;
+    display: inline-block;
+    background: url("http://lianai-image-sys.qiniudn.com/mq/timebg.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    color:#ffea74;
+    font-size: 0.24rem !important;
+    margin: 0 0.025rem;
+}
+.list_me{
+    width:5.76rem;
+    height:1.2rem;
+    background: #fffadc;
+    border-radius: 0.16rem;
+    margin:0 auto;
+    border:0.02rem solid #a03f1f;
+    box-sizing: border-box;
+    color:#711902;
+}
+.list_ranking {
+    width:0.94rem;
+    height:100%;
+    float: left;
+    text-align: center;
+    font-size: 0.19rem;
+    line-height: 1.2rem;
+    position: relative;
+}
+.list_ranking>i{
+    display: block;
+    position: absolute;
+    width:100%;
+    height:0.28rem;
+    background: #a03f1f;
+    color:#fff;
+    font-size: 0.18rem;
+    padding-left:0.16rem;
+    box-sizing: border-box;
+    border-radius: 1rem;
+    top:50%;
+    left:35%;
+    margin-top:-0.14rem;
+    line-height: 0.3rem;
+    text-align: left;.
+}
+.user_ranking{
+    width:0.74rem !important;
+}
+.list_pic{
+    width:0.74rem;
+    height:0.74rem;
+    border-radius: 50%;
+    background: #f3f8ff;
+    border:0.02rem solid #a03f1f;
+    float: left;
+    margin:0.2rem 0;
+    position: relative;
+}
+.list_pic>img{
+    border-radius: 50%;
+}
+.list_pic>i{
+    width:0.44rem;
+    height:0.44rem;
+    position: absolute;
+    top:-0.26rem;
+    right:-0.08rem;
+}
+.list_name{
+    width:31.5%;
+    height:100%;
+    float: left;
+    line-height: 1.2rem;
+    padding-left:0.2rem;
+    box-sizing: border-box;
+    font-size: 0.22rem;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+}
+.list_number{
+    float: right;
+    width:38%;
+    text-align: center;
+    height:100%;
+    line-height: 1.2rem;
+    color:#cf3938 !important;
+    font-weight: bold;
+}
+.user_list{
+    width:100%;
+    height:auto;
+    margin-top:0.21rem;
+}
+.user_list>li{
+    width:100%;
+    height:1.2rem;
+    background: url("http://lianai-image-sys.qiniudn.com/mq/listbg.jpg") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.user_list>li:nth-of-type(odd){
+    background: none;
+}
+.user_listBox{
+    width:6rem;
+    height:100%;
+    margin:0 auto;
+    color:#711902;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

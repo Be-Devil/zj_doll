@@ -1,0 +1,19 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service;
+
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+/**
+ * @author wurui
+ * @create 2018-06-19 10:16
+ **/
+public interface PushCoinFruitService {
+
+
+    BaseRespVO addConfig(PushCoinFruitsConfig pushCoinFruitsConfig);
+    BaseRespVO delConfig(int id);
+    BaseRespVO updateConfig(PushCoinFruitsConfig pushCoinFruitsConfig);
+    BaseRespVO getConfig(int id);
+
+
+}

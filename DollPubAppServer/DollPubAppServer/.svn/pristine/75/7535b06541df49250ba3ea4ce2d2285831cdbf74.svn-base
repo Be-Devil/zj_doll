@@ -1,0 +1,23 @@
+package com.imlianai.dollpub.app.modules.core.dice.dao;
+
+import com.imlianai.dollpub.domain.dice.Dice;
+import com.imlianai.dollpub.domain.dice.DiceStatus;
+
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 14:42
+ **/
+public interface DiceDao {
+    int addDiceRecord(Dice dice);
+    int updateDiceResult(long optId,int result,String remark);
+    Dice getDiceByOptId(long optId);
+    List<Dice> getDiceList();
+
+
+    int addDiceStatus(DiceStatus diceStatus);
+    DiceStatus getDiceStatusByBusId(int busId);
+    int deleteDiceStatus(int busId);
+
+}

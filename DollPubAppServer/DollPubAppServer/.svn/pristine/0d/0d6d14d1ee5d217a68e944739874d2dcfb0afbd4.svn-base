@@ -1,0 +1,142 @@
+package com.imlianai.dollpub.app.modules.core.trade.service;
+
+import java.sql.SQLException;
+
+import com.imlianai.dollpub.app.modules.core.trade.domain.AlipayH5Body;
+import com.imlianai.dollpub.domain.trade.ChargeMchInfo;
+import com.imlianai.dollpub.domain.trade.ChargeState;
+import com.imlianai.dollpub.domain.trade.ChargeWay;
+import com.imlianai.dollpub.domain.trade.TradeCharge;
+
+/**
+ * 交易充值相关
+ * 
+ * @author Max
+ * 
+ */
+public interface TradeChargeService {
+
+	/**
+	 * 新增充值记录
+	 * 
+	 * @param c
+	 * @return
+	 */
+	long add(TradeCharge c);
+
+	/**
+	 * 更新充值状态
+	 * 
+	 * @param id
+	 * @param state
+	 * @return
+	 * @throws SQLException
+	 */
+	int updateState(long id, ChargeState state);
+
+	/**
+	 * 拉取充值
+	 * 
+	 * @param id
+	 * @return
+	 * @throws SQLException
+	 */
+	TradeCharge getById(long id);
+
+	/**
+	 * 新增充值日志
+	 * 
+	 * @param chargeId
+	 * @param uid
+	 * @param createParams
+	 * @param httpParams
+	 */
+	void addLog(long chargeId, long uid, String createParams, String httpParams);
+
+	/**
+	 * 更新回调日志
+	 * 
+	 * @param chargeId
+	 * @param callBackValue
+	 */
+	void updatelog(long chargeId, String callBackValue);
+	/**
+	 * 通过第三方ID获取充值
+	 * 
+	 * @param otherId
+	 * @param way
+	 * @return
+	 * @throws SQLException
+	 */
+	TradeCharge getByOtherId(String otherId, ChargeWay way);
+
+	/**
+	 * 加入测试充值
+	 * 
+	 * @param c
+	 * @return
+	 */
+	long addTemp(TradeCharge c);
+
+	/**
+	 * 查询测试充值
+	 * 
+	 * @param otherId
+	 * @param way
+	 * @return
+	 */
+	TradeCharge getTempByOtherId(String otherId, ChargeWay way);
+	
+	/**
+	 * 是否有充值特定金额
+	 * @param uid
+	 * @param amt
+	 * @return
+	 */
+	public long hasChargeSpecialAmt(long uid,int code);
+	
+	/**
+	 * 当天是否已充值过
+	 * @param uid
+	 * @param code
+	 * @return
+	 */
+	public long hasChargeToday(long uid,int code);
+	
+	/**
+	 * 记录支付宝h5订单body
+	 * @param id
+	 * @param body
+	 * @return
+	 */
+	public int addAlipayH5Body(long id, String body,long uid,int price);
+	
+	/**
+	 * 获取订单内容
+	 * @param id
+	 * @return
+	 */
+	public AlipayH5Body getAlipayH5Body(long id);
+	
+	/**
+	 * 获取充值商户参数信息
+	 * @param customerId
+	 * @return
+	 */
+	public ChargeMchInfo getChargeMchInfo(int customerId);
+
+	/**
+	 * 获取充值商户参数信息
+	 * @param mchId
+	 * @return
+	 */
+	public ChargeMchInfo getChargeMchInfo(String mchId);
+	
+	/**
+	 * 查看用户是否已充值
+	 * @param uid
+	 * @return
+	 */
+	public int hasCharge(long uid);
+	
+}

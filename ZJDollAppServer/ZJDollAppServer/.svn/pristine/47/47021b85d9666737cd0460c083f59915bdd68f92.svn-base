@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>萌趣抓娃娃</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="萌趣抓娃娃">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="萌趣抓娃娃">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/style.css" type="text/css"/>
+    <link rel="stylesheet" href="css/index.css" type="text/css"/>
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+    <script src="./js/font.js"></script>
+    <script src="./js/index.js"></script>
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>
+
+</head>
+<body style="font-size: 12px;">
+<section class="maxBox">
+    <section class="navTop">
+        <!--<img src="http://lianai-image-sys.qiniudn.com/mall/black_btn.png" alt=""/>-->
+        <!--<p>积分商城</p>-->
+        <ul class="tabList">
+            <li class="listHot tab " index="2">商品兑换</li>
+            <li class="tab" index="1">碎片合成</li>
+        </ul>
+    </section>
+    <section class="listBox">
+
+        <!--商品兑换-->
+        <div class="list" style="display: none" id="list2">
+            <!--列表-->
+            <div class="conversion">
+
+            </div>
+            <!--列表2-->
+        </div>
+        <!--商品兑换 end-->
+        <!--碎片合成-->
+        <div class="list" id="list1">
+            <!--列表-->
+            <div class="compound">
+            </div>
+            <!--列表 end-->
+        </div>
+        <!--碎片合成 end-->
+    </section>
+</section>
+    <!--提示-->
+<div class="prompt prompt_2" style="display: none">
+    <p>呜呜，钻石数量不足~</p>
+    <p>对“背包-寄存中”的娃娃进行回收可得钻石哟~</p>
+</div>
+<!--模板框-->
+<div class="copyright">
+    <div class="copyright_content">
+        <p>本活动与苹果公司无关，解释权归萌趣抓娃娃所有</p>
+    </div>
+</div>
+</body>
+</html>

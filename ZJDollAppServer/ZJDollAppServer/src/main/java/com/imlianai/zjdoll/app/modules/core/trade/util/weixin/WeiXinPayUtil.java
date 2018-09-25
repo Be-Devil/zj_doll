@@ -1,0 +1,477 @@
+package com.imlianai.zjdoll.app.modules.core.trade.util.weixin;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import com.imlianai.zjdoll.domain.trade.TradeVipCatalog;
+import com.imlianai.zjdoll.app.configs.AppUtils;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.domain.ChargeCatalog;
+import com.imlianai.zjdoll.app.modules.core.trade.util.common.CommonUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.util.common.MD5Util;
+import com.imlianai.zjdoll.app.modules.core.trade.util.weixin.config.WeiXinPayConfig;
+import com.imlianai.zjdoll.app.modules.core.trade.util.weixin.config.WeiXinPayH5Config;
+import com.imlianai.zjdoll.app.modules.core.trade.util.weixin.config.WeiXinPayJSConfig;
+import com.imlianai.zjdoll.app.modules.core.trade.vo.ChargeGetChargeBillReqVO;
+
+/**
+ * 微信支付工具类
+ * 
+ * @author hq 2016-3-3
+ */
+public class WeiXinPayUtil {
+
+	private static final Logger logger = Logger.getLogger(WeiXinPayUtil.class);
+
+	/**
+	 * 生成xml格式订单
+	 * 
+	 * @param request
+	 * @param response
+	 * @param uid
+	 * @param orderId
+	 * @param c
+	 * @return
+	 */
+	public static String createOrderXml(ChargeGetChargeBillReqVO vo, long uid,
+			String orderId, ChargeCatalog c, String imei) {
+		StringBuffer xml = new StringBuffer("<xml>");
+		String nonceStr = AppUtils.randomStr(CommonUtil.randomNonceStr, 20);
+		String ipAddr = vo.getIp();
+		if (ipAddr == null) {
+			ipAddr = "192.168.1.99";
+		}
+		String priceStr = String.valueOf(c.getPrice() * 100);
+		// priceStr="1";
+		String notifyUrl = WeiXinPayConfig.notifyUrl;
+		if (AppUtils.isTestEnv()) {
+			priceStr = "1";
+		}
+		String tradeTypeStr = "APP";
+		// 参数生成签名
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("appid", WeiXinPayConfig.appId);
+		params.put("mch_id", WeiXinPayConfig.mchId);
+		params.put("nonce_str", nonceStr);
+		params.put("attach", imei);
+		params.put("body", c.getName());
+		params.put("out_trade_no", orderId);
+		params.put("spbill_create_ip", ipAddr);
+		params.put("total_fee", priceStr);
+		params.put("trade_type", tradeTypeStr);
+		params.put("notify_url", notifyUrl);
+		StringBuffer signBuffer = new StringBuffer(
+				CommonUtil.createUrlParamFormat(params));
+		signBuffer.append("&key=");
+		signBuffer.append(WeiXinPayConfig.apiKey);
+		logger.info("待签名字符串:" + signBuffer.toString());
+		// Md5处理
+		String charsetname = CommonUtil.getCharacterEncoding(null, null);
+		String md5Sign = MD5Util.MD5Encode(signBuffer.toString(), charsetname);
+		md5Sign = StringUtils.upperCase(md5Sign);
+		logger.info("签名后字符串:" + md5Sign);
+		xml.append("<appid>");
+		xml.append(WeiXinPayConfig.appId);
+		xml.append("</appid>");
+		xml.append("<attach>");
+		xml.append(imei);
+		xml.append("</attach>");
+		xml.append("<body>");
+		xml.append(c.getName());
+		xml.append("</body>");
+		xml.append("<mch_id>");
+		xml.append(WeiXinPayConfig.mchId);
+		xml.append("</mch_id>");
+		xml.append("<nonce_str>");
+		xml.append(nonceStr);
+		xml.append("</nonce_str>");
+		xml.append("<notify_url>");
+		xml.append(notifyUrl);
+		xml.append("</notify_url>");
+		xml.append("<out_trade_no>");
+		xml.append(orderId);
+		xml.append("</out_trade_no>");
+		xml.append("<spbill_create_ip>");
+		xml.append(ipAddr);
+		xml.append("</spbill_create_ip>");
+		xml.append("<total_fee>");
+		xml.append(priceStr);// 元
+		xml.append("</total_fee>");
+		xml.append("<trade_type>");
+		xml.append(tradeTypeStr);
+		xml.append("</trade_type>");
+		xml.append("<sign>");
+		xml.append(md5Sign);
+		xml.append("</sign>");
+		xml.append("</xml>");
+		return xml.toString();
+	}
+
+	/**
+	 * 生成H5 xml格式订单
+	 * 
+	 * @param request
+	 * @param response
+	 * @param uid
+	 * @param orderId
+	 * @param c
+	 * @param imei
+	 * @return
+	 */
+	public static String createOrderXml4JS(HttpServletRequest request,
+			HttpServletResponse response, long uid, String orderId,
+			TradeVipCatalog c, String imei) {
+		StringBuffer xml = new StringBuffer("<xml>");
+		String nonceStr = AppUtils.randomStr(CommonUtil.randomNonceStr, 20);
+		String ipAddr = AppUtils.getRealIpAddr(request);
+		String priceStr = String.valueOf(c.getPrice() * 100);
+		String openid = request.getParameter("openid");
+		// priceStr="1";
+		String tradeTypeStr = "JSAPI";
+		// 参数生成签名
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("appid", WeiXinPayH5Config.appId);
+		params.put("attach", imei);
+		params.put("body", c.getName());
+		params.put("mch_id", WeiXinPayH5Config.mchId);
+		params.put("nonce_str", nonceStr);
+		params.put("out_trade_no", orderId);
+		params.put("spbill_create_ip", ipAddr);
+		params.put("total_fee", priceStr);
+		params.put("trade_type", tradeTypeStr);
+		params.put("openid", openid);
+		params.put("notify_url", WeiXinPayH5Config.notifyUrl);
+		StringBuffer signBuffer = new StringBuffer(
+				CommonUtil.createUrlParamFormat(params));
+		signBuffer.append("&key=");
+		signBuffer.append(WeiXinPayH5Config.apiKey);
+		logger.info("待签名字符串:" + signBuffer.toString());
+		// Md5处理
+		String charsetname = CommonUtil.getCharacterEncoding(request, response);
+		String md5Sign = MD5Util.MD5Encode(signBuffer.toString(), charsetname);
+		logger.info("签名后字符串:" + md5Sign);
+		md5Sign = StringUtils.upperCase(md5Sign);
+		logger.info("签名后大写转换字符串:" + md5Sign);
+		xml.append("<appid>");
+		xml.append(WeiXinPayH5Config.appId);
+		xml.append("</appid>");
+		xml.append("<attach>");
+		xml.append(imei);
+		xml.append("</attach>");
+		xml.append("<body>");
+		xml.append(c.getName());
+		xml.append("</body>");
+		xml.append("<mch_id>");
+		xml.append(WeiXinPayH5Config.mchId);
+		xml.append("</mch_id>");
+		xml.append("<nonce_str>");
+		xml.append(nonceStr);
+		xml.append("</nonce_str>");
+		xml.append("<notify_url>");
+		xml.append(WeiXinPayH5Config.notifyUrl);
+		xml.append("</notify_url>");
+		xml.append("<out_trade_no>");
+		xml.append(orderId);
+		xml.append("</out_trade_no>");
+		xml.append("<spbill_create_ip>");
+		xml.append(ipAddr);
+		xml.append("</spbill_create_ip>");
+		xml.append("<total_fee>");
+		xml.append(priceStr);// 元
+		xml.append("</total_fee>");
+		xml.append("<trade_type>");
+		xml.append(tradeTypeStr);
+		xml.append("</trade_type>");
+		xml.append("<openid>");
+		xml.append(openid);
+		xml.append("</openid>");
+		xml.append("<sign>");
+		xml.append(md5Sign);
+		xml.append("</sign>");
+		xml.append("</xml>");
+		return xml.toString();
+	}
+	/**
+	 * 生成H5 xml格式订单
+	 * 
+	 * @param request
+	 * @param response
+	 * @param uid
+	 * @param orderId
+	 * @param c
+	 * @param imei
+	 * @return
+	 */
+	public static String createOrderXml4JS(ChargeGetChargeBillReqVO vo,
+			String openId, long uid, String orderId, ChargeCatalog c,
+			String imei) {
+		StringBuffer xml = new StringBuffer("<xml>");
+		String nonceStr = AppUtils.randomStr(CommonUtil.randomNonceStr, 20);
+		String ipAddr = vo.getIp();
+		String priceStr = String.valueOf(c.getPrice() * 100);
+		String openid = openId;
+		if (AppUtils.isTestEnv()) {
+			priceStr = "1";
+		}
+		String tradeTypeStr = "JSAPI";
+		// 参数生成签名
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("appid", WeiXinPayJSConfig.appId);
+		params.put("body", c.getName());
+		params.put("mch_id", WeiXinPayJSConfig.mchId);
+		params.put("nonce_str", nonceStr);
+		params.put("out_trade_no", orderId);
+		params.put("spbill_create_ip", ipAddr);
+		params.put("total_fee", priceStr);
+		params.put("trade_type", tradeTypeStr);
+		params.put("openid", openid);
+		params.put("notify_url", WeiXinPayJSConfig.jsNotifyUrl);
+		StringBuffer signBuffer = new StringBuffer(
+				CommonUtil.createUrlParamFormat(params));
+		signBuffer.append("&key=");
+		signBuffer.append(WeiXinPayJSConfig.apiKey);
+		logger.info("待签名字符串:" + signBuffer.toString());
+		// Md5处理
+		String charsetname = CommonUtil.getCharacterEncoding(null, null);
+		String md5Sign = MD5Util.MD5Encode(signBuffer.toString(), charsetname);
+		logger.info("签名后字符串:" + md5Sign);
+		md5Sign = StringUtils.upperCase(md5Sign);
+		logger.info("签名后大写转换字符串:" + md5Sign);
+		xml.append("<appid>");
+		xml.append(WeiXinPayJSConfig.appId);
+		xml.append("</appid>");
+		xml.append("<body>");
+		xml.append(c.getName());
+		xml.append("</body>");
+		xml.append("<mch_id>");
+		xml.append(WeiXinPayJSConfig.mchId);
+		xml.append("</mch_id>");
+		xml.append("<nonce_str>");
+		xml.append(nonceStr);
+		xml.append("</nonce_str>");
+		xml.append("<notify_url>");
+		xml.append(WeiXinPayJSConfig.jsNotifyUrl);
+		xml.append("</notify_url>");
+		xml.append("<out_trade_no>");
+		xml.append(orderId);
+		xml.append("</out_trade_no>");
+		xml.append("<spbill_create_ip>");
+		xml.append(ipAddr);
+		xml.append("</spbill_create_ip>");
+		xml.append("<total_fee>");
+		xml.append(priceStr);// 元
+		xml.append("</total_fee>");
+		xml.append("<trade_type>");
+		xml.append(tradeTypeStr);
+		xml.append("</trade_type>");
+		xml.append("<openid>");
+		xml.append(openid);
+		xml.append("</openid>");
+		xml.append("<sign>");
+		xml.append(md5Sign);
+		xml.append("</sign>");
+		xml.append("</xml>");
+		return xml.toString();
+	}
+
+	/**
+	 * 生成H5 xml格式订单
+	 * 
+	 * @param request
+	 * @param response
+	 * @param uid
+	 * @param orderId
+	 * @param c
+	 * @param imei
+	 * @return
+	 */
+	public static String createOrderXml4H5(ChargeGetChargeBillReqVO reqVo, long uid,
+			String orderId, ChargeCatalog c, String imei) {
+		StringBuffer xml = new StringBuffer("<xml>");
+		String nonceStr = AppUtils.randomStr(CommonUtil.randomNonceStr, 20);
+		String ipAddr = reqVo.getIp()==null?"122.11.48.251":reqVo.getIp();
+		String priceStr = String.valueOf(c.getPrice() * 100);
+		if (AppUtils.isTestEnv()) {
+			priceStr="1";
+		}
+		String tradeTypeStr = "MWEB";
+		// 参数生成签名
+		Map<String, String> params = new HashMap<String, String>();
+		logger.info("createOrderXml4H5 WeiXinPayH5Config.appId:" + WeiXinPayH5Config.appId);
+		logger.info("createOrderXml4H5 WeiXinPayH5Config.mchId:" + WeiXinPayH5Config.mchId);
+		params.put("appid", WeiXinPayH5Config.appId);
+		params.put("attach", imei);
+		params.put("body", c.getName());
+		params.put("mch_id", WeiXinPayH5Config.mchId);
+		params.put("nonce_str", nonceStr);
+		params.put("out_trade_no", orderId);
+		params.put("spbill_create_ip", ipAddr);
+		params.put("total_fee", priceStr);
+		params.put("trade_type", tradeTypeStr);
+		params.put("notify_url", WeiXinPayH5Config.notifyUrl);
+		StringBuffer signBuffer = new StringBuffer(
+				CommonUtil.createUrlParamFormat(params));
+		signBuffer.append("&key=");
+		signBuffer.append(WeiXinPayH5Config.apiKey);
+		logger.info("createOrderXml4H5 待签名字符串:" + signBuffer.toString());
+		// Md5处理
+		String charsetname ="utf-8";
+		String md5Sign = MD5Util.MD5Encode(signBuffer.toString(), charsetname);
+		logger.info("createOrderXml4H5 签名后字符串:" + md5Sign);
+		md5Sign = StringUtils.upperCase(md5Sign);
+		logger.info("createOrderXml4H5 签名后大写转换字符串:" + md5Sign);
+		xml.append("<appid>");
+		xml.append(WeiXinPayH5Config.appId);
+		xml.append("</appid>");
+		xml.append("<attach>");
+		xml.append(imei);
+		xml.append("</attach>");
+		xml.append("<body>");
+		xml.append(c.getName());
+		xml.append("</body>");
+		xml.append("<mch_id>");
+		xml.append(WeiXinPayH5Config.mchId);
+		xml.append("</mch_id>");
+		xml.append("<nonce_str>");
+		xml.append(nonceStr);
+		xml.append("</nonce_str>");
+		xml.append("<notify_url>");
+		xml.append(WeiXinPayH5Config.notifyUrl);
+		xml.append("</notify_url>");
+		xml.append("<out_trade_no>");
+		xml.append(orderId);
+		xml.append("</out_trade_no>");
+		xml.append("<spbill_create_ip>");
+		xml.append(ipAddr);
+		xml.append("</spbill_create_ip>");
+		xml.append("<total_fee>");
+		xml.append(priceStr);// 元
+		xml.append("</total_fee>");
+		xml.append("<trade_type>");
+		xml.append(tradeTypeStr);
+		xml.append("</trade_type>");
+		xml.append("<sign>");
+		xml.append(md5Sign);
+		xml.append("</sign>");
+		xml.append("</xml>");
+		return xml.toString();
+	}
+
+	public static void main(String[] args) {
+		StringBuffer signBuffer = new StringBuffer("appid=wx72f7d35891f70172&attach=A000006361AE32&body=100币&mch_id=1458868102&nonce_str=uixj43xbqD8Ou4oACYaL&notify_url=http://122.11.48.251:6639/DollAppServer/api/back/paywxh5/doBack&out_trade_no=MQ539&total_fee=1000&trade_type=MWEB&key=wx72f7d35891f70172LianlianXiehou");
+		String charsetname ="utf-8";
+		String md5Sign = MD5Util.MD5Encode(signBuffer.toString(), charsetname);
+		md5Sign = StringUtils.upperCase(md5Sign);
+		System.out.println(md5Sign);
+	}
+	/**
+	 * 创建预支付订单
+	 * 
+	 * @param params
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public static WeixinPreOrderRes createPrepayOrderInfo(
+			Map<String, String> params) {
+		if (params != null) {
+			Map<String, String> order = new HashMap<String, String>();
+			order.put("appid", WeiXinPayConfig.appId);
+			order.put("partnerid", WeiXinPayConfig.mchId);
+			order.put("prepayid", params.get("prepay_id"));
+			order.put("package", "Sign=WXPay");
+			order.put("noncestr", params.get("nonce_str"));
+			String timestamp = CommonUtil.getTimeStamp();
+			order.put("timestamp", timestamp);
+			StringBuffer signBuffer = new StringBuffer(
+					CommonUtil.createUrlParamFormat(order));
+			signBuffer.append("&key=");
+			signBuffer.append(WeiXinPayConfig.apiKey);
+			logger.info("待签名字符串:" + signBuffer.toString());
+			String charsetname = "utf-8";
+			String md5Sign = MD5Util.MD5Encode(signBuffer.toString(),
+					charsetname);
+			md5Sign = StringUtils.upperCase(md5Sign);
+			logger.info("签名后字符串:" + md5Sign);
+			order.put("sign", md5Sign);
+			WeixinPreOrderRes res = new WeixinPreOrderRes(
+					WeiXinPayConfig.appId, WeiXinPayConfig.mchId,
+					params.get("prepay_id"), "Sign=WXPay",
+					params.get("nonce_str"), timestamp, md5Sign);
+			return res;
+		}
+		return null;
+	}
+	/**
+	 * 创建预支付订单
+	 * 
+	 * @param params
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public static WeixinPreOrderRes createPrepayOrderInfo4JS(
+			Map<String, String> params) {
+		if (params != null) {
+			Map<String, String> order = new HashMap<String, String>();
+			String ts= CommonUtil.getTimeStamp();
+			order.put("appId", params.get("appid"));
+			order.put("timeStamp",ts);
+			order.put("nonceStr", params.get("nonce_str"));
+			order.put("package", "prepay_id=" + params.get("prepay_id"));
+			order.put("signType", "MD5");
+			StringBuffer signBuffer = new StringBuffer(
+					CommonUtil.createUrlParamFormat(order));
+			signBuffer.append("&key=");
+			signBuffer.append(WeiXinPayJSConfig.apiKey);
+			logger.info("待签名字符串:" + signBuffer.toString());
+			String charsetname = "utf-8";
+			String md5Sign = MD5Util.MD5Encode(signBuffer.toString(),
+					charsetname);
+			md5Sign = StringUtils.upperCase(md5Sign);
+			logger.info("签名后字符串:" + md5Sign);
+			order.put("paySign", md5Sign);
+			return new WeixinPreOrderRes(params.get("appid"), params.get("appid"), params.get("prepay_id"), "prepay_id=" + params.get("prepay_id"), params.get("nonce_str"), ts, md5Sign);
+		}
+		return null;
+	}
+	/**
+	 * 创建预支付订单
+	 * 
+	 * @param params
+	 * @param request
+	 * @param response
+	 * @return
+	 */
+	public static Map<String, String> createPrepayOrderInfo4JS(
+			Map<String, String> params, HttpServletRequest request,
+			HttpServletResponse response) {
+		if (params != null) {
+			Map<String, String> order = new HashMap<String, String>();
+			order.put("appId", WeiXinPayH5Config.appId);
+			order.put("timeStamp", CommonUtil.getTimeStamp());
+			order.put("nonceStr", params.get("nonce_str"));
+			order.put("package", "prepay_id=" + params.get("prepay_id"));
+			order.put("signType", "MD5");
+			StringBuffer signBuffer = new StringBuffer(
+					CommonUtil.createUrlParamFormat(order));
+			signBuffer.append("&key=");
+			signBuffer.append(WeiXinPayH5Config.apiKey);
+			logger.info("待签名字符串:" + signBuffer.toString());
+			String charsetname = CommonUtil.getCharacterEncoding(request,
+					response);
+			String md5Sign = MD5Util.MD5Encode(signBuffer.toString(),
+					charsetname);
+			md5Sign = StringUtils.upperCase(md5Sign);
+			logger.info("签名后字符串:" + md5Sign);
+			order.put("paySign", md5Sign);
+			return order;
+		}
+		return null;
+	}
+}

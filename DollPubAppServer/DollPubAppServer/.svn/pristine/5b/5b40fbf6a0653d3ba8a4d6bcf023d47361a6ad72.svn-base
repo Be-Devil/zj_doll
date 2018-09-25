@@ -1,0 +1,31 @@
+package com.imlianai.dollpub.app.modules.core.dice.controller;
+
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.dice.service.DiceService;
+import com.imlianai.dollpub.app.modules.core.dice.vo.OperateReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 11:56
+ **/
+@Component("dice")
+public class DiceController extends RootCmd {
+
+    @Resource
+    private DiceService diceService;
+
+    @ApiHandle
+    @Path("api/dice/startGame")
+    public BaseRespVO startGame(OperateReqVO vo){
+        diceService.sendShakeReturn(vo.getBusId());
+        return new BaseRespVO(100,true,"数据请求成功");
+    }
+
+
+}

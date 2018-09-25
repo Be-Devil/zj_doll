@@ -1,0 +1,355 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>com.imlianai</groupId>
+		<artifactId>parent-webapp</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>ZJDollAppServer</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>war</packaging>
+	<url>http://maven.apache.org</url>
+
+	<dependencies>
+		<!-- IMLIANAI -->
+		<dependency>
+			<groupId>com.imlianai</groupId>
+			<artifactId>zjdoll-iface-app</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+		<dependency>
+			<groupId>com.imlianai</groupId>
+			<artifactId>supply-iface-rabbitMq</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.imlianai</groupId>
+					<artifactId>imlianai-rpc-support</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<!-- <dependency>
+			<groupId>com.imlianai</groupId>
+			<artifactId>doll-iface-web</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency> -->
+
+
+		<!-- SPRING -->
+		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-web</artifactId> <version>${spring.version}</version> </dependency> -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-webmvc</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-context</artifactId> <version>${spring.version}</version> </dependency> -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context-support</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+		<!-- <dependency> <groupId>org.springframework</groupId> <artifactId>spring-tx</artifactId> <version>${spring.version}</version> </dependency> <dependency> 
+			<groupId>org.springframework</groupId> <artifactId>spring-jdbc</artifactId> <version>${spring.version}</version> </dependency> -->
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-test</artifactId>
+			<version>${spring.version}</version>
+		</dependency>
+
+		<!-- MappingJackson2HttpMessageConverter -->
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-core</artifactId>
+			<version>2.7.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>2.7.8</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>2.7.8</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+			<scope>test</scope>
+		</dependency>
+
+		<!-- ===COMMON01================================================== -->
+		<!-- apache -->
+		<dependency>  <!-- sms_voice_use -->
+			<groupId>org.apache.axis</groupId>
+			<artifactId>axis</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>  <!-- sms_voice_use -->
+			<groupId>org.apache.axis</groupId>
+			<artifactId>axis-jaxrpc</artifactId>
+			<version>1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>wsdl4j</groupId>
+			<artifactId>wsdl4j</artifactId>
+			<version>1.6.2</version>
+		</dependency>
+
+		<!-- <dependency> AlipayCore:DigestUtils.md5Hex <groupId>org.apache.httpcomponents</groupId> <artifactId>httpclient</artifactId> <version>4.3.3</version> 
+			</dependency> -->
+		<dependency> <!-- AlipayCore:DigestUtils.md5Hex -->
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.6</version>
+		</dependency>
+		<dependency> <!-- add -->
+			<groupId>commons-httpclient</groupId>
+			<artifactId>commons-httpclient</artifactId>
+			<version>3.1</version>
+		</dependency>
+
+		<!-- servlet -->
+		<dependency>
+			<groupId>servletapi</groupId>
+			<artifactId>servletapi</artifactId>
+			<version>2.4</version>
+			<scope>provided</scope>
+		</dependency>
+		<!-- reflect -->
+		<dependency>
+			<groupId>cglib</groupId>
+			<artifactId>cglib-nodep</artifactId>
+			<version>3.1</version>
+		</dependency>
+		<dependency>  <!-- trade:XmlUtil -->
+			<groupId>org.jdom</groupId>
+			<artifactId>jdom</artifactId>
+			<version>1.1.3</version>
+		</dependency>
+		<!-- QINIU-JAVA-SDK -->
+		<dependency>
+            <groupId>qiniu</groupId>
+            <artifactId>qiniu_provider</artifactId>
+            <version>1.0</version>
+        </dependency>
+		<dependency>
+			<groupId>com.qiniu</groupId>
+			<artifactId>qiniu-java-sdk</artifactId>
+			<version>7.2.6</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>3.3.1</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.6.2</version>
+		</dependency>
+		<dependency>
+			<groupId>com.qiniu</groupId>
+			<artifactId>happy-dns-java</artifactId>
+			<version>0.1.4</version>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.12</version>
+		</dependency>
+		<!-- Ali-JAVA-SDK -->
+		<dependency>
+			<groupId>com.alipay.api</groupId>
+			<artifactId>alipay-sdk</artifactId>
+			<version>1.0-20170307</version>
+		</dependency>
+		<dependency>
+  			<groupId>com.antgroup.zmxy.openplatform.api</groupId>
+  			<artifactId>zmxy-sdk</artifactId>
+  			<version>1.0-20170503</version>
+		</dependency>	
+		<!-- COMMON-COLLECTION -->
+		<dependency>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-collections4</artifactId>
+		    <version>4.0</version>
+		</dependency>
+		<!-- zxing -->
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>core</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.google.zxing</groupId>
+			<artifactId>javase</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<!--apollo配置中心客户端依赖-->
+		<dependency>
+			<groupId>com.ctrip.framework.apollo</groupId>
+			<artifactId>apollo-client</artifactId>
+			<version>0.10.1</version>
+		</dependency>
+		<!-- ===COMMON03================================================== -->
+		<!--cat 监控依赖 (挂件式，需要时引用)
+		<dependency>
+			<groupId>net.dubboclub</groupId>
+			<artifactId>cat-monitor</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency> -->
+
+		<!-- swagger api依赖 -->
+		<dependency>
+			<groupId>javax.ws.rs</groupId>
+			<artifactId>jsr311-api</artifactId>
+			<version>1.1.1</version>
+        </dependency>
+
+		<dependency>  <!-- web_oauth_util -->
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.imlianai</groupId>
+			<artifactId>supply-iface-rpc-heartbeat</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+		  <groupId>javax.mail</groupId>
+		  <artifactId>mail</artifactId>
+		  <version>1.4.2</version>
+		</dependency>
+
+			<!--zipkin客户端公共jar包-->
+		<dependency>
+			<groupId>com.imlianai</groupId>
+			<artifactId>zipkin-common</artifactId>
+			<version>1.0.0-SNAPSHOT</version>
+		</dependency>
+        <dependency>
+            <groupId>com.imlianai</groupId>
+            <artifactId>dollpub-iface-app</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+    </dependencies>
+	<build>
+		<finalName>ZJDollAppServer</finalName>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<groupId>org.eclipse.jetty</groupId>
+				<artifactId>jetty-maven-plugin</artifactId>
+				<version>9.2.8.v20150217</version>
+				<configuration>
+					<httpConnector>
+						<port>9002</port>
+					</httpConnector>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>development</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<properties>
+				<rpc.zk.cachefile>c:/logs_java/tomcat/zjdoll-app-ser/conf_zkcache/dubbo-registry.properties</rpc.zk.cachefile>
+				<log4j2.logs.rootdir>c:/logs_java/tomcat/zjdoll-app-ser</log4j2.logs.rootdir>
+				<log4j2.logs.additivity>true</log4j2.logs.additivity>
+				<cat.app.name>ZJDollAppSer_Dev</cat.app.name>
+				<swagger.enable>false</swagger.enable>
+				<namespace.env>application-dev</namespace.env>
+			</properties>
+		</profile>
+		<profile>
+			<id>test_T</id>
+			<properties>
+				<cat.app.name>ZJDollAppSer_Test</cat.app.name>
+				<swagger.enable>true</swagger.enable>
+				<namespace.env>application</namespace.env>
+			</properties>
+			<build>
+				<plugins>
+					<!-- swagger-api-plugin -->
+					<plugin>
+						<groupId>com.github.kongchen</groupId>
+						<artifactId>swagger-maven-plugin</artifactId>
+						<version>3.1.0</version>
+						<configuration>
+							<!--<abled>${swagger.enable}</abled>-->
+							<apiSources>
+								<apiSource>
+									<!-- 支持springMVC 因为我们项目只有入口才用Controller注解，此处启用非springMVC -->
+									<springmvc>false</springmvc>
+									<!-- 你的web项目Controller包名 -->
+									<locations>com.imlianai.doll.app</locations>
+									<!-- 协议 -->
+									<schemes>http</schemes>
+									<!-- 所在主机，可以为空 -->
+									<host></host>
+									<!-- web项目Context Path -->
+									<basePath>/DollAppServer</basePath>
+									<!-- 必须！要在主页显示你的API的整体信息的，相当于是标题 -->
+									<info>
+										<title>娃娃机项目文档</title>
+										<version>v1</version>
+										<description>娃娃机项目文档</description>
+									</info>
+									<!-- 模板位置，支持classpath:类型路径 -->
+									<templatePath>${project.basedir}/src/main/resources/swagger/templates/markdown.hbs</templatePath>
+									<!-- 编译期扫描controller之后合成的API文档输出位置 -->
+									<outputPath>${project.build.directory}/${project.build.finalName}/swagger/jsonApi/document.md</outputPath>
+									<swaggerDirectory>${project.build.directory}/${project.build.finalName}/swagger/jsonApi/</swaggerDirectory>
+								</apiSource>
+							</apiSources>
+						</configuration>
+						<!-- 这里很重要，简单说就是配置在maven的compile生命周期执行时触发swagger插件的generate命令 -->
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>generate</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>production_pe</id>
+			<properties>
+				<rpc.zk.address>null</rpc.zk.address>
+				<cat.app.name>ZJDollAppSer_Beta</cat.app.name>
+				<swagger.enable>false</swagger.enable>
+				<namespace.env>application</namespace.env>
+			</properties>
+		</profile>
+		<profile>
+			<id>production</id>
+			<properties>
+				<log4j2.logstash.address>101.201.108.67</log4j2.logstash.address>
+				<rpc.zk.address>101.201.108.67:2182</rpc.zk.address>			
+				<cat.app.name>ZJDollAppSer_Pro</cat.app.name>
+				<log4j2.logs.additivity>false</log4j2.logs.additivity>
+				<swagger.enable>false</swagger.enable>
+				<namespace.env>application</namespace.env>
+			</properties>
+		</profile>
+	</profiles>
+</project>

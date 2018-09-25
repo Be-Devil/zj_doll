@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:dubbo="http://code.alibabatech.com/schema/dubbo"
+	   xmlns:apollo="http://www.ctrip.com/schema/apollo"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd 
+       http://code.alibabatech.com/schema/dubbo http://code.alibabatech.com/schema/dubbo/dubbo.xsd
+		http://www.ctrip.com/schema/apollo http://www.ctrip.com/schema/apollo.xsd"
+	default-lazy-init="false">
+
+	<apollo:config namespaces="${namespace.env},common,qiniu"/>
+	<dubbo:application name="doll-app-server" owner="DollAppSer" />
+	<dubbo:registry protocol="zookeeper" address="${rpc.zk.address.apollo}" file="${rpc.zk.cachefile}" />
+	<!-- <dubbo:monitor protocol="registry" /> -->
+
+	<dubbo:protocol name="dubbo" host="" port="-1" charset="UTF-8" threadpool="fixed" threads="20" />
+
+	<dubbo:annotation package="com.imlianai.zjdoll.app" />
+
+	<!-- 服务消费者的cat相关filter -->
+	<dubbo:consumer timeout="6000" check="false" />
+
+	<!-- 服务提供者的cat相关filter -->
+	<dubbo:provider />
+
+	<import resource="classpath:configs/spring/root-context.xml" />
+</beans>

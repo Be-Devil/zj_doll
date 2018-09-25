@@ -1,0 +1,564 @@
+package com.imlianai.zjdoll.app.modules.core.egg.service;
+
+
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.AliasMethod;
+import com.imlianai.zjdoll.app.modules.core.egg.dao.EggMachineDao;
+import com.imlianai.zjdoll.app.modules.core.egg.trade.EggTradeService;
+import com.imlianai.zjdoll.app.modules.core.egg.vo.*;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.domain.ChargeCatalog;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.service.ChargeCatalogService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.support.userdoll.service.UserDollService;
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+import com.imlianai.zjdoll.domain.doll.user.UserDoll;
+import com.imlianai.zjdoll.domain.egg.*;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.trade.TradeCostType;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.zjdoll.domain.user.UserGeneral;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+@Service
+public class EggMachineServiceImpl implements EggMachineService {
+	
+	private static BaseLogger LOG = BaseLogger.getLogger(EggMachineServiceImpl.class);
+	
+	private ConcurrentHashMap<Long, EggMachine> eggMachineMap = null;
+	
+	private List<EggMachine> eggMachineList = new ArrayList<EggMachine>(); // 扭蛋机列表
+	
+	private static Date queryRefreshTime = new Date();
+	
+	@Resource
+	EggMachineDao eggMachineDao;
+	@Resource
+	DollInfoService dollInfoService;
+	@Resource
+	UserService userService;
+	@Resource
+	UserDollService userDollService;
+	@Resource
+	EggTradeService eggTradeService;
+	@Resource
+	ChargeCatalogService chargeCatalogService;
+	@Resource
+	MsgService msgService;
+	@Resource
+	TradeService tradeService;
+
+	@Override
+	public List<EggMacClassifyInfo> getEggMacClassifies() {
+		return eggMachineDao.getEggMacClassifies();
+	}
+
+	@Override
+	public List<EggMachine> getEggMachines(int type) {
+		if (StringUtil.isNullOrEmpty(eggMachineList) || DateUtils.secondBetween(queryRefreshTime) >= 5) {
+			initEggMachines();
+		}
+		if(type == 0) {
+			return eggMachineList;
+		} else {
+			return getEggMachinesByType(type);
+		}
+	}
+
+	private List<EggMachine> getEggMachinesByType(int type) {
+		List<Long> machineIds = eggMachineDao.getMachineIdsByType(type); // 分类下的扭蛋机IDs
+		if (!StringUtil.isNullOrEmpty(machineIds)) {
+			 return getEggMachinesByIds(machineIds);
+		}
+		return null;
+	}
+
+	private List<EggMachine> getEggMachinesByIds(List<Long> machineIds) {
+		List<EggMachine> eggMachines = new ArrayList<EggMachine>();
+		if(StringUtil.isNullOrEmpty(eggMachineMap)) {
+			initEggMachines(); // 初始化扭蛋机列表
+		}
+		if(!StringUtil.isNullOrEmpty(eggMachineMap)) {
+			if(!StringUtil.isNullOrEmpty(machineIds)) {
+				for(Long machineId : machineIds) {
+					EggMachine eggMachine = eggMachineMap.get(machineId);
+					if(eggMachine == null) continue;
+					eggMachines.add(eggMachine);
+				}
+			}
+		}
+		return eggMachines;
+	}
+
+	private void initEggMachines() {
+		List<EggMachine> eggMachines = eggMachineDao.getEggMachines();
+		if(!StringUtil.isNullOrEmpty(eggMachines)) {
+			eggMachineMap = new ConcurrentHashMap<Long, EggMachine>();
+			for(EggMachine eggMachine : eggMachines) {
+				eggMachine.setH5Url(StringUtil.isNullOrEmpty(eggMachine.getH5Url()) ? "" : (eggMachine.getH5Url() + "?machineId=" + eggMachine.getMachineId()));
+				eggMachineMap.put(eggMachine.getMachineId(), eggMachine);
+			}
+			eggMachineList = eggMachines;
+		} else {
+			eggMachineList = new ArrayList<EggMachine>();
+			eggMachineMap = null;
+		}
+		queryRefreshTime = new Date();
+	}
+	
+	private EggMachine getEggMachine(long machineId) {
+		if (StringUtil.isNullOrEmpty(eggMachineMap) || DateUtils.secondBetween(queryRefreshTime) >= 5) {
+			initEggMachines();
+		}
+		if(!StringUtil.isNullOrEmpty(eggMachineMap)) {
+			return eggMachineMap.get(machineId);
+		}
+		return null;
+	}
+
+	@Override
+	public EggMachineInfo getEggMachineInfo(long machineId, Long uid) {
+		EggMachine eggMachine = getEggMachine(machineId);
+		if(eggMachine != null) {
+			int inventory = 0; // 库存
+			List<String> detailUrls = new ArrayList<String>(); // 详情URL列表
+			detailUrls.add(eggMachine.getCover()); // 扭蛋机封面 
+			List<EggMachineRewardConf> rewardConfs = eggMachineDao.getRewardConfsByMachineId(machineId); // 获取奖品列表
+			if(!StringUtil.isNullOrEmpty(rewardConfs)) {
+				List<Integer> dollIds = new ArrayList<Integer>(); // 娃娃ID
+				for(EggMachineRewardConf rewardConf : rewardConfs) {
+					if(rewardConf.getType() != EggMachineRewardConf.EggType.COMMON.type) continue;
+					dollIds.add(rewardConf.getDollId());
+				}
+				List<DollInfo> dollInfos = dollInfoService.getDollInfoListByDollIds(dollIds); // 娃娃列表
+				if(!StringUtil.isNullOrEmpty(dollInfos)) {
+					for(DollInfo dollInfo : dollInfos) {
+						inventory += (dollInfo.getEggInventory() - eggMachineDao.getAwardNum(dollInfo.getDollId()));
+						detailUrls.add(dollInfo.getImgDetail());
+					}
+				}
+			}
+			List<WinRecordItem> winRecords = getWinRecords(machineId, uid); // 中奖记录
+			return new EggMachineInfo(eggMachine.getName(), eggMachine.getPrice(), inventory, detailUrls, winRecords);
+		}
+		return null;
+	}
+
+	private List<WinRecordItem> getWinRecords(long machineId, Long uid) {
+		List<WinRecordItem> winRecords = new ArrayList<WinRecordItem>();
+		List<EggMachineUserPlayRecord> userPlayRecords = eggMachineDao.getRecentlyUserPlayRecords(7, machineId); // 用户最近的抽奖记录
+		if(!StringUtil.isNullOrEmpty(userPlayRecords)) {
+			List<Long> uids = new ArrayList<Long>(); // 用户IDs
+			for(EggMachineUserPlayRecord userPlayRecord : userPlayRecords) {
+				uids.add(userPlayRecord.getUid());
+			}
+			Map<Long, UserGeneral> userGeneralMap = userService.getUserGeneralMap(uids);
+			for(EggMachineUserPlayRecord userPlayRecord : userPlayRecords) {
+				UserGeneral userGeneral = userGeneralMap.get(userPlayRecord.getUid());
+				DollInfo dollInfo = dollInfoService.getDollInfo(userPlayRecord.getDollId());
+				if(userGeneral == null || dollInfo == null) continue;
+				WinRecordItem winRecordItem = new WinRecordItem();
+				winRecordItem.setDesc("恭喜 " + userGeneral.getName() + " 扭到了 " + dollInfo.getName());
+				if(userPlayRecord.getUid().longValue() == uid.longValue()) {
+					winRecordItem.setColorFlag(1);
+				}
+				winRecords.add(winRecordItem);
+			}
+		}
+		return winRecords;
+	}
+	
+	private List<WinRecordItem> getWinRecords(List<RewardInfo> rewardInfos, UserGeneral userGeneral) {
+		List<WinRecordItem> winRecords = new ArrayList<WinRecordItem>();
+		if(!StringUtil.isNullOrEmpty(rewardInfos)) {
+			for(RewardInfo rewardInfo : rewardInfos) {
+				WinRecordItem winRecordItem = new WinRecordItem();
+				winRecordItem.setDesc("恭喜 " + userGeneral.getName() + " 扭到了 " + rewardInfo.getName());
+				winRecordItem.setColorFlag(1);
+				winRecords.add(winRecordItem);
+			}
+		}
+		return winRecords;
+	}
+
+	@Override
+	public AccountInfo getAccountInfo(Long uid) {
+		//EggMachineUserAccount userAccount =eggTradeService.getAccount(uid);
+		TradeAccount tradeAccount = tradeService.getAccount(uid);
+		AccountInfo accountInfo = new AccountInfo();
+		if(tradeAccount != null) {
+			accountInfo.setAmount(tradeAccount.getCoin());
+			accountInfo.setNum(tradeAccount.getCoupon());
+		}
+		return accountInfo;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public BaseRespVO play(PlayReqVO reqVO) {
+		PlayRespVO playRespVO = new PlayRespVO();
+		try {
+			int type = reqVO.getType();
+			long uid = reqVO.getUid();
+			long machineId = reqVO.getMachineId();
+			long optId = reqVO.getOptId();
+			int time = reqVO.getTime();
+			int isTry = reqVO.getIsTry();
+			EggMachine eggMachine = getEggMachine(machineId);
+			if(eggMachine == null) {
+				return new BaseRespVO(-1, false, "扭蛋机不存在，请刷新再试~");
+			}
+			if(eggMachine.getValid() == 0) { // 下架中
+				return new BaseRespVO(-1, false, "扭蛋机下架中~");
+			}
+			List<EggMachineRewardConf> rewardConfs = eggMachineDao.getRewardConfsByMachineId(machineId); // 获取奖品列表
+			if(StringUtil.isNullOrEmpty(rewardConfs)) {
+				eggMachineDao.updateEggMachineStatus(machineId, 0); // 扭蛋机下架
+				return new BaseRespVO(-1, false, "扭蛋机不存在，请刷新重试~");
+			}
+			Map<String, Object> resultMap = new HashMap<String, Object>();
+			List<Integer> dollIds = new ArrayList<Integer>(); // 娃娃IDs
+			for(EggMachineRewardConf rewardConf : rewardConfs) {
+				if(rewardConf.getType() != EggMachineRewardConf.EggType.COMMON.type) continue;
+				dollIds.add(rewardConf.getDollId());
+			}
+			if(isTry == 1) { // 尝试
+				resultMap = handlePlay(uid, type, time, eggMachine, rewardConfs, isTry); // 抽奖处理
+			} else {
+				if(type == 0) { // 使用余额
+					if(time <= 0) {
+						return new BaseRespVO(-1, false, "扭蛋次数有误，请重试~");
+					}
+					int inventory = 0;
+					List<DollInfo> dollInfos = dollInfoService.getDollInfoListByDollIds(dollIds); // 娃娃列表
+					if(!StringUtil.isNullOrEmpty(dollInfos)) {
+						for(DollInfo dollInfo : dollInfos) {
+							inventory += (dollInfo.getEggInventory() - eggMachineDao.getAwardNum(dollInfo.getDollId()));
+						}
+					}
+					if(inventory < time) { // 库存不足
+						if(inventory <= 0) {
+							eggMachineDao.updateEggMachineStatus(machineId, 0); // 扭蛋机下架
+						}
+						return new BaseRespVO(-1, false, "扭蛋库存不足~");
+					}
+//				EggMachineUserAccountRecord record =new EggMachineUserAccountRecord(uid, time*eggMachine.getPrice(), EggMachineUserAccountRecord.EggAccountRecordTradeType.APPLY.type, EggMachineUserAccountRecord.EggAccountRecordType.BALANCE.type, machineId+"号扭蛋机消耗"+time*eggMachine.getPrice()+"元");
+//					try {
+//						if(eggTradeService.consume(record)) {
+//							resultMap = handlePlay(uid, type, time, eggMachine, rewardConfs, isTry); // 抽奖处理
+//						} else {
+//							return new BaseRespVO(700, false, "余额不足~");
+//						}
+//					} catch (Exception e) {
+//						return new BaseRespVO(700, false, "余额不足~");
+//					}
+
+					//消费的货币体系(元)更换成现有的货币(游戏币)
+					try {
+						TradeRecord tradeRecord = new TradeRecord(uid,0, TradeType.APPLY_EGG.type,Integer.valueOf(machineId+""),time*eggMachine.getPrice(), TradeCostType.COST_COIN.type,machineId+"号扭蛋机消耗"+time*eggMachine.getPrice()+"游戏币");
+						tradeRecord.setOptId(optId);
+						if(tradeService.consume(tradeRecord)){
+							resultMap = handlePlay(uid, type, time, eggMachine, rewardConfs, isTry); // 抽奖处理
+						}else {
+							return new BaseRespVO(700, false, "余额不足~");
+						}
+					}catch (Exception e){
+						return new BaseRespVO(700, false, "余额不足~");
+					}
+				} else if(type == 1) { // 使用时光劵
+					if(optId > 0) {
+						EggMachineUserOptRecord userOptRecord = eggMachineDao.getUserOptRecordByOptId(optId);
+						if(userOptRecord == null || userOptRecord.getUid() != uid) {
+							return new BaseRespVO(-1, false, "亲，请先上机抽奖后才可重试哦~");
+						}
+						if(userOptRecord.getStatus() == 1) {
+							return new BaseRespVO(-1, false, "亲，奖励已发放，不可重试了哦~");
+						}
+						if(userOptRecord.getStatus() == 2) {
+							return new BaseRespVO(-1, false, "亲，不可重复重试了哦~");
+						}
+						time = userOptRecord.getTime();
+//						EggMachineUserAccountRecord record = new EggMachineUserAccountRecord(uid, time, EggMachineUserAccountRecord.EggAccountRecordTradeType.APPLY.type, EggMachineUserAccountRecord.EggAccountRecordType.TIMECOUPON.type, machineId+"号扭蛋机消耗1张时光券");
+//						try {
+//							if(eggTradeService.consume(record)) {
+//								eggMachineDao.updateUserOptRecord(optId, 0, 2);
+//								List<EggMachineUserPlayRecord> records = eggMachineDao.getUserPlayRecordsByOptId(optId);
+//								if(!StringUtil.isNullOrEmpty(records)) {
+//									for(EggMachineUserPlayRecord playRecord : records) {
+//										eggMachineDao.updateAwardNum(playRecord.getDollId(), -1);
+//									}
+//								}
+//								resultMap = handlePlay(uid, type, time, eggMachine, rewardConfs, isTry); // 抽奖处理
+//							} else {
+//								return new BaseRespVO(0, false, "时光卷不足~");
+//							}
+//						} catch (Exception e) {
+//							return new BaseRespVO(0, false, "时光卷不足~");
+//						}
+
+
+						TradeRecord tradeRecord = new TradeRecord(uid,0, TradeType.APPLY_EGG.type,Integer.valueOf(machineId+""),time*eggMachine.getPrice(), TradeCostType.TIMECOUPON.type,machineId+"号扭蛋机消耗1张时光券");
+						tradeRecord.setOptId(optId);
+						try {
+							if(tradeService.consume(tradeRecord)){
+								eggMachineDao.updateUserOptRecord(optId, 0, 2);
+								List<EggMachineUserPlayRecord> records = eggMachineDao.getUserPlayRecordsByOptId(optId);
+								if (!StringUtil.isNullOrEmpty(records)) {
+									for (EggMachineUserPlayRecord playRecord : records) {
+										eggMachineDao.updateAwardNum(playRecord.getDollId(), -1);
+									}
+								}
+								resultMap = handlePlay(uid, type, time, eggMachine, rewardConfs, isTry); // 抽奖处理
+							}else {
+								return new BaseRespVO(0, false, "时光卷不足~");
+							}
+						}catch (Exception e){
+							return new BaseRespVO(0, false, "时光卷不足~");
+						}
+
+					} else {
+						return new BaseRespVO(-1, false, "亲，请先上机抽奖后才可重试哦~");
+					}
+				}
+				int inventory = 0;
+				List<DollInfo> dollInfos = dollInfoService.getDollInfoListByDollIds(dollIds); // 娃娃列表
+				if(!StringUtil.isNullOrEmpty(dollInfos)) {
+					for(DollInfo dollInfo : dollInfos) {
+						inventory += (dollInfo.getEggInventory() - eggMachineDao.getAwardNum(dollInfo.getDollId()));
+					}
+				}
+				playRespVO.setInventory(inventory);
+			}
+			
+			List<RewardInfo> rewardInfos = (List<RewardInfo>)resultMap.get("rewardInfos");
+			playRespVO.setRewardInfos(rewardInfos);
+			playRespVO.setOptId((Long) resultMap.get("optId"));
+			playRespVO.setNum(getAccountInfo(uid).getNum());
+			playRespVO.setUseNum(time);
+			playRespVO.setWinRecords(getWinRecords(rewardInfos, userService.getUserGeneral(uid)));
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "系统异常，请刷新重试~");
+		}
+		return playRespVO;
+	}
+
+	private Map<String, Object> handlePlay(Long uid, int type, int time, EggMachine eggMachine, 
+			List<EggMachineRewardConf> rewardConfs, int isTry) {
+		Map<String, Object> resultMap = new HashMap<String, Object>();
+		List<RewardInfo> rewardInfos = new ArrayList<RewardInfo>(); // 奖品列表
+		long optId = 0;
+		List<EggMachineRewardConf> commRewardConfs = new ArrayList<EggMachineRewardConf>(); // 普通扭蛋
+		List<EggMachineRewardConf> candidateRewardConfs = new ArrayList<EggMachineRewardConf>(); // 候补扭蛋
+		for(EggMachineRewardConf rewardConf : rewardConfs) {
+			if(rewardConf.getType() == EggMachineRewardConf.EggType.COMMON.type) {
+				commRewardConfs.add(rewardConf);
+			} else if(rewardConf.getType() == EggMachineRewardConf.EggType.CANDIDATE.type) {
+				candidateRewardConfs.add(rewardConf);
+			}
+		}
+		int REWARD_SIZE = commRewardConfs.size();
+		if(isTry == 1) { // 尝试
+			int randomNum = new Random().nextInt(REWARD_SIZE);
+			EggMachineRewardConf reward = commRewardConfs.get(randomNum); // 用户获得的奖品
+			DollInfo dollInfo = dollInfoService.getDollInfo(reward.getDollId());
+			rewardInfos.add(new RewardInfo(dollInfo));
+			resultMap.put("rewardInfos", rewardInfos);
+			resultMap.put("optId", null);
+			return resultMap;
+		}
+		AliasMethod aliasMethod = null;
+		if(eggMachine.getRandom() == 1) { // 不随机
+			List<Double> chanceList = new ArrayList<Double>();
+			for(EggMachineRewardConf eggMachineRewardConf : commRewardConfs) {
+				chanceList.add(new Double(eggMachineRewardConf.getChance())/100);
+			}
+			aliasMethod = new AliasMethod(chanceList);
+		}
+		List<EggMachineRewardConf> userRewards = new ArrayList<EggMachineRewardConf>(); // 用户获得的奖品列表
+		int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+		optId = eggMachineDao.saveUserOptRecord(uid, dateCode, type, eggMachine.getMachineId(), "使用" + (type==0 ? "余额" : "时光劵") +"抽奖*" + time, time); // 保存用户上机记录
+		if(optId > 0) {
+			for(int i = 1; i <= time; i++) {
+				EggMachineRewardConf userReward = null;
+				if(eggMachine.getRandom() == 0) { // 随机
+					int randomNum = new Random().nextInt(REWARD_SIZE);
+					userReward = commRewardConfs.get(randomNum); // 用户获得的奖品
+					DollInfo dollInfo = dollInfoService.getDollInfo(userReward.getDollId());
+					int inventory = dollInfo.getEggInventory() - eggMachineDao.getAwardNum(dollInfo.getDollId());
+					if(inventory <= 0) {
+						commRewardConfs.remove(randomNum);
+						REWARD_SIZE = commRewardConfs.size();
+						if(REWARD_SIZE == 0) continue;
+						randomNum = new Random().nextInt(REWARD_SIZE);
+						userReward = commRewardConfs.get(randomNum); // 用户获得的奖品
+					}
+				} else {
+					int awardIndex = aliasMethod.next();
+					userReward = commRewardConfs.get(awardIndex);
+					DollInfo dollInfo = dollInfoService.getDollInfo(userReward.getDollId());
+					int inventory = dollInfo.getEggInventory() - eggMachineDao.getAwardNum(dollInfo.getDollId());
+					if(inventory <= 0) {
+						userReward = candidateRewardConfs.get(0); // 默认选择候补扭蛋奖品中的第一个
+					}
+				}
+				if(userReward != null) {
+					userRewards.add(userReward);
+					eggMachineDao.updateAwardNum(userReward.getDollId(), 1);
+					eggMachineDao.saveUserPlayRecord(optId, uid, dateCode, userReward.getDollId(), eggMachine.getMachineId()); // 保存用户抽奖记录
+				}
+			}
+			for(EggMachineRewardConf userReward : userRewards) {
+				DollInfo dollInfo = dollInfoService.getDollInfo(userReward.getDollId());
+				rewardInfos.add(new RewardInfo(dollInfo));
+			}
+		}
+		resultMap.put("rewardInfos", rewardInfos);
+		resultMap.put("optId", optId);
+		return resultMap;
+	}
+
+	@Override
+	public void autoHandleReward() {
+		try {
+			List<EggMachineUserOptRecord> userOptRecords = eggMachineDao.getOvertimeUserOptRecords(30);
+			if(!StringUtil.isNullOrEmpty(userOptRecords)) {
+				for(EggMachineUserOptRecord userOptRecord : userOptRecords) {
+					if(eggMachineDao.updateUserOptRecord(userOptRecord.getId(), 0, 1) > 0) {
+						List<EggMachineUserPlayRecord> userPlayRecords = eggMachineDao.getUserPlayRecordsByOptId(userOptRecord.getId());
+						handleReward(userPlayRecords); // 发放奖品
+					}
+				}
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+		}
+	}
+
+	private void handleReward(List<EggMachineUserPlayRecord> userPlayRecords) {
+		if(!StringUtil.isNullOrEmpty(userPlayRecords)) {
+			for(EggMachineUserPlayRecord userPlayRecord : userPlayRecords) {
+				if(eggMachineDao.updateUserPlayRecord(userPlayRecord.getId(), 0, 1) > 0) {
+					DollInfo dollInfo = dollInfoService.getDollInfo(userPlayRecord.getDollId());
+					int status = userDollService.getUserDollDefaultStatus(dollInfo); // 默认状态
+					
+					UserDoll userDoll = new UserDoll();
+					userDoll.setUid(userPlayRecord.getUid());
+					userDoll.setDollId(userPlayRecord.getDollId());
+					userDoll.setStatus(status);
+					userDoll.setRemark("【扭蛋" + userPlayRecord.getMachineId() + "】抽奖获得" + dollInfo.getName());
+					userDoll.setGoodsType(dollInfo.getGoodsType());
+					long uDollId = userDollService.saveUserDoll(userDoll);
+					eggMachineDao.updateUserPlayRecord(uDollId, userPlayRecord.getId());
+					boolean isPush = false;
+					if(dollInfo.getGoodsType() == 1) { // 虚拟
+						userDollService.handleVirtualDoll(dollInfo, status, uDollId, userPlayRecord.getUid());
+						TradeAccount tradeAccount = tradeService.getAccount(userPlayRecord.getUid());
+						if(status == 3) {
+							int originalNum = (tradeAccount.getCoin()-dollInfo.getCoin()) >= 0 ? tradeAccount.getCoin()-dollInfo.getCoin() : 0;
+							String textString = "恭喜小主人获得" + dollInfo.getCoin() +"币，从原来的" + originalNum  + "币上升到了" + tradeAccount.getCoin() + "币";
+							MsgNotice msg = new MsgNotice(userPlayRecord.getUid(), MsgType.NOTICE_SYS.type, textString);
+							msg.setJumpDoll(uDollId);
+							msgService.sendMsg(msg);
+							isPush = true;
+						} else if(status == 5) {
+							int originalNum = (tradeAccount.getJewel()-dollInfo.getReturnJewel()) >= 0 ? tradeAccount.getJewel()-dollInfo.getReturnJewel() : 0;
+							String textString = "恭喜小主人获得" + dollInfo.getReturnJewel() + "钻，从原来的" + originalNum  + "钻上升到了" + tradeAccount.getJewel() + "钻";
+							MsgNotice msg = new MsgNotice(userPlayRecord.getUid(), MsgType.NOTICE_SYS.type, textString);
+							msg.setJumpDoll(uDollId);
+							msgService.sendMsg(msg);
+							isPush = true;
+						}
+					}
+					if(!isPush) {
+						// 消息推送
+						String textString = "恭喜小主人扭到了" + dollInfo.getName() +"，棒棒哒~~";
+						MsgNotice msg = new MsgNotice(userPlayRecord.getUid(), MsgType.NOTICE_SYS.type, textString);
+						msg.setJumpDoll(uDollId);
+						msgService.sendMsg(msg);
+					}
+				}
+			}
+		}
+	}
+
+	@Override
+	public List<EggInfo> getEggDetails(long machineId) {
+		EggMachine eggMachine = getEggMachine(machineId);
+		List<EggInfo> eggInfos = new ArrayList<EggInfo>();
+		if(eggMachine != null) {
+			eggInfos.add(new EggInfo(eggMachine.getName(), eggMachine.getCover())); // 扭蛋机信息
+			List<EggMachineRewardConf> rewardConfs = eggMachineDao.getRewardConfsByMachineId(machineId); // 获取奖品列表
+			if(!StringUtil.isNullOrEmpty(rewardConfs)) {
+				List<Integer> dollIds = new ArrayList<Integer>(); // 娃娃ID
+				for(EggMachineRewardConf rewardConf : rewardConfs) {
+					if(rewardConf.getType() != EggMachineRewardConf.EggType.COMMON.type) continue;
+					dollIds.add(rewardConf.getDollId());
+				}
+				List<DollInfo> dollInfos = dollInfoService.getDollInfoListByDollIds(dollIds); // 娃娃列表
+				if(!StringUtil.isNullOrEmpty(dollInfos)) {
+					for(DollInfo dollInfo : dollInfos) {
+						eggInfos.add(new EggInfo(dollInfo.getName(), dollInfo.getImgDetail()));
+					}
+				}
+			}
+		}
+		return eggInfos;
+	}
+
+	@Override
+	public BaseRespVO getRewards(long optId) {
+		try {
+			EggMachineUserOptRecord userOptRecord = eggMachineDao.getUserOptRecordByOptId(optId);
+			if(userOptRecord != null) {
+				if(userOptRecord.getStatus() == 0) {
+					if(eggMachineDao.updateUserOptRecord(userOptRecord.getId(), 0, 1) > 0) {
+						List<EggMachineUserPlayRecord> userPlayRecords = eggMachineDao.getUserPlayRecordsByOptId(userOptRecord.getId());
+						handleReward(userPlayRecords); // 发放奖品
+						return new BaseRespVO();
+					} else {
+						return new BaseRespVO(-1, false, "奖品不符合发放的条件,请刷新重试~");
+					}
+				} else {
+					return new BaseRespVO(-1, false, "奖品不符合发放的条件,请刷新重试~");
+				}
+			} else {
+				return new BaseRespVO(-1, false, "操作记录不存在~");
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "系统异常，请刷新重试~");
+		}
+	}
+
+	@Override
+	public BaseRespVO getRechargeList(Long uid) {
+		GetRechargeListRespVO respVO = new GetRechargeListRespVO();
+		EggMachineUserAccount userAccount = eggMachineDao.getUserAccount(uid);
+		respVO.setAmount(userAccount == null ? 0 : userAccount.getAmount());
+		respVO.setNum(userAccount == null ? 0 : userAccount.getNum());
+		List<RechargeItem> rechargeItems = new ArrayList<RechargeItem>();
+		List<ChargeCatalog> catalogs = chargeCatalogService.getCatalogs(ChargeCatalog.ChargeCatalogType.EGG.type, -2);
+		if(!StringUtil.isNullOrEmpty(catalogs)) {
+			for(ChargeCatalog chargeCatalog : catalogs) {
+				rechargeItems.add(new RechargeItem(chargeCatalog));
+			}
+		}
+		respVO.setRechargeItems(rechargeItems);
+		return respVO;
+	}
+	
+}

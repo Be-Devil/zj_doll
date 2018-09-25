@@ -1,0 +1,352 @@
+@charset "utf-8";
+/* 禁用iPhone中Safari的字号自动调整 */
+html {
+    -webkit-background-size: 100%;
+    background-size: 100%;
+    overflow-x: hidden;
+}
+
+/* 去除iPhone中默认的input样式 */
+input[type="submit"],
+
+input[type="reset"],
+
+input[type="button"],
+input{-webkit-appearance:none; resize:none;outline:none;}
+/* 取消链接高亮  */
+body,div,ul,li,ol,h1,h2,h3,h4,h5,h6,input,textarea,select,p,dl,dt,dd,a,img,button,form,table,th,tr,td,tbody,article,
+aside, details,figcaption,figure,footer,header,hgroup, menu,nav,section{ -webkit-tap-highlight-color:rgba(0, 0, 0, 0); }
+/* 设置HTML5元素为块 */
+article, aside, details,figcaption,figure,footer,header,hgroup, menu,nav,section {
+    display: block;
+}
+/* 图片自适应 */
+img {
+    max-width: 100%;
+    height: auto;
+    width:auto\9; /* ie8 */
+    -ms-interpolation-mode:bicubic;/*为了照顾ie图片缩放失真*/
+    display: block;
+}
+body{
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    -khtml-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-user-select: none;/*禁用手机浏览器的用户选择功能 */
+    -moz-user-select: none;
+
+}
+/* 初始化 */
+body,div,ul,li,ol,h1,h2,h3,h4,h5,h6,input,textarea,select,p,dl,dt,dd,a,img,button,form,table,th,tr,td,tbody,article,
+aside, details,figcaption,figure,footer,header,hgroup, menu,nav,section{margin:0; padding:0; border:none;}
+body{font-family: '微软雅黑';}
+em,i{font-style:normal;}
+strong{font-weight: normal;}
+a{text-decoration:none; color:#eec285; font-family: '微软雅黑';}
+a:hover{ text-decoration:none;}
+
+/* a:visited{color:#9a9a9a;} */
+ul,ol{list-style:none;}
+h1, h2, h3, h4, h5, h6{ font-size:100%; font-family: '微软雅黑';}
+img{border: none;}
+input,textarea,button{
+    border:none;
+    outline:medium;
+    resize:none;
+}
+html,body{
+    width:100%;
+    height:auto;
+    -webkit-tap-highlight-color: transparent;
+    background: #fff203;
+}
+html{
+    position: relative;
+}
+/* 清除浮动 */
+.ks-clear:after, .clear:after {
+    content: '\20';
+    display: block;
+    height: 0;
+    clear: both;
+}
+.ks-clear, .clear {
+    *zoom: 1;
+}
+input,button,select,textarea{outline:none;}
+/*初始化end----------------------------*/
+
+
+
+.maxBox{
+    width:100%;
+    height:auto;
+    position: relative;
+}
+.wa_top{
+    width:100%;
+    height:6.46rem;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/bg.png") no-repeat center center;
+    -webkit-background-size: 87% 100%;
+    background-size: 87% 100%;
+    position: relative;
+    padding-top: 2.08rem;
+    box-sizing: border-box;
+    text-align: center;
+}
+.name{
+    color:#222;
+    font-size: 0.32rem;
+    margin-top:0.2rem;
+}
+.id{
+    font-size: 0.26rem;
+    color:#666;
+}
+.wa_top>span{
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:6.46rem;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/s_top.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.number{
+    position: absolute;
+    bottom:0.3rem;
+    left:0;
+    text-align: center;
+    width:100%;
+    height:auto;
+    font-size: 0.34rem;
+}
+.number>em{
+    font-size: 0.58rem;
+    color:#fff;
+    margin:0 0.05rem;
+    text-shadow: 0 1px #000, 1px 0 #000, -1px 0 #000, 0 -1px #000;
+}
+.down{
+    width:3.8rem;
+    height:0.56rem;
+    margin:0.32rem auto 0.56rem;
+}
+.head{
+    width:2rem;
+    height:2rem;
+    border-radius: 50%;
+    margin:0 auto;
+}
+.waList{
+    width:100%;
+    height:auto;
+    padding:0 0.2rem;
+    box-sizing: border-box;
+}
+.waList>li{
+    width:49%;
+    float: left;
+    height:4.58rem;
+    border-radius: 0.16rem;
+    background: #fff;
+    margin-top:0.14rem;
+}
+.waList>li:nth-of-type(even){
+    float: right;
+}
+.waList>li>div{
+    width:100%;
+    height:3.46rem;
+    text-align:center;
+}
+.waList>li>div>img{
+   width:100%;
+   height:100%;
+    border-top-left-radius: 0.16rem;
+    border-top-right-radius: 0.16rem;
+}
+.pic_name{
+    margin-top:0.24rem;
+}
+.pic_name,.pic_time{
+    font-size: 0.28rem;
+    color: #333;
+    padding:0 0.16rem;
+    box-sizing: border-box;
+    font-weight: 700;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+}
+.pic_time{
+    font-size: 0.24rem;
+    color:#999;
+    font-weight:normal;
+}
+.footer{
+    margin-top:0.58rem;
+}
+.s_footer{
+    position: absolute;
+    bottom:0;
+    left:0;
+}
+.shareCen{
+    position: absolute;
+    top:3.03rem;
+    left:0;
+    width:100%;
+    height:auto;
+}
+.shareCen_In{
+    width:6.52rem;
+    height:7.6rem;
+    margin:0 auto;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/s_cenbg.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    padding-top:0.68rem;
+    box-sizing:border-box;
+    position: relative;
+    text-align: center;
+}
+.sharePic{
+    width:6.24rem;
+    height:6.24rem;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/s_g.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin:0 auto;
+    overflow: hidden;
+}
+.sharePic>span{
+    width:100%;
+    height:4.98rem;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/txt_1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    display: block;
+    position: absolute;
+    top:0;
+    left:0;
+}
+.sharePic>img{
+    width:3rem;
+    margin:1.8rem auto 0 auto;
+}
+.sharePic>p{
+    font-size: 0.33rem;
+    color:#fff203;
+    text-shadow: 0 1px #000, 1px 0 #000, -1px 0 #000, 0 -1px #000;
+    text-align: center;
+    margin-top:0.36rem;
+}
+.yq{
+    width:auto;
+    display: inline-block;
+    height:0.6rem;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/invite.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin:-0.2rem auto 0 auto;
+    font-size: 0.2rem;
+    padding:0 0.3rem;
+    line-height: 0.6rem;
+    font-weight: normal;
+    color:#ccc;
+}
+.yq>em{
+    color:#fff203;
+}
+.codeBox{
+    width:100%;
+    height:auto;
+    position: absolute;
+    top:5.6rem;
+    left:0;
+}
+.codeBoxIn{
+    width:7rem;
+    height:4.52rem;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 22px rgba(255,242,3,0.5);
+    text-align: center;
+    margin:0 auto;
+    border-top:1px solid #fff;
+}
+.codeHead{
+    width:1.56rem;
+    height:1.56rem;
+    display: block;
+    margin:-0.8rem auto 0 auto;
+    background: #fff;
+    border-radius: 50%;
+    padding:0.1rem;
+    box-sizing:border-box;
+}
+.codeHead>img{
+    border-radius: 50%;
+
+}
+.codeName{
+    font-size: 0.34rem;
+    text-align: center;
+    color:#333;
+    margin:0.16rem 0 0.4rem;
+    font-weight: 560;
+}
+.codeTXt{
+    text-align: center;
+    font-size: 0.26rem;
+    color:#999;
+}
+.code{
+    width:auto;
+    height:0.84rem;
+    display: inline-block;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/code.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    padding:0 0.68rem;
+    letter-spacing: 0.28rem;
+    line-height: 0.84rem;
+    font-size: 0.29rem;
+    font-weight: 560;
+    color:#e83a3a;
+    margin-top:0.22rem;
+}
+.copy{
+    text-align: center;
+    color:#4a90e2;
+    width:7.35rem;
+    height:1.5rem;
+    margin:0 0 -0.25rem -0.18rem;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/Combined%20.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    line-height: 1.7rem;
+}
+.rules{
+    height:auto;
+    padding: 0 0.66rem 0.73rem;
+    box-sizing:border-box;
+    margin:0.4rem 0 0 0;
+    font-size: 0.26rem;
+    color:#333;
+    letter-spacing: 1px;
+    text-align: center;
+}
+.rules>em{
+    color:#ee1e1e;
+}
+.type_2{
+    line-height: 1.7rem;
+    color:#999;
+    font-size: 0.28rem;
+}

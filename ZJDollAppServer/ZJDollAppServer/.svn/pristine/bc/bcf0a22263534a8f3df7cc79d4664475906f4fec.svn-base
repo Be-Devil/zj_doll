@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>邀请奖励</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="邀请奖励">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="邀请奖励">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/style.css" type="text/css"/>
+    <link rel="stylesheet" href="css/index.css" type="text/css"/>
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>
+    <script src="http://lianai-image-sys.qiniudn.com/js/font.js"></script>
+</head>
+<style>
+    .topDown{width:100%;height:1.04rem;position: fixed;top:0;left:0;background: url("http://lianai-image-sys.qiniudn.com/h/download.png") no-repeat center center;-webkit-background-size: 100% 100%;background-size: 100% 100%;}
+</style>
+<body style="font-size: 12px;" >
+<div id="appp">
+<section class="MaxBox">
+    <div class="download">
+        <img src="http://lianai-image-sys.qiniudn.com/ndfx20180312161629.png" alt="">
+    </div>
+    <img src="http://lianai-image-sys.qiniudn.com/y/pic_top.png" alt="\"/>
+    <button class="topBtn" >能量获取记录</button><!--能量获取记录按钮-->
+    <img src="http://lianai-image-sys.qiniudn.com/y/news_direction.png" alt=""/>
+    <!--排行榜-->
+    <section class="listBox">
+        <div class="list_top"></div>
+        <div class="list_cen" >
+            <!--倒计时-->
+            <div class="timebox">
+                <p><strong class="pk_day">0</strong>天</p>
+                <p><strong class="pk_hour">0</strong>时</p>
+                <p><strong class="pk_minute">0</strong>分</p>
+                <p><strong class="pk_second">0</strong>秒</p>
+            </div>
+            <!--倒计时-->
+            <div class="list_me">
+                <span class="userRak">{{ pageInfo.rank != 0?"第" + pageInfo.rank + "名":"未上榜"}}</span>
+                <span class="userPic">
+                    <img :src="pageInfo.headImg" alt=""/>
+                </span>
+                <span class="userName">
+                    {{ pageInfo.name }}
+                </span>
+                <span class="userNumber">
+                    <p>{{  pageInfo.totalEnergy }}</p>
+                    <p>能量值</p>
+                </span>
+            </div>
+
+                <template v-for="(item,index) in pageInfo.rankList">
+                    <ul class="userBox" >
+                    <li class="userList">
+                        <span class="userRak" v-if="index < 3">
+                            <i>{{ index+1}}</i>
+                        </span>
+                        <span class="userRak" v-else>
+                            {{ index+1 }}
+                        </span>
+                        <span class="userPic">
+                        <img :src="item.headImg" alt=""/>
+                        </span>
+                        <span class="userName">
+                        <p v-if="item.name != null && item.name !== ''">{{ item.name }}</p><p v-else>...</p>
+                            <p v-show="index === 0">奖励：<em>SK-Ⅱ神仙水(75ml)</em></p>
+                            <p v-show="index === 1">奖励：<em>雪肌精护肤套装</em></p>
+                            <p v-show="index === 2">奖励：<em>美的烤箱</em></p>
+                            <p v-show="index === 3 || index === 4">奖励：<em>小熊煮蛋器</em></p>
+                            <p v-show="index >= 5 && index <= 14">奖励：<em>蜜罐Kitty-加长款</em></p>
+                            <p v-show="index >= 15 && index < 30">奖励：<em>福袋（19币娃娃）</em></p>
+                        </span>
+                        <span class="userNumber">
+                        <p>{{ item.totalEnergy }}</p>
+                        <p>能量值</p>
+                        </span>
+                        </li>
+                    </ul>
+                </template>
+        </div>
+        <div class="list_bon"></div>
+    </section>
+    <!--排行榜-->
+    <p class="footer">本活动与苹果官方无关，解释权归萌趣抓娃娃所有</p>
+    <div class="invitebtn">
+        <button  id="inviteBtn">邀请好友GO</button>
+    </div>
+    <div class="topDown" ></div>
+</section>
+</div>
+<div class="refresh"><img src="http://lianai-image-sys.qiniudn.com/y/btn_refresh.png" alt=""/></div><!--刷新按钮-->
+
+<script>
+
+
+    $(function(){
+        var uid_g;
+        var loginKeyg;
+        new Vue({
+            el: '#appp',
+            data: {
+                uid: "",
+                loginKey:"",
+                pageInfo:{
+                    rank:"",
+                    name:"",
+                    headImg:"",
+                    TotalEnergy:"",
+                    rankList:[]
+                }
+            },
+            methods: {
+                loadHTML() {
+                    var _ = this;
+                    _.uid = _.request("uid");
+                    _.loginKey = _.request("loginKey");
+                    uid_g= _.uid;
+                    loginKeyg = _.loginKey;
+                    $.post("../../api/inviteEnergy/getRankList", JSON.stringify({"uid": _.uid,"loginKey":_.loginKey}), function (data) {
+                        var result = JSON.parse(data);
+                        if (result.state) {
+
+                            Object.assign(_.pageInfo,result);
+                            console.info(_.pageInfo);
+                            _.timer();
+
+                        }
+                    })
+                },
+                //参数
+                request(paramName) {
+                    var url = location.href;
+                    var paraString = url.substring(url.indexOf("?") + 1, url.length).split(
+                        "&");
+                    var params = {}
+                    for (i = 0; j = paraString[i]; i++) {
+                        params[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(
+                            j.indexOf("=") + 1, j.length);
+                    }
+                    var returnValue = params[paramName.toLowerCase()];
+                    if (typeof(returnValue) == "undefined") {
+                        return "";
+                    } else {
+                        return returnValue;
+                    }
+                },
+                //倒计时
+                timer() {
+                    var intDiff = this.pageInfo.residueTime;
+                    console.info("-----" +intDiff );
+                    window.setInterval(function () {
+                        var day = 0,
+                            hour = 0,
+                            minute = 0,
+                            second = 0;//时间默认值
+                        if (intDiff > 0) {
+                            day = Math.floor(intDiff / (60 * 60 * 24));
+                            hour = Math.floor(intDiff / (60 * 60)) - (day * 24);
+                            minute = Math.floor(intDiff / 60) - (day * 24 * 60) - (hour * 60);
+                            second = Math.floor(intDiff) - (day * 24 * 60 * 60) - (hour * 60 * 60) - (minute * 60);
+                        }
+                        $('.pk_day').html(day);
+                        $(".pk_hour").html(hour);
+                        $(".pk_minute").html(minute);
+                        $(".pk_second").html(second);
+                        intDiff--;
+                    }, 1000);
+                },
+            },
+            mounted() {
+                this.loadHTML();
+
+                $('.refresh').click(function () {
+                    console.info("......");
+                    window.location.reload();
+                });
+                $('.topBtn').click(function () {
+                    window.location.href="http://www.mengquww.com/download/gw";
+                });
+
+                $('#inviteBtn').click(function(){
+                    window.location.href="http://www.mengquww.com/download/gw";
+                });
+                $('.topDown').click(function () {
+                    window.location.href="http://www.mengquww.com/download/gw";
+                })
+            }
+        });
+
+    })
+
+
+
+</script>
+</body>
+
+
+</html>
+
+
+
+
+
+

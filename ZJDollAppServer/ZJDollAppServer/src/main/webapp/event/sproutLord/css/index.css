@@ -1,0 +1,627 @@
+body,html{
+    background: #fffadc;
+    position: relative;
+}
+h1,h2,h3,h4,h5,h6{
+    font-weight: normal;
+}
+.maxBox,.BoxTop,.bodyRanking,.userListBox,.contenBody,.manageBox,.contenBox,.shareBox,.devote,.d_userBox{
+    width:100%;
+    height:auto;
+    position: relative;
+}
+.BoxTop>span{
+    position: absolute;
+    display: block;
+    width:5.3rem;
+    height:2.64rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/mz.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    top:3.14rem;
+    left:50%;
+    margin-left:-2.65rem;
+    z-index: 3;
+
+}
+.BoxTopPic{
+    width:100%;
+    height:auto;
+    position: absolute;
+    top: 3.5rem;
+    left:0;
+    z-index: 1;
+    box-sizing: border-box;
+    color:#A54225;
+    text-align: center;
+}
+.BoxTopPic>img{
+    width:1.7rem;
+    height:1.7rem;
+    border-radius: 50%;
+    border:1px solid #983111;
+    margin:0 auto;
+}
+.BoxTopPic>p{
+    margin:0.5rem 0 0.08rem 0;
+    font-size: 0.32rem;
+}
+.BoxTopPic>i{
+    display: block;
+    font-size: 0.24rem;
+    margin-bottom:0.6rem;
+}
+.BoxTopPic>h6,.BoxTop>h6{
+    font-weight: normal;
+    color:#FF1717;
+    font-size: 0.24rem;
+    line-height: 0.36rem;
+}
+.timeBox p{
+    display: inline;
+}
+.bodyTop,.bodyBon{
+    width:100%;
+    height:0.72rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/bodytab.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.bodyCen,.z_pmC,.devote_c,.lookCen{
+    width:100%;
+    height:auto;
+    background: url("http://lianai-image-sys.qiniudn.com/m/bgCen.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    overflow: hidden;
+}
+.bodyBon,.z_pmB,.devote_b,.lookBon{
+    background: url("http://lianai-image-sys.qiniudn.com/m/bgBon.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    height:0.33rem;
+}
+.bodyCenMe{
+    width:6.5rem;
+    height:auto;
+    background: #FFF;
+    border-radius: 0.2rem;
+    margin:0.24rem auto 0 auto;
+}
+.bodyCenMe>span,.userList>span{
+    display:inline-block;
+    float: left;
+}
+.userList>span{
+    height:100%;
+    display: block;
+}
+.pm{
+    width:auto;
+    height:100%;
+    line-height: 1.55rem;
+    font-size: 0.2rem;
+    padding-left:0.02rem;
+    box-sizing: border-box;
+    color:#A13E1F;
+}
+.pic{
+    width:0.74rem;
+    height:0.74rem !important;
+    border-radius: 50%;
+    border:1px solid #A03F1F;
+    margin:0.38rem 0 0 0.09rem;
+    position: relative;
+}
+.pic>i{
+    width:0.44rem;
+    height:0.44rem;
+    position: absolute;
+    top: -0.2rem;
+    right: -0.1rem;
+}
+.pic>img{
+    border-radius: 50%;
+    width:100%;
+    height:100%
+
+}
+.name{
+    width:28%;
+    padding:0 0.12rem;
+    line-height: 1.55rem;
+    box-sizing: border-box;
+    color:#A13E1F;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.number{
+    color:#CF3938;
+    line-height: 1.55rem;
+    width:14%;
+    text-align: center;
+    font-size: 0.22rem;
+    float: left;
+    height:100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.number2{
+    width:17%;
+}
+.lookBtn,.addBtn{
+    width:1.7rem;
+    height:0.4rem;
+    display: inline-block;
+    background: url("http://lianai-image-sys.qiniudn.com/m/lookbtn.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin:-1.5rem 0 0.38rem 1.3rem ;
+}
+.addBtn{
+    width:1.56rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/addbtn.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin-left:0.57rem;
+}
+.userList{
+    width:6.67rem;
+    height:1.2rem;
+    margin:0 auto;
+}
+.userList .pm,.userList .name,.userList .number{
+    line-height: 1.2rem;
+}
+.userList .pic{
+    margin-top:0.23rem;
+}
+.userList .name{
+    width:28%;
+}
+.userList .pm{
+    /*width:7%;*/
+    /*text-align: center;*/
+    width: auto;
+    text-align: center;
+    min-width: 13%;
+}
+.userListBox>li:nth-of-type(even){
+    background: #fffadc;
+}
+
+.down{
+    position: fixed;
+    top:0;
+    left:0;
+    z-index: 1;
+}
+.footer{
+    width:100%;
+    height:auto;
+   /* position: fixed;*/
+    bottom:0;
+    left:0;
+}
+.footertxt {
+    color: #FFBE71;
+    text-align: center;
+    font-size: 0.24rem;
+    margin: 0.38rem 0 0.74rem 0;
+
+
+
+}
+.footerNumer{
+    width:100%;
+    height:1.1rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/footer.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    position: fixed;
+    text-align: center;
+    bottom: 0;
+    left: 0;
+    z-index:4;
+}
+.rulesBtn,.refurbish{
+    width:0.88rem;
+    height:0.88rem;
+    position: fixed;
+    background: url("http://lianai-image-sys.qiniudn.com/m/rules.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    top:50%;
+    right:0;
+    z-index: 3;
+}
+.refurbish{
+    background: url("http://lianai-image-sys.qiniudn.com/m/refurbish.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    top:57%;
+}
+.contenUl,.shareUl{
+    width:100%;
+    height:1.35rem;
+}
+.contenUl>li,.shareUl>li{
+    width:3.75rem;
+    height:100%;
+    float: left;
+}
+.contenUl>li.mzShow1{
+    background: url("http://lianai-image-sys.qiniudn.com/m/show1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.contenUl>li.mzShow2{
+    background: url("http://lianai-image-sys.qiniudn.com/m/show2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.contenUl>li.mzHide1{
+    background: url("http://lianai-image-sys.qiniudn.com/m/hide1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.contenUl>li.mzHide2{
+    background: url("http://lianai-image-sys.qiniudn.com/m/hide2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.manageBox_t,.manageBox_b{
+    width:100%;
+    height:0.9rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/m_t.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.manageBox_b {
+    height: 0.92rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/m_b.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.manageBox_c{
+    width:100%;
+    height:auto;
+    background: url("http://lianai-image-sys.qiniudn.com/m/m_c.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    text-align: center;
+}
+.manageBox_c>h5{
+    text-align: center;
+    color:#A13E1F;
+    font-size: 0.22rem;
+   padding:0.15rem 0 ;
+    box-sizing: border-box;
+}
+.z_number{
+    width:5.67rem;
+    height:auto;
+    padding:0.25rem 0;
+    box-sizing: border-box;
+    background: #F1E9BC;
+    border-radius: 0.2rem;
+    margin:0 auto;
+    display: block;
+    color:#FF1717;
+    font-size: 0.36rem;
+}
+.z_number>h5{
+    color:#A13E1F;
+    font-size: 0.24rem;
+    margin:0 ;
+}
+.manageBox_c>h6{
+    width:5.67rem;
+    margin:0.35rem auto 0.48rem;
+    color:#A13E1F;
+    font-size: 0.22rem;
+}
+.manageBox_c>h6>em{
+    color:#FF1717;
+}
+.m_rules{
+    width:5.74rem;
+    height:auto;
+    margin:0 auto;
+}
+.m_rules>dt,.m_rules>dd{
+    width:100%;
+    height:0.5rem;
+    text-align: center;
+    line-height: 0.5rem;
+    color:#A13E1F;
+    font-size: 0.24rem;
+}
+.m_rules>dd{
+    border-top:0.04rem solid #fff;
+}
+.m_rules>dt>span,.m_rules>dd>span{
+    width:49.5%;
+    float: left;
+    height:100%;
+    display: block;
+    background: #FFE024;
+    border-radius: 0.04rem;
+}
+.m_rules>dd>span{
+    background: #FFFADC;
+}
+.m_rules>dt>span:last-of-type,.m_rules>dd>span:last-of-type{
+    float: right;
+}
+.z_pmT{
+    width:100%;
+    height:0.72rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/bodyTop.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.BoxTop{
+    text-align: center;
+}
+.topPic{
+    width:1.2rem;
+    height:1.2rem;
+    background: pink;
+    border-radius: 50%;
+    position: absolute;
+    top:4.4rem;
+    left:0.76rem;
+    border:1px solid #a13f20;
+    box-sizing: border-box;
+}
+.topPic>img{
+    border-radius: 50%;
+}
+.topTxt{
+    position: absolute;
+    width:4.68rem;
+    height:auto;
+    background: url("http://lianai-image-sys.qiniudn.com/m/txt.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    top:4.4rem;
+    left:2.17rem;
+    /*padding:0.13rem 0.19rem 0.2rem 0.42rem;*/
+    padding: 0.2rem 0.19rem 0.2rem 0.42rem;
+    box-sizing: border-box;
+    font-size: 0.24rem;
+    color:#A13E1F;
+    text-align:left;
+}
+.topTxt em{
+    color:#FB7600;
+}
+.topBtn{
+    width:100%;
+    height:0.65rem;
+    position: absolute;
+    bottom:1.5rem;
+    padding:0 1rem;
+    box-sizing: border-box;
+}
+.support,.me{
+    width:2.18rem;
+    height:100%;
+    background: url("http://lianai-image-sys.qiniudn.com/m/support.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.me{
+    width:2.78rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/me.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    float: right;
+}
+.shareUl{
+    margin-top:0.38rem;
+}
+.Show1{
+    background: url("http://lianai-image-sys.qiniudn.com/m/s_show1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.Show2{
+    background: url("http://lianai-image-sys.qiniudn.com/m/s_show2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.Hide1{
+    background: url("http://lianai-image-sys.qiniudn.com/m/s_hide1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.Hide2{
+    background: url("http://lianai-image-sys.qiniudn.com/m/s_hide2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.devote_t{
+    width: 100%;
+    height: 0.72rem;
+    background: url("http://lianai-image-sys.qiniudn.com/m/new_devote.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.d_me{
+    width:6.67rem;
+    margin:0 auto;
+    height:1.2rem;
+}
+.d_me>span{
+    display: block;
+    height:100%;
+    float: left;
+    text-align: center;
+}
+.d_me .pm,.d_user .pm{
+    width:12%;
+    line-height: 1.2rem;
+}
+.d_me .pic,.d_user .pic{
+    margin:0.23rem 0 0 0.2rem;
+    background: #fff;
+}
+.d_me .name,.d_user .name{
+    width:48%;
+    text-align: left;
+    line-height:1rem ;
+    padding-left:0.2rem;
+}
+.d_me .number,.d_user .number{
+    width:25%;
+    line-height: 1.2rem;
+}
+/*.name>p{*/
+    /*width:100%;*/
+    /*overflow: hidden;*/
+    /*text-overflow: ellipsis;*/
+    /*white-space: nowrap*/
+/*}*/
+.name>p:nth-of-type(1)>i{
+    display: inline-block;
+    width:50%;
+    float: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-right:0.05rem;
+}
+
+.name>p:nth-of-type(1){
+    font-size: 0.24rem;
+    color:#A13E1F;
+}
+.name>p:nth-of-type(2){
+    font-size: 0.22rem;
+    color:#BE7D68;
+    margin-top:-0.6rem;
+    float:left
+
+}
+.d_userBox>li:nth-of-type(odd){
+    background: #FFFADC;
+}
+.cd{
+    position: relative;
+    z-index: 3;
+}
+.looktop{
+    width:100%;
+    height:0.78rem;
+    background: url("http://lianai-image-sys.qiniudn.com/Mall/look.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    position: relative;
+    z-index: 2;
+    margin-top:-0.6rem;
+}
+
+#topNav,#opt {
+    width: 88%;
+    /*overflow: hidden;*/
+    float: left;
+    box-sizing: border-box;
+}
+.swiper-container {
+    margin-left: auto;
+    margin-right: auto;
+    position: relative;
+    /*overflow: hidden;*/
+    z-index: 1
+}
+.swiper-wrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    -webkit-transition-property: -webkit-transform;
+    -moz-transition-property: -moz-transform;
+    -o-transition-property: -o-transform;
+    -ms-transition-property: -ms-transform;
+    transition-property: transform;
+    -webkit-box-sizing: content-box;
+    -moz-box-sizing: content-box;
+    box-sizing: content-box
+}
+.swiper-slide {
+    -webkit-flex-shrink: 0;
+    -ms-flex: 0 0 auto;
+    flex-shrink: 0;
+    width: auto;
+    height: 100%;
+    position: relative;
+    display: block;
+}
+.machine{
+    margin:0 0.19rem;
+}
+.machine>span{
+    width:1.12rem;
+    height:1.12rem;
+    display: block;
+    border:1px solid #fdd103;
+    border-radius: 50%;
+    margin:-0.65rem auto 0;
+}
+.machine>span>img{
+    border-radius: 50%;
+}
+.machine>em{
+    display: block;
+    padding:0.07rem 0.12rem;
+    box-sizing: border-box;
+    background: #FFD303;
+    border-radius: 1rem;
+    font-size: 0.16rem;
+    color:#A13E1F;
+    position: relative;
+    z-index: 2;
+    margin-top:-0.35rem;
+}
+.active>span{
+    width: 1.4rem;
+    height:1.4rem;
+    border:1px solid #A13E1F;
+}
+.active>em{
+    background: #A13E1F;
+    color:#FFFFFF;
+    font-size: 0.2rem;
+}
+.maxBox{
+    padding-bottom: 1.4rem;
+    box-sizing: border-box;
+}
+.rulesBtn{
+    width:1.53rem !important;
+    height:0.64rem !important;
+    background: url("http://lianai-image-sys.qiniudn.com/m/newrules.png") no-repeat center center !important;
+    -webkit-background-size: 100% 100% !important;
+    background-size: 100% 100% !important;
+    top:25% !important;
+    z-index: 4;
+}
+.machine_2{
+    color: #CF3938;
+    width: 17%;
+    text-align: center;
+    font-size: 0.22rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    display: inline-block !important;
+    overflow: visible;
+}

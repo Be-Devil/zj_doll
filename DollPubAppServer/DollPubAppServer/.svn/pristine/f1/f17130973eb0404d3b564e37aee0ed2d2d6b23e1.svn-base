@@ -1,0 +1,61 @@
+package com.imlianai.dollpub.app.modules.core.trade.catalog.service;
+
+import java.sql.SQLException;
+import java.util.List;
+
+import com.imlianai.dollpub.domain.trade.ChargeCatalog;
+
+public interface ChargeCatalogService {
+	/**
+	 * 获取所有产品列表
+	 * @param type
+	 * @param isFirst 是否是首冲优惠列表 1-是 0-否
+	 * @return
+	 */
+	List<ChargeCatalog> getCatalogs(int type,int isFirst,int customerId);
+	
+	/**
+	 * 获取首冲优惠充值列表
+	 * @param type
+	 * @param uid
+	 * @return
+	 */
+	List<ChargeCatalog> getFirstPayCatalogs(int type,long uid,int customerId);
+	
+	/**
+	 * 获取快速充值列表
+	 * @param type
+	 * @return
+	 */
+	List<ChargeCatalog> getQuickCatalogs(int type,int customerId);
+	
+	/**
+	 * 获取特殊充值促销
+	 * @param type
+	 * @param uid
+	 * @param customerId
+	 * @return
+	 */
+	public List<ChargeCatalog> getSpecialPromotion(int type,long uid,int customerId);
+	/**
+	 * 处理ios马甲充值代码
+	 * @param channel
+	 * @param list
+	 * @return
+	 */
+	List<ChargeCatalog> handleIosCatalogs(String channel,List<ChargeCatalog> list);
+
+	/**
+	 * 获取指定类型的某个商品
+	 * 
+	 * @param code
+	 * @param type
+	 * @return
+	 * @throws SQLException
+	 */
+	ChargeCatalog getCatalog(int code);
+
+	List<ChargeCatalog> getSpecialPromotionSrc(int type, long uid,
+			int customerId);
+
+}

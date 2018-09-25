@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="war" name="DollPubAppServer:war">
+    <output-path>$PROJECT_DIR$/target</output-path>
+    <root id="archive" name="DollPubAppServer.war">
+      <element id="artifact" artifact-name="DollPubAppServer:war exploded" />
+    </root>
+  </artifact>
+</component>

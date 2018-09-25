@@ -1,0 +1,90 @@
+package com.imlianai.dollpub.app.modules.core.user.customer.opt.dao;
+
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import com.imlianai.dollpub.app.modules.core.user.customer.opt.router.CusOptRecordRouter;
+import org.springframework.stereotype.Repository;
+import com.imlianai.dollpub.domain.optrecord.OptRecord;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+
+@Repository
+public class CustomerOptRecordDaoImpl implements CustomerOptRecordDao {
+
+	@Resource
+	private JdbcHandler jdbcHandler;
+	
+	@Resource
+	private CusOptRecordRouter cusOptRecordRouter;
+	
+	private String insert_sql = "insert into %s(optId,busId,dollId,uid,customerId,agentId,startTime,endTime,result,remark) values(?,?,?,?,?,?,now(),?,?,?)";
+	
+	@Override
+	public int insertEntity(int groupId,OptRecord optRecord) {
+		return jdbcHandler.executeSql(cusOptRecordRouter.getFormatSql(insert_sql, groupId),
+				optRecord.getOptId(), optRecord.getBusId(), optRecord.getDollId(),optRecord.getUid(), optRecord.getCustomerId(),optRecord.getAgentId(),
+				optRecord.getEndTime(), optRecord.getResult(),optRecord.getRemark());
+	}
+
+	private String update_sql = "update %s set endTime=now(),result=? where optId=?";
+	
+	@Override
+	public int updateEntityById(int groupId,OptRecord optRecord) {
+		return jdbcHandler.executeSql(cusOptRecordRouter.getFormatSql(update_sql, groupId),
+				optRecord.getResult(), optRecord.getOptId());
+	}
+
+	
+	private String select_sql = "select * from %s";
+
+	@Override
+	public OptRecord getEntityByOptId(int groupId, long optId) {
+		return jdbcHandler.queryOneBySql(OptRecord.class,
+				cusOptRecordRouter.getFormatSql(select_sql, groupId) + " where optId=?", optId);
+	}
+
+
+	@Override
+	public List<OptRecord> getEntitysByStartTime(int groupId, Date startTime) {
+		return jdbcHandler.queryBySql(OptRecord.class,
+				cusOptRecordRouter.getFormatSql(select_sql, groupId) + " where startTime >= ?", startTime);
+	}
+
+
+	@Override
+	public List<OptRecord> getEntitysByResult(int groupId, int result) {
+		return jdbcHandler.queryBySql(OptRecord.class,
+				cusOptRecordRouter.getFormatSql(select_sql, groupId) + " where result = ?", result);
+	}
+
+
+	@Override
+	public List<OptRecord> getOptRecords(int groupId, int page, int pageSize) {
+		return jdbcHandler.queryBySql(OptRecord.class,
+				cusOptRecordRouter.getFormatSql(select_sql, groupId) + " order by `id` asc limit ?,?", page, pageSize);
+	}
+	
+	@Override
+	public List<OptRecord> getOptRecordByUid(int groupId,long uid) {
+		return jdbcHandler.queryBySql(OptRecord.class,cusOptRecordRouter.getFormatSql(select_sql, groupId) + " where uid=? ORDER BY startTime DESC LIMIT 50", uid);
+	}
+	
+	@Override
+	public List<OptRecord> getOptRecordsByPaging(int groupId, long uid, long lastId, int pageSize) {
+		StringBuilder sbSQL = new StringBuilder(cusOptRecordRouter.getFormatSql(select_sql, groupId));
+		sbSQL.append(" where uid=?");
+		if(lastId == 0) {
+			sbSQL.append(" and optId>?");
+		} else {
+			sbSQL.append(" and optId<?");
+		}
+		sbSQL.append(" order by optId desc limit ?");
+		return jdbcHandler.queryBySql(OptRecord.class, sbSQL.toString(), uid, lastId, pageSize);
+	}
+
+
+	
+	
+}

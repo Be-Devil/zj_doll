@@ -1,0 +1,388 @@
+package com.imlianai.zjdoll.app.modules.core.doll.service;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Random;
+import java.util.TimerTask;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.domain.doll.BusOperatingRecord;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.zjdoll.domain.doll.DollBus.DollBusCompany;
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+import com.imlianai.zjdoll.domain.doll.DollOptRecord;
+import com.imlianai.zjdoll.domain.doll.DollOptRecord.DollOptRecordStrong;
+import com.imlianai.zjdoll.domain.doll.pattern.BusPatternStat;
+import com.imlianai.zjdoll.domain.msg.Msg;
+import com.imlianai.zjdoll.domain.msg.MsgRoom;
+import com.imlianai.zjdoll.domain.msg.MsgRoomJump;
+import com.imlianai.zjdoll.domain.msg.MsgRoomType;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.zjdoll.domain.user.UserGeneral;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.rpc.support.utils.SysTimerHandle;
+import com.imlianai.zjdoll.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.zjdoll.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.zjdoll.app.modules.core.doll.list.DollRecommendService;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.domain.UserStageRecord;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.service.DollBusPatternService;
+import com.imlianai.zjdoll.app.modules.core.doll.record.DollRecordDao;
+import com.imlianai.zjdoll.app.modules.core.doll.record.DollRecordService;
+import com.imlianai.zjdoll.app.modules.core.doll.robot.service.DollRobotService;
+import com.imlianai.zjdoll.app.modules.core.doll.share.DollShareService;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.DollUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.qiyiguo.QIyiguoApplyResp;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.qiyiguo.QiyiguoApplyRetval;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.ZengjingUtils;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.domain.ZengjingApplyMachineRespVO;
+import com.imlianai.zjdoll.app.modules.core.doll.vo.DollApplyRes;
+import com.imlianai.zjdoll.app.modules.core.doll.vo.DollSuccessRes;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.publics.msg.leancloud.IMCommonService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.support.busowner.service.BusOwnerService;
+import com.imlianai.zjdoll.app.modules.support.dailytask.service.DailytaskService;
+import com.imlianai.zjdoll.app.modules.support.invite.service.InviteService;
+import com.imlianai.zjdoll.app.modules.support.redpacket.service.RedpacketService;
+import com.imlianai.zjdoll.app.modules.support.redpacket.vo.BusRedpacket;
+
+@Service
+public class DollServiceImpl implements DollService {
+	protected final BaseLogger logger = BaseLogger
+			.getLogger(DollServiceImpl.class);
+	@Resource
+	DollRecordService dollRecordService;
+	@Resource
+	DollInfoService dollInfoService;
+	@Resource
+	DollRecordDao dollRecordDao;
+	@Resource
+	DollBusService dollBusService;
+	@Resource
+	private IMCommonService iMCommonService;
+	@Resource
+	private DollBusPatternService dollBusPatternService;
+	@Resource
+	MsgService msgService;
+	@Resource
+	UserService userService;
+	@Resource
+	InviteService inviteService;
+	@Resource
+	DollShareService dollShareService;
+	@Resource
+	DollRobotService dollRobotService;
+	@Resource
+	RedpacketService redpacketService;
+	@Resource
+	DailytaskService dailytaskService;
+	@Resource
+	BusOwnerService busOwnerService;
+	@Resource
+	DollRecommendService dollRecommendService;
+
+	@Override
+	public DollApplyRes applyMachine(long uid, DollBus dollBus) {
+		Object resp = null;
+		DollOptRecordStrong catchStage=dollBusPatternService.judgeClaw(uid, dollBus);
+			resp = ZengjingUtils.applyMachine(uid, dollBus.getDeviceId());
+		// 记录日志
+		dollRecordDao.addApplyLog(uid, dollBus.getBusId(),dollBus.getDeviceCompany(),
+				dollBus.getDeviceId(), JSON.toJSONString(resp));
+		
+		if(dollBus.getDeviceCompany() == DollBusCompany.ZENGJING.type) {
+			ZengjingApplyMachineRespVO zengjingResp = (ZengjingApplyMachineRespVO)resp;
+			if(zengjingResp != null && zengjingResp.isSuccess()) {
+				Long optId = zengjingResp.getOptId();
+				if(optId == null || optId.intValue() < 0) {
+					return new DollApplyRes(false, "上机数据异常");// 增景上机数据异常
+				} else {
+					return handleApplySucc(uid, dollBus, optId.intValue(), DollBusCompany.ZENGJING.type,catchStage);
+				}
+			} else {
+				return new DollApplyRes(false, "上机失败");// 上机失败
+			}
+		} else {
+			return null;
+		}
+	}
+	
+	private DollApplyRes handleApplySucc(long uid, DollBus dollBus, int logId, int deviceCompany,DollOptRecordStrong catchStage) {
+		DollOptRecord record = new DollOptRecord(uid,
+				dollBus.getBusId(), logId,
+				dollBus.getDollId(), dollBus.getPrice());
+		record.setDeviceCompany(deviceCompany);
+		int optId = dollRecordService.saveDollOptRecord(record);
+		record.setOptId(optId);
+		//同步更新捉取捉力指定
+		dollBusService.addBusOperatingRecord(dollBus.getBusId(),
+				uid, optId, logId);
+		if (catchStage==null) {
+			catchStage=DollOptRecordStrong.DEFAULT;
+		}
+		String addMsg="";
+		if (catchStage==DollOptRecordStrong.DEFAULT) {
+			catchStage=dollBusPatternService.handleDefaultPattern(dollBus,true);
+			BusPatternStat stat=dollBusPatternService.getStat(dollBus.getBusId());
+			addMsg=" 本轮次数："+stat.getCurrent()+" 本轮预计出强爪为第"+stat.getStrong()+"次";
+		}
+		dollRecordService.updateOptRecordStrong(optId,
+				catchStage.type);
+		UserStageRecord stageRecord=dollBusPatternService.getUserStage(uid);
+		int roundNum=stageRecord!=null?stageRecord.getNum():0;
+		logger.info("handleApplySucc uid:"+uid+" 本次抓力公告:"+catchStage.des+" 用户该轮回累计次数:"+roundNum+addMsg);
+		
+		dollBusPatternService.updateUserStage(uid, optId, catchStage==DollOptRecordStrong.FULL_STRONG);
+		DollApplyRes res = new DollApplyRes(true, "");
+		res.setRecord(record);
+		UserGeneral user = userService.getUserGeneral(uid);
+		MsgRoom msgRoom = new MsgRoom(dollBus, user,
+				MsgRoomType.START_PLAY.type, user.getName()
+						+ " 成功上机了");
+		Map<String, Object> dataMap = new HashMap<String, Object>();
+		dataMap.put("remainSecond", 30);
+		msgRoom.setData(JSON.toJSONString(dataMap));
+		msgService.sendMsgRoom(msgRoom);
+		dollRecommendService.addHotRank(dollBus.getBusId());
+		return res;
+	}
+
+	@Override
+	public int handleOpt(long uid, int busId, int action) {
+
+		return 0;
+	}
+
+	@Override
+	public int releaseBus(int busId) {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	@Override
+	public int enterBus(long uid, int busId) {
+		DollBus dollBus = dollBusService.getDollBus(busId);
+		UserGeneral user = userService.getUserGeneral(uid);
+		MsgRoom msgRoom = new MsgRoom(dollBus, user,
+				MsgRoomType.ENTER_ROOM.type, user.getName() + " 来了");
+		Map<String, Object> dataMap = new HashMap<String, Object>();
+		if(busOwnerService.isBusOwner(uid)) { // 判断是否为萌主
+			dataMap.put("busOwnerRes", busOwnerService.getBusOwnerRes(uid)); // 萌主信息
+		}
+		msgRoom.setData(JSON.toJSONString(dataMap));
+		msgService.sendMsgRoom(msgRoom);
+		leaveBus(uid, -2,false);
+		dollRecordService.addWatchRecord(uid, busId);
+		dollBusService.updateBusWatchCount(busId, 1);
+		int robNum=new Random().nextInt(1)+1;
+		dollRobotService.addRobot(dollBus, robNum);
+		return 1;
+	}
+
+	@Override
+	public DollBus initBusConversationId(DollBus dollBus) {
+		if (dollBus != null) {
+			if (StringUtil.isNullOrEmpty(dollBus.getConversationId())) {
+				String conversationId = iMCommonService
+						.createRoomConversation(dollBus.getBusId());
+				dollBusService.updateConversationId(dollBus.getBusId(),
+						conversationId);
+				dollBus.setConversationId(conversationId);
+			}
+		}
+		return dollBus;
+	}
+
+	@Override
+	public void handleResult(long logId, int isSuccess, int deviceCompany) {
+
+		DollOptRecord record = dollRecordService.getOptRecordByLogId(logId, deviceCompany);
+		if (record != null) {
+
+			DollBus bus = dollBusService.getDollBus(record.getBusId());
+
+			if (bus != null) {
+				BusOperatingRecord operatingRecord = dollBusService
+						.getBusOperatingRecord(record.getBusId());
+				if (operatingRecord!=null&&operatingRecord.getLogId() == logId) {
+					int flag=dollRecordService.updateOptHasHandle(operatingRecord.getOptId());
+					if (flag!=1) {
+						return;
+					}
+					/*if (AppUtils.isTestEnv()) {
+						if (isSuccess==1||new Random().nextInt(10) == 0) {
+							isSuccess = 1;
+						} else {
+							isSuccess = 0;
+						}
+					}*/
+					try {
+						UserBase userBase=userService.getUserBase(record.getUid());
+						if (userBase!=null&&userBase.getVersion()>=110) {//110后开启直播间红包
+							dollRecordService.addUserPlaySummry(record.getUid(), record.getOptId(), isSuccess);
+						}
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					try {
+						dollBusService.closeBusOperatingRecord(record.getBusId(),
+								record.getOptId());
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					try {
+						dollBusPatternService.handleFinalPlay(bus, record,isSuccess);
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					// 夹中消息
+					if (isSuccess == 1) {
+						logger.info("handleResult removeBusOperatingRecord :"+JSON.toJSONString(record)+" before sendSuccessMsg"+DateUtils.getNowTime());
+						try {
+							final DollBus busfBus=bus;
+							final DollOptRecord recordf= record;
+							SysTimerHandle.execute(new TimerTask() {
+								@Override
+								public void run() {
+									try {
+										sendSuccessMsg(busfBus, recordf);
+									} catch (Exception e) {
+										PrintException.printException(logger, e);
+									}
+								}
+							}, 0);
+							
+						} catch (Exception e) {
+							PrintException.printException(logger, e);
+						}
+						logger.info("handleResult removeBusOperatingRecord :"+JSON.toJSONString(record)+" before invite"+DateUtils.getNowTime());
+						try {
+							inviteService.handleCatchDollSuccess(record.getUid());
+						} catch (Exception e) {
+							PrintException.printException(logger, e);
+						}
+						try {
+							BusOperatingRecord busOperatingRecord = dollBusService
+									.getBusOperatingRecord(record.getBusId());
+							logger.info("handleResult removeBusOperatingRecord :"+JSON.toJSONString(busOperatingRecord)+" "+DateUtils.getNowTime());
+							dollBusService
+									.removeBusOperatingRecord(busOperatingRecord);
+							dollRecordService.handleUserSuccessError(record.getUid(), record.getBusId(), record.getOptId());
+						} catch (Exception e) {
+							PrintException.printException(logger, e);
+						}
+					} else {
+						sendFailMsg(bus, record);
+					}
+					record.setResult(isSuccess);
+					try {
+						dollRecordService.updateDollOptRecord(record);
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					try {
+						dollRecordService.addDailyPlayRecord(record.getUid(),
+								isSuccess);
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					try {
+						dailytaskService.handleCatchDoll(record);
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					try {
+						dollRobotService.handleRobotCatchResultMsg(bus, isSuccess==1);
+					} catch (Exception e) {
+						PrintException.printException(logger, e);
+					}
+					try {
+						busOwnerService.handleUserIndex(record); // 机主指数处理
+					} catch(Exception e) {
+						PrintException.printException(logger, e);
+					}
+				}
+			}
+		}
+	}
+
+	private void sendSuccessMsg(DollBus bus, DollOptRecord record) {
+		DollInfo doll = dollInfoService.getDollInfo(bus.getDollId());
+		UserGeneral userGeneral = userService.getUserGeneral(record.getUid());
+		//获取连续捉娃娃次数
+		int playCount = dollRecordService.getUserContinueTime(record.getUid());
+		String msgString = DollUtil.getAppSuccessMsg(userGeneral.getName(),
+				doll.getName(),bus.getBusId(), playCount);
+		MsgRoom msgRoom = new MsgRoom(bus, userGeneral,
+				MsgRoomType.GAIN_SUCCESS.type, msgString);
+		DollSuccessRes shareRes = dollShareService.getDollSuccessShare(
+				record.getUid(), doll, bus.getBusId());
+		msgRoom.setData(JSON.toJSONString(shareRes));
+		msgService.sendMsgRoom(msgRoom);
+		Msg msg = new Msg(userGeneral, 0, MsgType.GAIN_SUCCESS.type, msgString);
+		msgService.sendOnlineSysMsgByRoom(msg);
+		MsgRoom msgRoomWebp = new MsgRoom(bus, userGeneral, MsgRoomType.BUS_WEBP.type, msgString);
+		//msgRoomWebp.initWebPMsg("http://lianai-image-sys.qiniudn.com/e20180125/toastn.webp");
+		msgRoomWebp.initWebPMsg("http://lianai-image-sys.qiniudn.com/e20180125/xinnianpiaopin.webp");
+		msgService.sendMsgRoomAll(msgRoomWebp);
+		MsgRoomJump msgRoomSys = new MsgRoomJump(bus, userGeneral, MsgRoomType.BUS_SYS.type, "<font color='#FF7B7B'>"+ msgString+"</font>");
+		msgRoomSys.setSave(true);
+		msgService.sendMsgRoomAll(msgRoomSys);
+	}
+
+	private void sendFailMsg(DollBus bus, DollOptRecord record) {
+		UserGeneral userGeneral = userService.getUserGeneral(record.getUid());
+		final String msgString = DollUtil.getAppFailMsg(userGeneral.getName());
+		if (DateUtils.secondBetween(record.getStartTime()) > 28) {
+			final DollBus busd = bus;
+			final UserGeneral userGenerald = userGeneral;
+			MsgRoom msgRoom = new MsgRoom(busd, userGenerald,
+					MsgRoomType.GAIN_FAIL.type, msgString);
+			msgService.sendMsgRoom(msgRoom);
+		} else {
+			MsgRoom msgRoom = new MsgRoom(bus, userGeneral,
+					MsgRoomType.GAIN_FAIL.type, msgString);
+			msgService.sendMsgRoom(msgRoom);
+		}
+
+	}
+
+	@Override
+	public void leaveBus(long uid, int busId,boolean isRobot) {
+		// 检查是否有在娃娃机
+		int currentBusId = dollRecordService.getWatchBus(uid);
+		if ((currentBusId > 0&&busId==currentBusId)||busId==-2) {
+			// 离开并且扣除在线人数
+			if(dollRecordService.deleteWatchRecord(uid, currentBusId)>0){
+				dollBusService.updateBusWatchCount(currentBusId, -1);
+				if (!isRobot) {
+					dollRobotService.removeRobot(busId);
+				}
+			}
+		}
+	}
+
+	@Override
+	public BusRedpacket abandonMachine(long uid, int busId) {
+		BusOperatingRecord record = dollBusService.getBusOperatingRecord(busId);
+		logger.info("abandonMachine removeBusOperatingRecord uid:"+uid+" busId:"+busId+" record:"+JSON.toJSONString(record));
+		if (record != null && record.getUid() == uid) {
+			dollBusService.removeBusOperatingRecord(record);
+			dollBusService.sendReleaseMsg(record);
+			dollRecordService.addUserAbandonSummry(uid, record.getOptId());
+			//下机红包
+			BusRedpacket busRedpacket =redpacketService.getBusRedpacket(uid, busId, record.getOptId());
+			return busRedpacket;
+		}
+		return null;
+	}
+
+}

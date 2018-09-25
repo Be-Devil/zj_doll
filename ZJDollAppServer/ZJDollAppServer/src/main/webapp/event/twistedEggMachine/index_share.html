@@ -1,0 +1,282 @@
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>扭蛋机</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="扭蛋机">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="扭蛋机">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/e20180311/css/swiper.min.css">
+    <!--<link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/e20180311/css1/index.css" type="text/css"/>-->
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/ndfxindex6.css" type="text/css"/>
+    <script src="http://lianai-image-sys.qiniudn.com/e20180311/js/jquery-1.8.3.min.js"></script>
+    <script src="http://lianai-image-sys.qiniudn.com/e20180311/js/font.js"></script>
+    <script src="http://lianai-image-sys.qiniudn.com/e20180311/js/swiper.min.js"></script>
+    <style type="text/css">.bl{background-color: black}</style>
+</head>
+<body style="font-size: 12px">
+<!--<section class="top">-->
+
+<!--</section>-->
+<section class="top_btn">
+    <div class="download">
+        <img src="http://lianai-image-sys.qiniudn.com/ndfx20180312161629.png" alt="">
+    </div>
+    <!--<div class="top_btn1">-->
+        <!--<ul class="userJB">-->
+            <!--&lt;!&ndash;<li><img src="./images/ico.png" alt=""></li>&ndash;&gt;-->
+            <!--&lt;!&ndash;<li>2304</li>&ndash;&gt;-->
+            <!--&lt;!&ndash;<li><img src="./images/add.png" alt=""></li>&ndash;&gt;-->
+        <!--</ul>-->
+    <!--</div>-->
+    <!--<div class="nd">-->
+        <!--<p>扭蛋记录</p>-->
+    <!--</div>-->
+    <!--提示-->
+     <div class="big_ts">
+         <div class="ts" style="display: none">
+             <!--<p>大是大非</p>-->
+         </div>
+     </div>
+    <div class="ck">
+        <a href="./newegg.html"><img src="http://lianai-image-sys.qiniudn.com/e20180311/images/btn_ck.png" alt=""></a>
+    </div>
+    <div class="sx">
+        <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/sx.png" alt="">
+    </div>
+    <div class="ten ">
+        <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/kin.png" alt="">
+    </div>
+    <div class="rw ">
+        <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/pink.png" alt="" class="rw_btn">
+        <div class="taggNumber">
+            <!--<p>10</p>-->
+        </div>
+    </div>
+    <div class="one ">
+        <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/green.png" alt="" class="non_cj">
+    </div>
+
+</section>
+<!--&lt;!&ndash;扭蛋不足&ndash;&gt;-->
+<div class="box_nd" style="display: none">
+    <div class="nd_ts">
+        <p>任务扭蛋数不足</p>
+        <p>（完成任务送扭蛋的活动会不定期推出噢~）</p>
+        <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/btnok.png" alt="" class="bz">
+    </div>
+</div>
+<!--扭蛋弹窗-->
+<!--今日手气-->
+<section class="sqb">
+    <div class="bg_sq">
+        <!--<img src="./images/list1.jpg" alt="">-->
+    </div>
+    <div class="today">
+        <!--我的排名-->
+        <!--<div class="today_me">-->
+            <!--&lt;!&ndash;<div class="list_ranking">未上榜</div>&lt;!&ndash;排名&ndash;&gt;&ndash;&gt;-->
+            <!--&lt;!&ndash;<div class="list_pic"><img src="http://sglive.imlianai.com/head/1/0/9/3/0/6/6/201703171802313383!s640" alt=""></div>&lt;!&ndash;头像&ndash;&gt;&ndash;&gt;-->
+            <!--&lt;!&ndash;<div class="list_name">超超的小七七</div>&ndash;&gt;-->
+            <!--&lt;!&ndash;<div class="list_number">手气值&nbsp;|&nbsp;<em>501546</em></div>&ndash;&gt;-->
+        <!--</div>-->
+        <!--我的排名 end-->
+        <!--用户排名-->
+        <ul class="user_list ks-clear">
+            <!--<li>-->
+                <!--<div class="user_listBox">-->
+                    <!--<div class="list_ranking user_ranking"><i>1</i></div>&lt;!&ndash;排名&ndash;&gt;-->
+                    <!--<div class="list_pic">-->
+                        <!--<img src="http://sglive.imlianai.com/head/1/0/9/3/0/6/6/201703171802313383!s640" alt=""/>-->
+                        <!--<i><img src="images/top1.png" alt=""/></i>&lt;!&ndash;皇冠&ndash;&gt;-->
+                    <!--</div>&lt;!&ndash;头像&ndash;&gt;-->
+                    <!--<div class="list_name">超超的小七七</div>&lt;!&ndash;昵称&ndash;&gt;-->
+                    <!--<div class="list_number">手气值&nbsp;|&nbsp;<em>501546</em></div>&lt;!&ndash;手气值&ndash;&gt;-->
+                <!--</div>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<div class="user_listBox">-->
+                    <!--<div class="list_ranking user_ranking"><i>2</i></div>&lt;!&ndash;排名&ndash;&gt;-->
+                    <!--<div class="list_pic">-->
+                        <!--<i><img src="images/top2.png" alt=""/></i>&lt;!&ndash;皇冠&ndash;&gt;-->
+                    <!--</div>&lt;!&ndash;头像&ndash;&gt;-->
+                    <!--<div class="list_name">超超的小七七</div>-->
+                    <!--<div class="list_number">手气值&nbsp;|&nbsp;<em>501546</em></div>-->
+                <!--</div>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<div class="user_listBox">-->
+                    <!--<div class="list_ranking user_ranking"><i>3</i></div>&lt;!&ndash;排名&ndash;&gt;-->
+                    <!--<div class="list_pic">-->
+                        <!--<i><img src="images/top3.png" alt=""/></i>&lt;!&ndash;皇冠&ndash;&gt;-->
+                    <!--</div>&lt;!&ndash;头像&ndash;&gt;-->
+                    <!--<div class="list_name">超超的小七七</div>-->
+                    <!--<div class="list_number">手气值&nbsp;|&nbsp;<em>501546</em></div>-->
+                <!--</div>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<div class="user_listBox">-->
+                    <!--<div class="list_ranking user_ranking"><i>4</i></div>&lt;!&ndash;排名&ndash;&gt;-->
+                    <!--<div class="list_pic">-->
+                        <!--&lt;!&ndash;<i><img src="http://lianai-image-sys.qiniudn.com/mq/pic_3.png" alt=""/></i>&lt;!&ndash;皇冠&ndash;&gt;&ndash;&gt;-->
+                    <!--</div>&lt;!&ndash;头像&ndash;&gt;-->
+                    <!--<div class="list_name">超超的小七七</div>-->
+                    <!--<div class="list_number">手气值&nbsp;|&nbsp;<em>501546</em></div>-->
+                <!--</div>-->
+            <!--</li>-->
+            <!--<li>-->
+                <!--<div class="user_listBox">-->
+                    <!--<div class="list_ranking user_ranking"><i>5</i></div>&lt;!&ndash;排名&ndash;&gt;-->
+                    <!--<div class="list_pic">-->
+                        <!--&lt;!&ndash;<i><img src="images/top3.png" alt=""/></i>&lt;!&ndash;皇冠&ndash;&gt;&ndash;&gt;-->
+                    <!--</div>&lt;!&ndash;头像&ndash;&gt;-->
+                    <!--<div class="list_name">超超的小七七</div>-->
+                    <!--<div class="list_number">手气值&nbsp;|&nbsp;<em>501546</em></div>-->
+                <!--</div>-->
+            <!--</li>-->
+        </ul>
+        <!--用户排行-->
+    </div>
+    <div>
+        <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/list3.jpg" alt="">
+    </div>
+</section>
+<!--今日手气结束-->
+<!--&lt;!&ndash;恭喜用户获奖&ndash;&gt;-->
+<!--<div class="noticeTxt swiper-container">-->
+    <!--<div class="swiper-wrapper">-->
+        <!--&lt;!&ndash;<div class="swiper-slide"><p></p></div>&ndash;&gt;-->
+    <!--</div>-->
+    <!--&lt;!&ndash;<p>恭喜 <em>昵称XXX</em> 扭蛋开出 <i>XXX</i></p>&ndash;&gt;-->
+<!--</div>-->
+<!--&lt;!&ndash;恭喜用户获奖 end&ndash;&gt;-->
+
+<div class="MaxBg" style="display: none"></div><!--蒙层-->
+<!--抽奖弹窗-->
+<div class="nd_tk" style="display: none">
+    <!--一次抽奖-->
+    <div class="nd_tk_type1" style="display: none">
+        <!--<i class="nd_tk_pic"></i>-->
+        <!--<img src="./images/award_jb.png" alt="" class="gifPic">-->
+        <!--<p>19币</p>-->
+        <!--<img src="./images/btnlq.png" alt="" class="lq">-->
+    </div>
+    <!--一次抽奖结束-->
+    <!--十次抽奖-->
+    <div class="nd_tk_type2 ks-clear" style="display: none">
+        <div class="gifListBox ks-clear">
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_jb.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_fd.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_kh.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+            <!--<div class="gifList">-->
+                <!--<i class="nd_tk_pic"></i>-->
+                <!--<img src="./images/award_zzj.png" alt="" class="gifPic">-->
+                <!--<p>19币</p>-->
+            <!--</div>-->
+        </div>
+        <button class="gifBtn"></button>
+    </div>
+    <!--十次抽奖结束-->
+</div>
+<!--抽奖弹窗 end-->
+
+<!--扭蛋记录-->
+<div class="record" style="display: none">
+    <i class="close"></i>
+    <ul class="recordList">
+        <!--<li>恭喜扭出 <em>19币</em> <i>20:00</i></li>-->
+        <!--<li>恭喜扭出 <em>19币</em> <i>20:00</i></li>-->
+    </ul>
+</div>
+<!--扭蛋记录-->
+
+<!--底部-->
+<div class="bom">
+    <!--恭喜用户获奖-->
+    <div class="noticeTxt swiper-container">
+        <div class="swiper-wrapper">
+            <!--<div class="swiper-slide"><p></p></div>-->
+        </div>
+        <!--<p>恭喜 <em>昵称XXX</em> 扭蛋开出 <i>XXX</i></p>-->
+    </div>
+    <!--恭喜用户获奖 end-->
+</div>
+<div style="display: none;">
+    <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/bg1.jpg">
+    <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/bg2.jpg">
+    <img src="http://lianai-image-sys.qiniudn.com/e20180311/images/bg3.jpg">
+</div>
+</body>
+<!--<script src="./js/index.js"></script>-->
+<!--<script>-->
+    <!--console.log($("html").width());-->
+<!--</script>-->
+<script>
+    <!--三张背景图-->
+    var num = 0;
+    $(".top_btn").attr("class",function(){
+        setInterval(function(){
+            num++;
+            if(num%3==0){
+                $('.top_btn').addClass("top_btn_2");
+            }else if(num%3==1) {
+                $('.top_btn').addClass("top_btn_3");
+                /*$('.top_btn').removeClass('top_btn');*/
+                $('.top_btn').removeClass('top_btn_2');
+            }
+            else{
+                $('.top_btn').addClass("top_btn");
+                $('.top_btn').removeClass('top_btn_2');
+                $('.top_btn').removeClass('top_btn_3');
+            }
+        },500)
+    })
+</script>'
+<script src="js/index_share.js"></script>
+</html>

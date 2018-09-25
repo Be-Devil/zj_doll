@@ -1,0 +1,79 @@
+package com.imlianai.dollpub.app.modules.support.shipping.cmd;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+import org.springframework.stereotype.Component;
+
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.app.modules.support.shipping.service.ShippingService;
+import com.imlianai.dollpub.app.modules.support.shipping.vo.ApplyReqVO;
+import com.imlianai.dollpub.app.modules.support.shipping.vo.ApplyShippingRespVO;
+import com.imlianai.dollpub.app.modules.support.shipping.vo.GetPostageRespVO;
+import com.imlianai.dollpub.app.modules.support.shipping.vo.GetShippingListRespVO;
+import com.imlianai.dollpub.domain.doll.BaseDollInfo;
+import com.imlianai.dollpub.domain.trade.TradeAccount;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LogHead;
+import com.imlianai.rpc.support.manager.aspect.annotations.LoginCheck;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
+@Api("发货")
+@LogHead("发货模块")
+@Component("shipping")
+public class CmdShipping extends RootCmd{
+	
+	@Resource
+    ShippingService shippingService;
+	@Resource
+	TradeService tradeService;
+	
+	@ApiHandle
+	@Path("api/shipping/getDollList")
+	@ApiOperation(value = "发货的娃娃列表", notes = "发货的娃娃列表", httpMethod = "POST", response = GetShippingListRespVO.class)
+	@LogHead("发货的娃娃列表")
+	public BaseRespVO getDollList(BaseReqVO reqVO) {
+		GetShippingListRespVO respVO = new GetShippingListRespVO();
+		List<BaseDollInfo> dollList = shippingService.getShippingList(reqVO.getUid());
+		respVO.setDollList(dollList);
+		return respVO;
+	}
+	
+	@ApiHandle
+	@Path("api/shipping/phonebind")
+	@ApiOperation(value = "申请发货验证手机是否绑定", notes = "申请发货验证手机是否绑定", httpMethod = "POST", response = BaseReqVO.class)
+	@LogHead("申请发货验证手机是否绑定")
+	public BaseRespVO phonebind(BaseReqVO reqVO) {
+		return shippingService.phonebind(reqVO.getUid());
+	}
+	
+	@ApiHandle
+	@LoginCheck
+	@Path("api/shipping/applyShipping")
+	@ApiOperation(value = "申请发货", notes = "申请发货", httpMethod = "POST", response = ApplyShippingRespVO.class)
+	@LogHead("申请发货")
+	public BaseRespVO applyShipping(ApplyReqVO reqVO) {
+		return shippingService.applyShipping(reqVO.getDollList(), reqVO.getUid(), reqVO.getAddressId());
+	}
+	
+	@ApiHandle
+	@LoginCheck
+	@Path("api/shipping/getPostage")
+	@ApiOperation(value = "获取邮费", notes = "获取邮费", httpMethod = "POST", response = GetPostageRespVO.class)
+	@LogHead("获取邮费")
+	public BaseRespVO getPostage(ApplyReqVO reqVO) {
+		GetPostageRespVO respVO = new GetPostageRespVO();
+		int postage = shippingService.getPostage(reqVO.getDollList(), reqVO.getUid());
+		respVO.setPostage(postage); // 邮费
+		TradeAccount tradeAccount = tradeService.getAccount(reqVO.getUid());
+		respVO.setCoin(tradeAccount.getCoin()); // 余额
+		return respVO;
+	}
+}

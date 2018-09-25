@@ -1,0 +1,288 @@
+package com.imlianai.zjdoll.app.modules.publics.oauth.wechat.callback;
+
+import java.io.IOException;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.publics.oauth.wechat.domain.UserWechat;
+import com.imlianai.zjdoll.app.modules.publics.oauth.wechat.domain.WechatOpenIdInfo;
+import com.imlianai.zjdoll.app.modules.publics.oauth.wechat.service.WechatService;
+import com.imlianai.zjdoll.app.modules.publics.oauth.wechat.utils.WebWeixinShareOauthUtil;
+import com.imlianai.zjdoll.app.modules.publics.oauth.wechat.utils.WebWeixinTokenHandler;
+
+/**
+ * 微信网页用户授权
+ * 
+ * @author tensloveq
+ * 
+ */
+@Component
+public class WechatOauthController {
+
+	protected Logger logger = Logger.getLogger(this.getClass());
+
+	@Resource
+	private UserService userService;
+
+	@Resource
+	private WechatService wechatService;
+
+	private final boolean isDebug = true;
+
+	private final String auth_domain = "http://happycooltt.realgamecloud.com";// 获取用户信息的授权域名
+	private final String oauth_url = "/api/oauth/"; // 授权路径
+	// 授权入口
+	private final String commonEntanceUrl = "wxAuth";
+	// 获取用户openId
+	private final String getOpenIdUrl = "getOpenId";
+	// 获取用户信息
+	private final String getUserInfo = "getUserInfo";
+	// 保存用户信息
+	private final String saveUserInfo = "saveUserInfo";
+
+	/**
+	 * 授权入口
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void handleFirstStep(HttpServletRequest request,
+			HttpServletResponse response, String target) throws IOException {
+		String dir_url = null;
+		String queryParam = target;
+		Map map = request.getParameterMap();
+		String userInfoMark = request.getParameter("userInfoMark");// 判断是否需要具体信息
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		logger.info("-wx_auth.do 进入授权页 ---appid:" + appid + "--userInfoMark:"
+				+ userInfoMark + " map:" + JSON.toJSONString(map));
+		// 开始第一步-判断是否是微信
+		String platform = request.getHeader("User-Agent");
+		if (StringUtils.indexOfIgnoreCase(platform, "micromessenger") < 0) {// 如果不是微信agent跳转官网
+			String urlString = getRedictUrlByCode(target);
+			response.sendRedirect(urlString);
+		} else {
+			String authOpenID = null;
+			if (StringUtils.isNotBlank(authOpenID)) {
+				// 从cookie找出是否有记录下来的openID
+			} else {// 未授权，则走微信授权
+				queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+						request.getParameterMap(), new String[] { "code" });
+				if (StringUtils.equals("userInfoMark", userInfoMark)) {// 只是取用户信息
+					dir_url = auth_domain + oauth_url + getUserInfo + "/"
+							+ target + "?" + queryParam;
+					WebWeixinShareOauthUtil.redirect4GetCodeUnauth(response,
+							appid, dir_url, true);
+				} else if (StringUtils.equals("userInfoSave", userInfoMark)) {// 保存并新建用户
+					dir_url = auth_domain + oauth_url + saveUserInfo + "/"
+							+ target + "?" + queryParam;
+					WebWeixinShareOauthUtil.redirect4GetCodeUnauth(response,
+							appid, dir_url, true);
+				} else {// 仅获取openid
+					dir_url = auth_domain + oauth_url + getOpenIdUrl + "/"
+							+ target + "?" + queryParam;
+					logger.info("-wx_auth.do 进入授权页 ---appid:" + appid
+							+ " dir_url:" + dir_url);
+					WebWeixinShareOauthUtil.redirect4GetCode(response, appid,
+							dir_url, true);
+				}
+			}
+		}
+	}
+
+	/**
+	 * 获取用户openId
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public void getOpenId(HttpServletRequest request,
+			HttpServletResponse response, String target) throws IOException {
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		String appSecret = WebWeixinTokenHandler.getAppSecretByAppID(appid);
+		String code = request.getParameter("code");
+		WechatOpenIdInfo openID = WebWeixinShareOauthUtil.getUserOpenid(appid, appSecret,
+				code);
+		Map map = request.getParameterMap();
+		logger.info("-getOpenId.do 进入获取openId页 -----map:"
+				+ JSON.toJSONString(map));
+		if (isDebug) {
+			logger.info("-case getOpenId.do-getQueryString-"
+					+ request.getQueryString());
+			logger.info("-case getOpenId.do-code-" + code);
+			logger.info("-case getOpenId.do-openID-" + openID);
+		}
+		if (openID == null) {// 数据信息为空-重新授权
+			String queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+					request.getParameterMap(), new String[] { "code" });
+			String dir_url = auth_domain + oauth_url + commonEntanceUrl + "?"
+					+ queryParam;
+			response.sendRedirect(dir_url);
+		} else {
+			// 成功获取后记录
+			String queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+					request.getParameterMap(), new String[] { "step", "code" });
+			WebWeixinShareOauthUtil.handleUserLoginCookies(response, openID.getOpenid());
+			String dir_url = getRedictUrlByCode(target) + "openId=" + openID.getOpenid()+"&unionId="+openID.getUnionid()
+					+ "&" + queryParam;
+			response.sendRedirect(dir_url);
+		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void getUserInfo(HttpServletRequest request,
+			HttpServletResponse response, String target) throws IOException {
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		String appSecret = WebWeixinTokenHandler.getAppSecretByAppID(appid);
+		String code = request.getParameter("code");
+		Map map = request.getParameterMap();
+		UserWechat userWechat = WebWeixinShareOauthUtil.getUserInfoByCode(
+				appid, appSecret, code);
+		logger.info("-case getUserInfo.do-----mapu:"
+				+ JSON.toJSONString(userWechat) + " map:"
+				+ JSON.toJSONString(map));
+		// 保存用户信息
+		wechatService.saveWechatUserInfo(userWechat);
+		// TODO 创建用户
+
+		WebWeixinShareOauthUtil.handleUserLoginCookies(response,
+				userWechat.getUnionId());
+		String queryParam = WebWeixinShareOauthUtil.getQueryParameter(map,
+				new String[] { "code" });
+		String dir_url = null;
+		if (target.equals("vote")) {
+			dir_url = getRedictUrlByCode(target)
+					+ request.getParameter("voteId") + "?htmlId="
+					+ userWechat.getUnionId();
+		} else {
+			dir_url = getRedictUrlByCode(target) + queryParam + "&openId="
+					+ userWechat.getOpenId() + "&unionId="
+					+ userWechat.getUnionId();
+		}
+		logger.info("getUserInfo dir_url:" + dir_url);
+		response.sendRedirect(dir_url);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void saveUserInfo(HttpServletRequest request,
+			HttpServletResponse response, String target) throws IOException {
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		String code = request.getParameter("code");
+		String authBefore = request.getParameter("authBefore");
+		Map map = request.getParameterMap();
+		logger.info("-case saveUserInfo.do---- map:" + JSON.toJSONString(map));
+		if (authBefore != null && !authBefore.trim().equals("")) {
+			String queryParam = WebWeixinShareOauthUtil.getQueryParameter(map,
+					new String[] { "code" });
+			String dir_url = getRedictUrlByCode(target) + "code=" + code + "&"
+					+ queryParam;
+			logger.info("-case saveUserInfo.do-----dir_url:" + dir_url);
+			response.sendRedirect(dir_url);
+		} else {
+			long uid = 0;
+			logger.info("-case saveUserInfo.do-----uid:" + uid);
+			String queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+					request.getParameterMap(), new String[] { "code" });
+			String dir_url = getRedictUrlByCode(target) + queryParam + "&uid="
+					+ uid;
+			response.sendRedirect(dir_url);
+		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void codeOnly(HttpServletRequest request,
+			HttpServletResponse response, String target)
+			throws IOException {
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		String appSecret = WebWeixinTokenHandler.getAppSecretByAppID(appid);
+		String code = request.getParameter("code");
+		Map map = request.getParameterMap();
+		UserWechat userWechat = WebWeixinShareOauthUtil.getUserInfoByCode(
+				appid, appSecret, code);
+		logger.info("-case getUserInfo.do-----mapu:"
+				+ JSON.toJSONString(userWechat) + " map:"
+				+ JSON.toJSONString(map));
+		// 保存用户信息
+		wechatService.saveWechatUserInfo(userWechat);
+		// TODO 创建用户
+
+		WebWeixinShareOauthUtil.handleUserLoginCookies(response,
+				userWechat.getUnionId());
+		String queryParam = WebWeixinShareOauthUtil.getQueryParameter(map,
+				new String[] { "code" });
+		String dir_url = null;
+		if (target.equals("vote")) {
+			dir_url = getRedictUrlByCode(target)
+					+ request.getParameter("voteId") + "?htmlId="
+					+ userWechat.getUnionId();
+		} else {
+			dir_url = getRedictUrlByCode(target) + queryParam + "&openId="
+					+ userWechat.getOpenId() + "&unionId="
+					+ userWechat.getUnionId();
+		}
+		logger.info("getUserInfo dir_url:" + dir_url);
+		response.sendRedirect(dir_url);
+	}
+	
+	/**
+	 * 根据code获取目标跳转地址
+	 * 
+	 * @param code
+	 */
+	private String getRedictUrlByCode(String eventParam) {
+		String url = auth_domain;
+		if (eventParam != null) {
+			if (StringUtils.equals("pay4met", eventParam)) {// 亲密付测试
+				url = "http://web.mengquww.com/qinmifu.html?";
+			} else if (StringUtils.equals("pay4me", eventParam)) {// 亲密付
+				url = "http://web.mengquww.com/qinmifu_online.html?";
+			} else if (StringUtils.equals("inviteRedpackett", eventParam)) {// 邀请红包测试
+				url = "http://122.11.48.251:6639/DollAppServer/event/inviteredpacket/index.html?";
+			} else if (StringUtils.equals("inviteRedpacket", eventParam)) {// 邀请红包
+				url = "http://www.mengquww.com/event/inviteredpacket/index.html?";
+			} else if (StringUtils.equals("critRedpackett", eventParam)) {// 暴击红包测试
+				url = "http://122.11.48.251:6639/DollAppServer/event/critredpacket/index.html?";
+			} else if (StringUtils.equals("critRedpacket", eventParam)) {// 暴击红包
+				url = "http://www.mengquww.com/event/critredpacket/index.html?";
+			}else if (StringUtils.equals("pay2b", eventParam)) {// 投票
+				url = "http://web.mengquww.com/charge.html?";
+			} else if(StringUtils.equals("busownert", eventParam)) { // 萌主邀请测试
+				url = "http://t.xiehou360.com/DollAppServer/event/sproutLord/shareIndex.html?";
+			} else if(StringUtils.equals("busowner", eventParam)) { // 萌主邀请
+				url = "http://www.mengquww.com/event/sproutLord/shareIndex.html?";
+			} 
+		} else {
+			url = auth_domain;
+		}
+		return url;
+	}
+
+}

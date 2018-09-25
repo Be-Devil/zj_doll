@@ -1,0 +1,43 @@
+package com.imlianai.zjdoll.app.modules.core.push.controller;
+
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.controller.RootCmd;
+import com.imlianai.zjdoll.app.modules.core.push.service.PushCoinExService;
+import com.imlianai.zjdoll.app.modules.core.push.vo.*;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-05-17 22:01
+ **/
+@Component("CmdPushCoinEx")
+public class CmdPushCoinEx extends RootCmd {
+
+    @Resource
+    private PushCoinExService pushCoinExService;
+
+    @ApiHandle
+    @Path("api/CmdPushCoinEx/pushCoinAuth")
+    public BaseRespVO pushCoinAuth(AuthReqVO vo){
+        if (!StringUtil.isNullOrEmpty(vo)){
+            return pushCoinExService.handleAuth(vo.getEmail(),vo.getPwd());
+        }
+        return new BaseRespVO(0,false,"非法操作");
+    }
+
+    @ApiHandle
+    @Path("api/CmdPushCoinEx/pushCoinAuthPermission")
+    public BaseRespVO pushCoinAuthPermission(AuthReqVO vo){
+        if (!StringUtil.isNullOrEmpty(vo)){
+            return pushCoinExService.handlePermission(vo.getEmail(),vo.getPwd());
+        }
+        return new BaseRespVO(0,false,"非法操作");
+    }
+
+
+}

@@ -1,0 +1,28 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service;
+
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.VirtualFruitsQueryReqVO;
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+/**
+ * 水果机相关服务
+ * @author wurui
+ * @create 2018-06-19 10:16
+ **/
+public interface PushCoinFruitService {
+
+
+    /**
+     * 查询水果机中奖
+     * @param reqVO
+     * @return
+     */
+    public BaseRespVO query(VirtualFruitsQueryReqVO reqVO);
+
+
+
+
+
+
+
+}

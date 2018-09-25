@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>领取红包</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="领取红包">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="领取红包">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/normalize.css" type="text/css"/>
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/style.css" type="text/css"/>
+    <style>
+        html,body{
+            background: #fe1c30;
+        }
+        .maxBox{
+            width:100%;
+            height:100%;
+            background:url("http://lianai-image-sys.qiniudn.com/h/bg.png") no-repeat center -3%;
+            -webkit-background-size: 100% ;
+            background-size: 100% ;
+            padding-top:1.02rem;
+            box-sizing: border-box;
+        }
+        .ursePic{
+            width:2rem;
+            height:2rem;
+            display: block;
+            margin:0 auto 0.4rem;
+            border: 0.04rem solid #ffdf23;
+            box-sizing: border-box;
+            border-radius: 50%;;
+        }
+        .ursePic>img{
+            border-radius: 50%;
+        }
+        .name{
+            text-align: center;
+            font-size: 0.4rem;
+            color:#fff;
+        }
+        .tle{
+            font-size: 0.32rem;;
+            color:#fff;
+            opacity: 0.7;
+            text-align: center;
+            margin:0.26rem 0 0.92rem;;
+        }
+        .money{
+            font-size: 1.2rem;
+            text-align: center;
+            color:#fff79c;
+            font-weight: normal;
+        }
+        .money>em{
+            font-size:0.32rem; ;
+        }
+        .tx{
+            text-align: center;
+            color:#fedc00;
+            font-size: 0.26rem;;
+            letter-spacing: 1px;;
+        }
+        .libtn{
+            width:3.28rem;
+            height:0.8rem;
+            background: url("http://lianai-image-sys.qiniudn.com/h/btnRed.png") no-repeat center center;
+            -webkit-background-size: 100% 100%;
+            background-size: 100% 100%;
+            margin: 0.78rem auto 0.2rem;;
+            color:#c63b3b;
+            display: block;
+            font-size: 0.4rem;
+        }
+        .footerDiv{
+            width:6.6rem;
+            height:2.1rem;
+            background:#e4122c ;
+            margin:0 auto;
+            border-radius: 0.1rem;
+            position: relative;
+        }
+        .footerDiv>li{
+            width:32%;
+            height:100%;
+            text-align: center;
+            padding:0.28rem 0;
+            box-sizing: border-box;
+            font-size: 0.28rem;
+            color:#fff;
+            float: left;
+            position: relative;
+            z-index: 4;
+        }
+        .footerDiv>li:nth-of-type(1){
+            width:36%;
+        }
+        .footerDiv>li>img{
+            width:1.1rem;
+            display: inline-block;
+        }
+        .line{
+            width:3.9rem;
+            height:0.06rem;
+            border-radius: 1rem;
+            background: #fff;
+            position: absolute;
+            top:41%;
+            left:22%;
+            margin-top:-0.03rem;
+            z-index: 2;
+        }
+        .footerTxt{
+            text-align: center;
+            margin-bottom:0.65rem;
+            font-size: 13pt;
+            color:#FFC8CE;
+            font-weight: normal;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body style="font-size: 12px;">
+    <section class="maxBox" id="inviteInfo">
+        <span class="ursePic"><img v-bind:src="(uhead != null && uhead != undefined && uhead != '')?uhead:'http://lianai-image-sys.qiniudn.com/mqww/head/pic_avatar_n.jpg'" alt=""/></span>
+        <p class="name" v-text="uname"></p>
+        <p class="tle">给你发了一个红包!</p>
+        <h6 class="money">20.00<em>元</em></h6>
+        <p class="tx">(可提现)</p>
+        <button class="libtn" v-on:click="get()">领  取</button>
+        <h6 class="footerTxt">下载萌趣抓娃娃后微信登录即可领取</h6>
+        <ul class="footerDiv">
+            <li>
+                <img src="http://lianai-image-sys.qiniudn.com/h/pic_1.png" alt=""/>
+                <p>下载“萌趣抓娃娃”</p>
+            </li>
+            <li>
+                <img src="http://lianai-image-sys.qiniudn.com/h/pic_2.png" alt=""/>
+                <p>通过微信登录</p>
+            </li>
+            <li>
+                <img src="http://lianai-image-sys.qiniudn.com/h/pic_3.png" alt=""/>
+                <p>领红包</p>
+            </li>
+            <i class="line"></i>
+        </ul>
+    </section>
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script src="http://lianai-image-sys.qiniudn.com/js/font.js"></script>
+<script>
+    /*控制字长*/
+    $(".name").each(function(){
+        var maxwidth=6;
+        if($(this).text().length>maxwidth){
+            $(this).text($(this).text().substring(0,maxwidth));
+            $(this).html($(this).html()+'…');
+        }
+    });
+</script>
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>
+    <script src="js/vue_model.js"></script>
+    <script src="js/main_vue.js"></script>

@@ -1,0 +1,446 @@
+package com.imlianai.dollpub.app.modules.core.user.service.impl;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.configs.AppUtils;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.app.modules.core.user.cache.UserCacheService;
+import com.imlianai.dollpub.app.modules.core.user.dao.UserDAO;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.core.user.util.UserUtil;
+import com.imlianai.dollpub.app.modules.core.user.value.UserValueService;
+import com.imlianai.dollpub.app.modules.core.user.vo.UserUpdateReqVO;
+import com.imlianai.dollpub.app.modules.core.user.vo.UserWechatRegRespVO;
+import com.imlianai.dollpub.app.modules.publics.oauth.qq.OauthQQManager;
+import com.imlianai.dollpub.app.modules.publics.oauth.weibo.OauthWeiBoManager;
+import com.imlianai.dollpub.app.modules.publics.oauth.weixin.OauthWeiXinManager;
+import com.imlianai.dollpub.domain.user.UserAgentRecord;
+import com.imlianai.dollpub.domain.user.UserBase;
+import com.imlianai.dollpub.domain.user.UserBase.UserSrcType;
+import com.imlianai.dollpub.domain.user.UserGeneral;
+import com.imlianai.dollpub.domain.user.UserName;
+import com.imlianai.dollpub.domain.user.UserOauth;
+import com.imlianai.dollpub.domain.user.UserSimple;
+import com.imlianai.dollpub.domain.user.UserTemp;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.common.info.PackageMsg;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.ImgUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+@Service
+public class UserServiceImpl implements UserService {
+
+	private final BaseLogger logger = BaseLogger
+			.getLogger(UserServiceImpl.class);
+
+	@Resource
+	private UserDAO userDAO;
+	@Resource
+	private UserValueService userValueService;
+	@Resource
+	private UserCacheService userCacheService;
+	@Resource
+	private OauthWeiBoManager oauthWeiBoManager;
+	@Resource
+	private OauthWeiXinManager oauthWeiXinManager;
+	@Resource
+	private OauthQQManager oauthQQManager;
+	@Resource
+	private TradeService tradeService;
+
+	// @Resource
+	// private RecommendService recommendService;
+
+	@Override
+	public long initUser(UserBase userBase, UserGeneral user) {
+		long uid = 0;
+		for (int i = 0; i < 100; i++) {// 最多重试100次
+			long location = StringUtil.getRanDom(104170, 304170);
+			uid = userDAO.getUid(location);
+			if (UserUtil.isPrettyId(uid))
+				continue;
+			if (uid > 0)
+				break;
+		}
+		if (uid > 0) {
+			userBase.setUid(uid);
+			user.setUid(uid);
+			userDAO.initUserBase(userBase);
+			if (StringUtil.isNullOrEmpty(user.getName())) {
+				user.setName("萌萌哒" + uid);
+			}
+			//user.setName(getNameNoSame(user.getName()));
+			userDAO.initUserGeneral(user);
+			userValueService.initUserValue(uid);
+			userDAO.updateUserName(uid, user.getName());
+			userDAO.addHeadAudit(uid);
+			tradeService.initAccount(uid);
+		}
+		return uid;
+	}
+
+	/**
+	 * 自动避免重名
+	 * 
+	 * @param name
+	 * @return
+	 */
+	public String getNameNoSame(String name) {
+		name = UserUtil.getName(name);
+		if (name.length() > 10)
+			name = name.substring(0, 10);
+		String nameNew = name;
+		if (isSameName(name)) {
+			for (int i = 0; i <= 1000; i++) {
+				nameNew = name + UserUtil.buildDynStr(5);
+				if (!isSameName(nameNew))
+					return nameNew;
+			}
+		}
+		return nameNew;
+	}
+
+	@Override
+	public BaseRespVO initUser(int srcType, String srcId, String srcIdUnion,
+			String srcToken,int customerId) {
+		UserOauth userBean = null;
+		BaseRespVO vo = null;
+		try {
+			if (srcType == UserSrcType.WECHAT.type) {
+				userBean = oauthWeiXinManager.getUserInfo(srcToken, srcId);
+			} else if (srcType == UserSrcType.QQ.type) {
+				userBean = oauthQQManager.getUserInfo(srcToken, srcId);
+			} else if (srcType == UserSrcType.WEIBO.type) {
+				userBean = oauthWeiBoManager.getUserInfo(srcToken, srcId);
+			} else if (srcType == UserSrcType.WECHAT_PUBLIC.type) {
+
+			}
+		} catch (Exception e) {
+			PrintException.printException(logger, e);
+			return new BaseRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+		}
+		if (userBean == null) {
+			return new BaseRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+		}
+		userBean.setName(AppUtils.getNoXSS(userBean.getName()));
+		if (StringUtils.isNotBlank(userBean.getErrmsg())) {
+			vo = new BaseRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+			vo.setMsg(userBean.getErrmsg());
+			return vo;
+		}
+		UserBase userBase = new UserBase(srcType, srcId);
+		if (StringUtils.isNotBlank(userBean.getUnionId())) {
+			srcIdUnion = userBean.getUnionId();
+		}
+		if (StringUtils.isNotBlank(srcIdUnion)) {
+			userBase.setSrcUnionId(srcIdUnion);
+		}
+		userBase.setCustomerId(customerId);
+		userBase.setAgentId(0l);
+		UserGeneral user = new UserGeneral(userBean);
+		user.setAgentId(0l);
+		user.setCustomerId(customerId);
+		logger.info("initUser userBase:" + JSON.toJSONString(userBase));
+		long uid = initUser(userBase, user);
+		if (uid > 0) {
+			vo = new BaseRespVO().getRespVO(ResCodeEnum.SUCCESS);
+			vo.setMsg(userBean.getErrmsg());
+		} else {
+			vo = new BaseRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+		}
+		return vo;
+	}
+
+	@Override
+	public UserWechatRegRespVO initUserWechat(String appid, String appSecret,
+			String code,int customerId,int agentId) {
+		UserWechatRegRespVO vo = null;
+		UserOauth userBean = oauthWeiXinManager.getUserInfo(appid, appSecret,
+				code);
+		if (userBean == null) {
+			return new UserWechatRegRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+		}
+		userBean.setName(AppUtils.getNoXSS(userBean.getName()));
+		if (StringUtils.isNotBlank(userBean.getErrmsg())) {
+			vo = new UserWechatRegRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+			vo.setMsg(userBean.getErrmsg());
+			return vo;
+		}
+		if (StringUtils.isNotBlank(userBean.getOpenId())
+				|| StringUtils.isNotBlank(userBean.getUnionId())) {
+			UserBase userBase = getUserBaseBySrc(
+					UserSrcType.WECHAT_PUBLIC.type, userBean.getOpenId(),
+					userBean.getUnionId(),customerId);
+			if (userBase!=null) {
+				vo = new UserWechatRegRespVO();
+				vo.setOpenId(userBean.getOpenId());
+				vo.setUnionId(userBean.getUnionId());
+				vo.setUid(userBase.getUid());
+				return vo;
+			}
+		}
+		UserBase userBase = new UserBase(UserSrcType.WECHAT_PUBLIC.type,
+				userBean.getOpenId());
+		userBase.setCustomerId(customerId);
+		userBase.setSrcUnionId(userBean.getUnionId());
+		userBase.setAgentId((long)agentId);
+		UserGeneral user = new UserGeneral(userBean);
+		user.setCustomerId(customerId);
+		user.setAgentId((long)agentId);
+		long uid = initUser(userBase, user);
+		logger.info("initUser userBase:" + JSON.toJSONString(userBase));
+		logger.info("initUser uid:" + uid);
+		if (uid > 0) {
+			vo = new UserWechatRegRespVO();
+			vo.setOpenId(userBean.getOpenId());
+			vo.setUnionId(userBean.getUnionId());
+			vo.setUid(uid);
+			vo.setReg(true);
+		} else {
+			vo = new UserWechatRegRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+		}
+		return vo;
+	}
+
+	@Override
+	public UserBase initUserWechat(UserOauth userBean,int customerId,int agentId) {
+		if (userBean == null) {
+			return new UserWechatRegRespVO().getRespVO(ResCodeEnum.SYSTEM_ERROR);
+		}
+		userBean.setName(AppUtils.getNoXSS(userBean.getName()));
+		if (StringUtils.isNotBlank(userBean.getOpenId())
+				|| StringUtils.isNotBlank(userBean.getUnionId())) {
+			UserBase userBase = getUserBaseBySrc(
+					UserSrcType.WECHAT_PUBLIC.type, userBean.getOpenId(),
+					userBean.getUnionId(),customerId);
+			if (userBase!=null) {
+				return userBase;
+			}
+		}
+		UserBase userBase = new UserBase(UserSrcType.WECHAT_PUBLIC.type,
+				userBean.getOpenId());
+		userBase.setCustomerId(customerId);
+		userBase.setSrcUnionId(userBean.getUnionId());
+		userBase.setAgentId((long)agentId);
+		UserGeneral user = new UserGeneral(userBean);
+		user.setCustomerId(customerId);
+		user.setAgentId((long)agentId);
+		long uid = initUser(userBase, user);
+		logger.info("initUser userBase:" + JSON.toJSONString(userBase));
+		logger.info("initUser uid:" + uid);
+		return userBase;
+	}
+	@Override
+	public Map<String, Object> updateHead(Map<String, String> map) {
+		long uid = Long.parseLong(map.get("uid"));
+		if (uid <= 0 || getUserBase(uid) == null)
+			return PackageMsg.getRightOperCode("OK");
+		String head = ImgUtil.getImgurl(map.get("url"), 2);
+		userDAO.updateHead(uid, head);
+		userDAO.addHeadAudit(uid);
+		userCacheService.updateUserGeneral(uid);
+		return PackageMsg.getRightOperCode("OK");
+	}
+
+	@Override
+	public void updateUserInfo(UserUpdateReqVO userUpdate) {
+		userDAO.updateUserInfo(userUpdate);
+		if (StringUtils.isNotBlank(userUpdate.getName())) {
+			// articleService.updateName(userUpdate.getUid(),
+			// userUpdate.getName());
+			userDAO.updateUserName(userUpdate.getUid(), userUpdate.getName());
+		}
+		userCacheService.updateUserGeneral(userUpdate.getUid());
+		userCacheService.updateUserBase(userUpdate.getUid());
+	}
+
+	@Override
+	public int updateVip(long uid, int vip) {
+		int flag = userDAO.updateVip(uid, vip);
+		userCacheService.updateUserGeneral(uid);
+		return flag;
+	}
+
+	@Override
+	public int updateValid(long uid, int valid) {
+		int flag = userDAO.updateValid(uid, valid);
+		if (flag > 0 && valid == 1) {
+			userDAO.updateHead(uid, null);
+			userDAO.updateName(uid, uid + "");
+		}
+		userCacheService.updateUserGeneral(uid);
+		return flag;
+	}
+
+	@Override
+	public int updateLoginKey(long uid, String loginKey) {
+		int flag = userDAO.updateLoginKey(uid, loginKey);
+		userCacheService.updateUserBase(uid);
+		return flag;
+	}
+
+	@Override
+	public int updateNumber(long uid, long number) {
+		int flag = userDAO.updateNumber(uid, number);
+		userCacheService.updateUserBase(uid);
+		return flag;
+	}
+
+	@Override
+	public int updateUserDevice(long uid, BaseReqVO baseReqVO) {
+		int flag = userDAO.updateUserDevice(uid, baseReqVO);
+		userCacheService.updateUserBase(uid);
+		return flag;
+	}
+
+	@Override
+	public UserGeneral getUserGeneral(long uid) {
+		return userCacheService.getUserGeneral(uid);
+	}
+
+	@Override
+	public UserBase getUserBase(long uid) {
+		return userCacheService.getUserBase(uid);
+	}
+
+	@Override
+	public UserBase getUserBaseByNumberCustomerId(long number,int customerId) {
+		return userDAO.getUserBaseByNumber(number,customerId);
+	}
+
+	@Override
+	public UserBase getUserBaseBySrc(int srcType, String srcId,
+			String srcIdUnion,int customerId) {
+		logger.info("getUserBaseBySrc srcType:"+srcType+" srcId:"+srcId+" srcIdUnion:"+srcIdUnion+" customerId:"+customerId);
+		UserBase base = null;
+		if (StringUtils.isNotBlank(srcIdUnion)) {
+			base = userDAO.getUserBaseByUnion(srcType, srcIdUnion,customerId);
+			if (base == null) {
+				base = userDAO.getUserBaseBySrc(srcType, srcId,customerId);
+			}
+			if (base != null)
+				return base;
+		}
+		return userDAO.getUserBaseBySrc(srcType, srcId,customerId);
+	}
+
+	@Override
+	public Map<Long, UserGeneral> getUserGeneralMap(List<Long> uids) {
+		return userCacheService.getUserGeneralMap(uids);
+	}
+
+	@Override
+	public Map<Long, UserBase> getUserBaseMap(List<Long> uids) {
+		return userCacheService.getUserBaseMap(uids);
+	}
+
+	@Override
+	public List<UserSimple> getUserSimpleList(List<Long> uids) {
+		List<UserSimple> simples = new ArrayList<UserSimple>();
+		if (uids == null || uids.isEmpty())
+			return simples;
+		Map<Long, UserGeneral> userMap = getUserGeneralMap(uids);
+		for (Long uid : uids) {
+			UserGeneral user = userMap.get(uid);
+			if (user != null)
+				simples.add(new UserSimple(user));
+		}
+		return simples;
+	}
+
+	@Override
+	public long initTempUser(BaseReqVO reqVO) {
+		UserTemp userTemp = null;
+		if (StringUtils.isNotBlank(reqVO.getToken())) {
+			userTemp = userDAO.getTempUserByToken(reqVO.getToken());
+		}
+		if (userTemp == null && StringUtils.isNotBlank(reqVO.getImei())
+				&& !reqVO.getImei().equals("0")
+				&& !reqVO.getImei().equals("000000000000000")) {
+			userTemp = userDAO.getTempUserByImei(reqVO.getImei());
+		}
+		if (userTemp == null) {// 创建新临时用户
+			long uuid = System.currentTimeMillis()
+					+ Integer.valueOf(UserUtil.buildDynNmb(5))
+					* 10000000000000l;
+			userTemp = new UserTemp(uuid, reqVO.getIp(), reqVO.getVersion(),
+					reqVO.getChannel(), reqVO.getImei(), reqVO.getOsType(),
+					reqVO.getToken());
+			userDAO.initTempUser(userTemp);
+		} else {// 更新
+		}
+		return userTemp.getUuid();
+	}
+
+	@Override
+	public UserTemp getTempUser(long id) {
+		return userDAO.getTempUser(id);
+	}
+
+	@Override
+	public boolean isSameName(String name) {
+		return userDAO.isSameName(name);
+	}
+
+	@Override
+	public UserName getUserName(long uid) {
+		return userDAO.getUserName(uid);
+	}
+
+	@Override
+	public Date getHeadTime(long uid) {
+		return userDAO.getHeadTime(uid);
+	}
+
+	@Override
+	public int updatePwd(UserBase userBase) {
+		logger.info("updatePwd userBase.getPwd():" + userBase.getPwd()
+				+ " userBase.getPwd():" + userBase.getPwd());
+		if (StringUtil.isNullOrEmpty(userBase.getPwd())
+				|| userBase.getUid() <= 0) {
+			return 0;
+		}
+		int falg = userDAO.updatePwd(userBase);
+		logger.info("updatePwd falg:" + falg + " userBase.getPwd():"
+				+ userBase.getPwd() + " userBase.getPwd():" + userBase.getPwd());
+		userCacheService.updateUserBase(userBase.getUid());
+		return falg;
+	}
+
+	@Override
+	public UserBase getUserBaseByNumberCustomerId(long number, int srcType,int customerId) {
+		return userDAO.getUserBaseByNumber(number, srcType,customerId);
+	}
+
+	@Override
+	public int updateInviteNotice(long uid, int num) {
+		int flag = userDAO.updateInviteNotice(uid, num);
+		if (flag > 0) {
+			userCacheService.updateUserBase(uid);
+		}
+		return flag;
+	}
+	
+	@Override
+	public void handleUserAgentRelate(long uid,long agentId){
+		UserAgentRecord record=userDAO.getUserAgentRecord(uid);
+		if (record==null||DateUtils.daysBetweenNow(record.getStartTime())>90) {
+			userDAO.addAgentSignLog(uid, agentId);
+			userDAO.updateUserAgentId(uid, agentId);
+		}
+	}
+}

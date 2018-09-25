@@ -1,0 +1,118 @@
+package com.imlianai.dollpub.app.modules.support.invite.h5.service;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.app.modules.core.user.customer.service.CustomerService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.publics.msg.service.MsgService;
+import com.imlianai.dollpub.app.modules.support.invite.h5.dao.InviteH5DAO;
+import com.imlianai.dollpub.domain.invite.InviteH5Relation;
+import com.imlianai.dollpub.domain.invite.InviteH5Relation.InviteGameState;
+import com.imlianai.dollpub.domain.invite.InviteH5RewardCatalog;
+import com.imlianai.dollpub.domain.invite.InviteH5RewardCatalog.InviteH5RewardState;
+import com.imlianai.dollpub.domain.trade.TradeCostType;
+import com.imlianai.dollpub.domain.trade.TradeRecord;
+import com.imlianai.dollpub.domain.trade.TradeType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+@Service
+public class InviteH5ServiceImpl implements InviteH5Service {
+
+	private final BaseLogger logger = BaseLogger
+			.getLogger(InviteH5ServiceImpl.class);
+	@Resource
+	private InviteH5DAO inviteH5DAO;
+	@Resource
+	private UserService userService;
+
+	@Resource
+	private TradeService tradeService;
+
+	@Resource
+	private MsgService msgService;
+	@Resource
+	CustomerService customerService;
+
+	@Override
+	public void handleApplySuccess(long uid) {
+		InviteH5Relation record = getInviteRelationByUid(uid);
+		if (record!=null) {
+			if(record.getGameState()==InviteGameState.NEW_REG.type){//初次玩
+				if(inviteH5DAO.updateInviteRelationGameState(uid, InviteGameState.APPLYED.type)>0){
+					//增加任务进度
+					inviteH5DAO.incInviteNum(record.getInviteUid(), 1);
+				}
+			}
+		}
+	}
+
+	@Override
+	public InviteH5Relation getInviteRelationByUid(long uid) {
+		return inviteH5DAO.getInviteRelation(uid);
+	}
+
+	@Override
+	public int addInvite(long uid, long inviteId) {
+		InviteH5Relation relation=getInviteRelationByUid(uid);
+		if (relation==null) {
+			return inviteH5DAO.addInvite(uid, inviteId);
+		}
+		return 0;
+	}
+
+	@Override
+	public List<InviteH5RewardCatalog> getInviteH5RewardCatalog(long uid) {
+		List<InviteH5RewardCatalog> list=inviteH5DAO.getInviteH5RewardCatalog();
+		if (!StringUtil.isNullOrEmpty(list)) {
+			for (InviteH5RewardCatalog inviteH5RewardCatalog : list) {
+				int state=getInviteH5RewardState(uid, inviteH5RewardCatalog.getId());
+				inviteH5RewardCatalog.setState(state);
+			}
+		}
+		return list;
+	}
+
+	@Override
+	public BaseRespVO gainInviteH5Reward(long uid, int id) {
+		InviteH5RewardCatalog catalog=inviteH5DAO.getInviteH5RewardCatalog(id);
+		InviteH5Relation inviteRecord =getInviteRelationByUid(uid);
+		int totalInvite=0;
+		if (inviteRecord!=null) {
+			totalInvite=inviteRecord.getInviteNum();
+		}
+		if (catalog!=null) {
+			int state=getInviteH5RewardState(uid, id);
+			if (state!=InviteH5RewardState.GAINED.type) {//未领取
+				if (totalInvite>=catalog.getTarget()) {
+					if(inviteH5DAO.addInviteH5RewardGainRecord(uid, id, InviteH5RewardState.GAINED.type, catalog.getTarget(), catalog.getReward(), catalog.getRemark())>0){
+						TradeRecord record=new TradeRecord(uid, uid, TradeType.INVITE_REWARD.type, id, catalog.getReward(), TradeCostType.COST_COIN.type,catalog.getRemark());
+						try {
+							tradeService.charge(record);
+						} catch (Exception e) {
+							PrintException.printException(logger, e);
+						}
+						return new BaseRespVO(catalog.getReward(), true, "领取成功");
+					}
+				}else{
+					return new BaseRespVO(0, false, "尚未达标，不能领取");
+				}
+			}
+			return new BaseRespVO(0, false, "您已领过，不能重复领取");
+		}else{
+			return new BaseRespVO(0, false, "没有该奖励");
+		}
+	}
+
+	@Override
+	public int getInviteH5RewardState(long uid, int id) {
+		return inviteH5DAO.getInviteH5RewardState(uid, id);
+	}
+}

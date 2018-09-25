@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <title>充值成功</title>
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/e20180125/weui.css">
+    <script src="http://lianai-image-sys.imlianai.com/web/js/jquery-1.9.1.min.js"></script>
+    <style>
+    .hidden {
+        display: none !important;
+    }
+    </style>
+</head>
+
+<body ontouchstart="">
+    <div class="page slideIn msg">
+        <div class="weui_msg">
+            <div class="weui_icon_area"><i class="weui_icon_success weui_icon_msg"></i></div>
+            <div class="weui_text_area">
+                <h2 class="weui_msg_title">充值成功</h2>
+                <p class="weui_msg_desc">请留意到账情况</p>
+            </div>
+        </div>
+        <p class="weui-btn-area">
+            <a href="#" class="weui-btn weui-btn_primary">返回</a>
+        </p>
+    </div>
+</body>
+<script>
+    $('.weui-btn-area').click(function(){
+//        alert("1233132");
+        window.history.go(-3);
+        return false;
+    })
+</script>
+
+</html>

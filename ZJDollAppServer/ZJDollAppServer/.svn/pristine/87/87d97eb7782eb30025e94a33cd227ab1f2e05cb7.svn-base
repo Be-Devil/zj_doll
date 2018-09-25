@@ -1,0 +1,18 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.service;
+
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.vo.EntryVirtualRoomReqVO;
+
+/**
+ * @author wurui
+ * @create 2018-07-04 11:51
+ **/
+public interface PushCoinVirtualService {
+
+    BaseRespVO entryVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO);
+
+
+    BaseRespVO laveVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO);
+
+
+}

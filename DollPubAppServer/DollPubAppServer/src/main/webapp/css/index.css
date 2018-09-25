@@ -1,0 +1,242 @@
+﻿/* 清除浮动 */
+.ks-clear:after, .clear:after {
+    content: '\20';
+    display: block;
+    height: 0;
+    clear: both;
+}
+.ks-clear, .clear {
+    *zoom: 1;
+}
+#yui3-css-stamp.cssreset{ 
+    isplay:none
+}
+.content{height: 100%;
+    position: absolute;
+    left: 0;top:0;
+    width: 100%;}
+.content>section{
+    height: 100%;
+    position: relative;
+    background-clip :border-box;
+}
+
+.gps{
+    position: absolute;
+    right: 60px;top:45%;
+}
+.gps li{
+    background: #fff;
+    width:8px;height:8px;
+    border-radius: 50%;
+    margin:0 auto 20px;}
+.gps li.current{ 
+    width: 16px !important;
+    height: 16px !important; 
+    background: none !important;
+    border: 5px #fff solid;
+    border-radius: 50%;
+    box-sizing:border-box;
+}
+.navTop{
+    position: fixed;
+    top:0;
+    width:75% !important;
+    height:auto;
+    z-index: 5;
+    left:12.5%;
+}
+
+
+.page1{
+    background:url('http://lianai-image-sys.qiniudn.com/z/bg_p1.jpg') no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.page2{
+    background:url('http://lianai-image-sys.qiniudn.com/z/bg_p2.jpg') no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.page3{
+     background:url('http://lianai-image-sys.qiniudn.com/z/bg_p3.jpg') no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.page4{
+    background:url('http://lianai-image-sys.qiniudn.com/z/bg_p4.jpg') no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.page5{
+    background:url('http://lianai-image-sys.qiniudn.com/z/bg_p5.jpg') no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.page6{
+     background:url('http://lianai-image-sys.qiniudn.com/z/bg_p6.jpg') no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.gps li{
+    cursor:pointer;
+}
+
+/*首屏-------------------------------------------------*/
+.max-width{
+    height:100%;
+    text-align: center;
+    margin:0 auto;
+    position: relative;
+    width:75% ; 
+}
+.logo_z{
+    width:214px;
+    height:51px;
+    padding-top:47px;
+    box-sizing:border-box;
+}
+.nav{
+    width:auto;
+    height:auto;
+    float: right;
+}
+.nav>li{
+    float: left;
+    font-size: 16px;
+    color:#fff;
+    margin:10px 50px;
+    cursor: pointer;
+}
+.nav>li.txthot{
+    border-bottom: 1px solid #fff;
+    box-sizing:border-box;
+    padding:0 2px 4px 2px;
+}
+.pageTxt{
+    width:477px;
+    height:109px;
+    position: absolute;
+    top:410px;
+    left:0;
+
+}
+.pageTxt>p{
+    color:#4e91ca;
+    font-size: 14px;
+    text-align: left;
+    margin-top:10px;
+    letter-spacing: 1px;
+}
+.pageImg{
+    width:440px;
+    height:358px;
+    position: absolute;
+    right:0;
+    top:320px;
+}
+
+.page3Img{
+    margin-top:155px;
+}
+.page4Img{
+    margin-top:150px;
+    opacity: 1;
+}
+.page6Img_1{
+    position: absolute;
+    left:50%;
+    top:22%;
+    margin-left:-360px;
+}
+.page6Img_2{
+    position:absolute;
+    bottom:10%;
+    left:50%;
+    margin-left:-484px; 
+}
+.page5_left{
+    width:256px;
+    height:520px;
+    position: absolute;
+    left:103px;
+    top:22%;
+    background: url("http://lianai-image-sys.qiniudn.com/z/phone.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    overflow: hidden;
+}
+.page5_left>ul{
+    width:216px;
+    height:384px;
+    overflow: hidden;
+    margin:22% auto 0 auto;
+}
+.page5_left>ul>li{
+  position: absolute;top:11%;left:8%;
+ display: none
+}
+.page6_right{
+    width:auto;
+    height:auto;
+    position: absolute;
+    left:414px;
+    top:28%;
+}
+#left,#right{
+    width:41px;
+    height:69px;
+    position: absolute;
+    top:215px;
+    background:url("http://lianai-image-sys.qiniudn.com/z/arr.png") no-repeat; 
+    display: none;
+}
+#left{
+    left:20px;
+    background-position: -84px 0;
+}
+#left:hover{
+    background-position:left;
+}
+#right{
+    right:20px;
+    background-position:right;
+}
+#right:hover{
+    background-position: -41px 0;
+}
+.code{
+    margin-top:40px;
+    width:100%;
+}
+.code>span{
+    width:auto;
+   height:auto;
+    display: inline-block;
+    float: left;
+    background: #fff;
+    border-radius: 4px;
+    margin:0 12px;
+    padding:12px 12px;
+    box-sizing:border-box;
+}
+.code>span>p{
+    text-align: center;
+    font-size: 14px;
+    color:#333;
+}
+.pageBtn{
+    width:180px;
+    height:40px;
+    background: #042F64;
+    border: 1px solid #00E0FF;
+    box-shadow: 0 0 4px 0 #00E0FF;
+    border-radius: 24px;
+    display: block;
+    float: l;
+    margin-top:20px;
+    color:#fff;
+    letter-spacing: 1px;
+    font-size: 16px;
+    cursor: pointer;
+}

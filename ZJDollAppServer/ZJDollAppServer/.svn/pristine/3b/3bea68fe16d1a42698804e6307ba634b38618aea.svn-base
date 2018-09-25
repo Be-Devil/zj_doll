@@ -1,0 +1,44 @@
+package com.imlianai.zjdoll.app.modules.core.push.dao;
+
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxPointGive;
+
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-06-19 11:44
+ **/
+public interface PushCoinPointGiveDao {
+
+    /**
+     * 新增宝箱点送
+     * @param pushCoinBoxPointGive
+     * @return
+     */
+    int addPointGiveRecord(PushCoinBoxPointGive pushCoinBoxPointGive);
+
+    /**
+     * 更新宝箱点送
+     * @param id
+     * @param optId
+     * @param status
+     * @return
+     */
+    int updatePointGiveRecord(int id,int boxId,long optId,int status);
+
+    /**
+     * 获取第一条点送记录
+     * @param uid
+     * @return
+     */
+    PushCoinBoxPointGive getPointGiveRecordByUid(long uid);
+
+    PushCoinBoxPointGive getPointGiveRecordById(int id);
+
+    int deletePointRecordById(int id);
+
+    List<PushCoinBoxPointGive> getPointGiveListByUid(long uid);
+
+
+    List<PushCoinBoxPointGive> getPointGiveList();
+}

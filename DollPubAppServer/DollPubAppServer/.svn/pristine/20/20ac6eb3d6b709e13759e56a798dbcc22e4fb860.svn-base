@@ -1,0 +1,29 @@
+package com.imlianai.dollpub.app.modules.support.test.cmd;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+import org.springframework.stereotype.Component;
+
+import com.imlianai.dollpub.app.controller.WebCmd;
+import com.imlianai.dollpub.app.modules.support.shopkeeper.service.ShopkeeperService;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LogHead;
+
+@LogHead("店主测试")
+@Component("shopkeepTest")
+public class CmdShopKeeperTest extends WebCmd {
+
+	@Resource
+	private ShopkeeperService shopkeeperService;
+
+	@ApiHandle
+	@Path("api/shopkeepTest/charge")
+	@LogHead("娃娃自动兑换成游戏币任务")
+	public BaseRespVO charge(long uid,int chargeMoney) {
+		shopkeeperService.chargeHandle(uid, chargeMoney);
+		return new BaseRespVO();
+	}
+
+}

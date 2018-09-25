@@ -1,0 +1,60 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.cmd;
+
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinFruitService;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.PushCoinFruit;
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-06-19 10:24
+ **/
+@Component("fruit")
+public class PushCoinFruitCmd extends RootCmd {
+
+    @Resource
+    private PushCoinFruitService pushCoinFruitService;
+
+    @ApiHandle
+    @Path("api/fruit/addConfig")
+    public BaseRespVO addConfig(PushCoinFruit pushCoinFruit){
+        if (pushCoinFruit != null && null != pushCoinFruit.getConfig()){
+            PushCoinFruitsConfig pushCoinFruitsConfig = new PushCoinFruitsConfig();
+            pushCoinFruitsConfig.setConfig(pushCoinFruit.getConfig());
+            return pushCoinFruitService.addConfig(pushCoinFruitsConfig);
+        }
+        return new BaseRespVO(0,false,"参数不能为空");
+    }
+
+    @ApiHandle
+    @Path("api/fruit/delConfig")
+    public BaseRespVO delConfig(PushCoinFruit pushCoinFruit){
+        return pushCoinFruitService.delConfig(pushCoinFruit.getId());
+    }
+
+    @ApiHandle
+    @Path("api/fruit/updateConfig")
+    public BaseRespVO updateConfig(PushCoinFruit pushCoinFruit){
+        if (pushCoinFruit != null && null != pushCoinFruit.getConfig()){
+            PushCoinFruitsConfig pushCoinFruitsConfig = new PushCoinFruitsConfig();
+            pushCoinFruitsConfig.setId(pushCoinFruit.getId());
+            pushCoinFruitsConfig.setConfig(pushCoinFruit.getConfig());
+            return pushCoinFruitService.updateConfig(pushCoinFruitsConfig);
+        }
+        return new BaseRespVO(0,false,"参数不能为空");
+    }
+
+
+    @ApiHandle
+    @Path("api/fruit/getOneRecord")
+    public BaseRespVO getOneRecord(PushCoinFruit pushCoinFruit){
+        return pushCoinFruitService.getConfig(pushCoinFruit.getId());
+    }
+
+}

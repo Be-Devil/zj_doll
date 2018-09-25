@@ -1,0 +1,81 @@
+package com.imlianai.dollpub.app.modules.support.probability.util;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+import java.util.LinkedList;
+import java.util.Map;
+
+/**
+ * @author wurui
+ * @create 2018-04-10 16:13
+ **/
+public class DownClawUtil {
+
+    /**
+     * 新注册用户(刚注册，从未下爪过的用户)
+     */
+    public static int NEW_USER_NO_DOLL = 1;
+
+    /**
+     * 用户背包娃娃数量中间值
+     */
+    public static int USER_DOLL = 1;
+
+    /**
+     * 弱抓次数 5次
+     */
+    public static int WEAK_NUM_5 = 5;
+
+    /**
+     * 弱抓次数 7次
+     */
+    public static int WEAK_NUM_7 = 7;
+
+
+    /**
+     * 机器概率下抓次数 8次
+     */
+    public static int TIME_NUM_8 = 8;
+
+    /**
+     * 机器概率下抓次数 12次
+     */
+    public static int TIME_NUM_12 = 12;
+
+
+    /**
+     * 系统弱抓
+     */
+    public static int SYS_CATCH_WEAK = 1;
+
+    /**
+     * 系统默认
+     */
+    public static int SYS_CATCH_DEFAULT = 0;
+
+    /**
+     * 系统强爪
+     */
+    public static int SYS_CATCH_STRONG = 2;
+
+
+    /**
+     * 机器概率弱抓
+     */
+    public static int MAC_CATCH_WEAK = 0;
+
+    /**
+     * 机器概率默认
+     */
+    public static int MAC_CATCH_DEFAULT = 1;
+
+    /**
+     * 机器概率强爪
+     */
+    public static int MAC_CATCH_STRONG = 2;
+
+
+
+
+}

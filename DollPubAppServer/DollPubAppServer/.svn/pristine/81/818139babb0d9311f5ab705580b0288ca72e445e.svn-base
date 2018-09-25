@@ -1,0 +1,73 @@
+package com.imlianai.dollpub.app.modules.support.shopkeeper.dto;
+
+import com.imlianai.dollpub.domain.shopkeeper.ShopkeeperIncomeDay;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * 店主日收入榜单
+ * @author wurui
+ * @create 2018-04-27 9:51
+ **/
+@ApiModel("店主榜单对象")
+public class ShopkeeperDayRankDTO {
+    @ApiModelProperty(value = "排名")
+    private int rank;
+    @ApiModelProperty(value = "头像")
+    private String head;
+    @ApiModelProperty(value = "名字")
+    private String name;
+    @ApiModelProperty(value = "当天收益")
+    private Double income;
+
+    public int getRank() {
+        return rank;
+    }
+
+    public void setRank(int rank) {
+        this.rank = rank;
+    }
+
+    public String getHead() {
+        return head;
+    }
+
+    public void setHead(String head) {
+        this.head = head;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Double getIncome() {
+        return income;
+    }
+
+    public void setIncome(Double income) {
+        this.income = income;
+    }
+
+    public static ShopkeeperDayRankDTO adapter(ShopkeeperIncomeDay incomeDay, int rank){
+        ShopkeeperDayRankDTO dto = new ShopkeeperDayRankDTO();
+        if (incomeDay != null){
+            dto.setRank(rank);
+            dto.setHead(incomeDay.getHead());
+            if (null != incomeDay.getName() && "".equals(incomeDay.getName())){
+                if (incomeDay.getName().length() > 8){
+                    dto.setName(incomeDay.getName().substring(0,8) + "...");
+                }else {
+                    dto.setName(incomeDay.getName());
+                }
+            }else {
+                dto.setName("萌萌哒" + incomeDay.getUid());
+            }
+            dto.setIncome((double)incomeDay.getDayIncome()/100);
+        }
+        return dto;
+    }
+}

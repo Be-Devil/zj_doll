@@ -1,0 +1,28 @@
+package com.imlianai.zjdoll.app.modules.support.agency.dao;
+
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import com.imlianai.zjdoll.domain.agency.UserAgency;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-08-14 22:27
+ **/
+@Repository
+public class UserAgencyDaoImpl implements UserAgencyDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public int addAgency(UserAgency userAgency) {
+        return jdbcHandler.executeSql("insert into user_agency(uid,name,phone,time) value(?,?,?,now())",userAgency.getUid(),userAgency.getName(),userAgency.getPhone());
+    }
+
+    @Override
+    public UserAgency getUserAgency(long uid) {
+        return jdbcHandler.queryOneBySql(UserAgency.class,"select * from user_agency where uid=?",uid);
+    }
+}

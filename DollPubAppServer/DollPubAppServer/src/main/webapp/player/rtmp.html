@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>增景RTMP</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="增景RTMP">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="增景RTMP">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="stylesheet" type="text/css" href="config/iview.css">
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="config/layui.css"  media="all">-->
+
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", YaHei, "微软雅黑", SimHei, "黑体";
+            font-size: 14px
+        }
+    </style>
+    <script src="https://cdn.bootcss.com/jquery/3.3.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <!--<script src="config/layui.all.js" charset="utf-8"></script>-->
+    <script type="text/javascript" src="config/iview.min.js"></script>
+    <script type="text/javascript" src="config/ckplayer.js"></script>
+</head>
+
+<body>
+
+
+<div class="container" style="width: 100%" id="ZJ_PLAYER">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="row clearfix">
+                <div class="col-md-4 column" style="margin-top: 10px">
+                    <Card style="height:800px;">
+                        <p slot="title" style="height: 40px;width: 100%;margin-top: 20px">
+                            <i-input  v-model="inputUrl" placeholder="请输入播放地址,目前支持格式有：rtmp,m3u8,flv,mp4,f4v,webm,ogg" style="width: 480px;margin-right: 10px"></i-input>
+                            <i-button type="primary" icon="play" @click="play">播放</i-button>
+                        </p>
+                        <div id="video" style="height: 600px;margin-top: 10px"></div>
+                        <!-- 进度条 -->
+                    </Card>
+                </div>
+                <div class="col-md-8 column">
+                    <template>
+                        <Card style="height:800px;width: 100%;margin-top: 10px;">
+                            <i-select v-model="choiceCustomerList" multiple filterable   @on-change="choiceCustomerHandle(choiceCustomerList)" style="width:93%;height: 70px;padding-top: 20px">
+                                <i-option v-for="item in customerList" :value="item.appId" :key="item.appId">
+                                    <span v-text="item.name"></span>
+                                    <span style="float:right;color:#ccc" v-text="item.groupId"></span>
+                                </i-option>
+                            </i-select>
+                            <i-button type="primary" icon="ios-search" style="float: right;margin-top: 20px" @click="refresh">刷新</i-button>
+                            <!--<Tag color="blue" style="width: 50px">机器</Tag>-->
+                            <!--<i-select v-model="choiceBusList" multiple filterable style="width:260px;height: 70px;padding-top: 20px">-->
+                                <!--<i-option v-for="item in busList" :value="item.appId">-->
+                                    <!--<span v-text="item.name"></span>-->
+                                    <!--<span style="float:right;color:#ccc" v-text="item.groupId"></span>-->
+                                <!--</i-option>-->
+                            <!--</i-select>-->
+
+                            <i-table height="650" border :content="self" :columns="columns" :data="historyData" ></i-table>
+                            <Page :total="dataCount" :page-size="pageSize" show-total class="paging" @on-change="changePage" style="margin-top: 10px;float: right"></Page>
+                        </Card>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+</body>
+
+</html>
+
+<script>
+    var vm = new Vue({
+        el: '#ZJ_PLAYER',
+        data: {
+            self: this,
+            //线上地址
+            dollPubUrl: "http://www.realgamecloud.com",
+            //dollPubUrl: "http://localhost:9003",
+            zjDollPubUrl: "http://www.happycooltt.com",
+
+            inputUrl: "",
+            isStart:true,
+            buff: 0,
+            player: {},
+            videoObject: {
+                container: '#video', //容器的ID
+                variable: 'player',
+                autoplay: true, //是否自动播放
+                loaded: 'loadedHandler', //当播放器加载后执行的函数
+                flashplayer: false,
+                video: "",
+
+            },
+            customerList:[],
+            choiceCustomerList:[],
+            ajaxHistoryData:[],
+            historyData: [],
+            // 初始化信息总条数
+            dataCount:0,
+            // 每页显示多少条
+            pageSize:12,
+            columns: [
+                {title: '机器ID', key: 'busId',align: 'center', width: 150,},
+                {title: '设备名', key: 'nickName', align: 'center', width: 150,},
+                {
+                    title: '正面流',
+                    key: 'stream1',
+                    align: 'center',
+                    width: 150,
+                    render: function (h, params) {
+                        return h('div', [
+                            h('Button', {
+                                props: {type: 'primary', size: 'small'},
+                                style: {marginRight: '8px'},
+                                on: {
+                                    click: function () {
+                                        vm.changeVideo(params.row.stream1)
+                                    }
+                                }
+                            }, '播放正面流'),
+                        ]);
+                    }
+                },
+                {
+                    title: '侧面流',
+                    key: 'stream2',
+                    width: 150,
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div', [
+                            h('Button', {
+                                props: {type: 'primary', size: 'small'},
+                                style: {marginRight: '8px'},
+                                on: {
+                                    click: function () {
+                                        vm.changeVideo(params.row.stream2)
+                                    }
+                                }
+                            }, '播放侧面流'),
+                        ]);
+                    }
+                },
+                {
+                    title: '是否上架',
+                    key: 'valid',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div',{style:{}},[h('p',params.row.valid===0?"下架":"上架")],params.row.valid)
+                    }
+                },
+                {
+                    title: '当前机器状态',
+                    key: 'status',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div',{style:{}},[h('p',params.row.status===0?"空闲":params.row.status===1?"游戏中":"故障")],params.row.valid)
+                    }
+                },
+                {
+                    title: '机器类型',
+                    key: 'type',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div',{style:{}},[h('p',params.row.type===0?"娃娃机":params.row.type===1?"推币机":"骰子机")],params.row.valid)
+                    }
+                },
+            ],
+            busList:[],
+            choiceBusList:[],
+
+        },
+        methods: {
+
+            //动态获取uid和loginKey
+            request(paramName) {
+                var url = location.href;
+                var paraString = url.substring(url.indexOf("?") + 1, url.length).split(
+                    "&");
+                var params = {};
+                for (i = 0; j = paraString[i]; i++) {
+                    params[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(
+                        j.indexOf("=") + 1, j.length);
+                }
+                var returnValue = params[paramName.toLowerCase()];
+                if (typeof(returnValue) == "undefined") {
+                    return "";
+                } else {
+                    return returnValue;
+                }
+            },
+
+            //获取所有商户
+            getCustomer(){
+                var _this = this;
+                var param = JSON.stringify({"uid":"10000", "loginKey":"c10f91de68d240b1ad5ef41b056735b1"});
+                $.post(_this.dollPubUrl + "/api/cus/getAllCustomer",param,function(data) {
+                    var result = JSON.parse(data);
+                    if(result.state) {
+                        _this.customerList = result.data.customer;
+                        _this.choiceCustomerList.push(_this.customerList[0].appId);
+                    }else {
+                        console.info(result.msg)
+                    }
+                });
+            },
+            choiceCustomerHandle(choiceCustomerList){
+                var _this = this;
+                if (choiceCustomerList && choiceCustomerList.length > 0){
+                    _this.busList = [];
+                    var param = JSON.stringify({"appIds":_this.choiceCustomerList});
+                    $.post(_this.dollPubUrl + "/api/cus/getCustomerBusList",param,function(data) {
+                        var result = JSON.parse(data);
+                        if(result.state) {
+                            _this.busList = result.data.busList;
+                            _this.handleListApproveHistory();
+                            _this.handleEntryPlayer();
+                        }else {
+                            _this.busList = [];
+                            console.info(result.msg)
+                        }
+                    });
+                }else {
+                    _this.busList = [];
+                }
+            },
+            // 获取历史记录信息
+            handleListApproveHistory(){
+                // 保存取到的所有数据
+                var _this = this;
+                _this.ajaxHistoryData = _this.busList
+                _this.dataCount = _this.busList.length;
+                // 初始化显示，小于每页显示条数，全显，大于每页显示条数，取前每页条数显示
+                if(_this.busList.length < _this.pageSize){
+                    _this.historyData = _this.ajaxHistoryData;
+                }else{
+                    _this.historyData = _this.ajaxHistoryData.slice(0,_this.pageSize);
+                }
+            },
+            //分页选择
+            changePage(index){
+                var _this = this;
+                var _start = ( index - 1 ) * _this.pageSize;
+                var _end = index * _this.pageSize;
+                _this.historyData = _this.ajaxHistoryData.slice(_start,_end);
+            },
+            refresh(){
+                console.info("refresh");
+                this.choiceCustomerHandle(this.choiceCustomerList)
+            },
+            //处理刚进入页面时
+            handleEntryPlayer(){
+                var _this = this;
+                if(_this.isStart){
+                    _this.isStart = false;
+                    console.info("进入平台机器管理页")
+                    if (_this.busList && _this.busList.length > 0){
+                        _this.inputUrl = _this.busList[0].stream1;
+                        if (_this.inputUrl !== ""){
+                            _this.videoObject.video = _this.inputUrl;
+                            this.player = new ckplayer(_this.videoObject);
+                            if (_this.player && _this.player !== {}) {
+                                console.info("初始化播放器")
+                            }
+                        }
+                    }
+                }
+            },
+            deleteChild(ele) {
+                if (this.player) {
+                    this.player.deleteElement(ele);
+                }
+            },
+            changeText(div, text) {
+                //player.getByElement(div).innerHTML = text;
+                console.info(text);
+            },
+            getHtml(div) {
+                //return player.getByElement(div).innerHTML;
+                return "";
+            },
+            play(){
+                var _this = this;
+                if(_this.inputUrl && _this.inputUrl !== ""){
+                    _this.changeVideo(_this.inputUrl)
+                }else {
+                    alert("请输入有效的播放地址!");
+                }
+
+            },
+            changeVideo(videoUrl) {
+                console.info("开始播放:" + videoUrl)
+                var _this = this;
+                if (_this.player == null) {
+                    return;
+                }
+                _this.inputUrl = videoUrl;
+                //判断是需要重新加载播放器还是直接换新地址
+
+                _this.videoObject.video = videoUrl;
+
+                _this.player = null;
+                _this.player = new ckplayer();
+                _this.player.embed(_this.videoObject);
+
+
+                // if (_this.player.playerType === 'html5video') {
+                //     if (_this.player.getFileExt(videoUrl) === '.flv'
+                //         || _this.player.getFileExt(videoUrl) === '.m3u8'
+                //         || _this.player.getFileExt(videoUrl) === '.f4v'
+                //         || videoUrl.substr(0, 4) === 'rtmp') {
+                //         _this.player.removeChild();
+                //         _this.player = null;
+                //         _this.player = new ckplayer();
+                //         _this.player.embed(_this.videoObject);
+                //     }
+                // } else {
+                //     if (_this.player.getFileExt(videoUrl) === '.mp4'
+                //         || _this.player.getFileExt(videoUrl) === '.webm'
+                //         || _this.player.getFileExt(videoUrl) === '.ogg') {
+                //         _this.player = null;
+                //         _this.player = new ckplayer();
+                //         _this.player.embed(_this.videoObject);
+                //     }
+                // }
+            },
+            loadedHandler() {
+                var _this = this;
+                _this.player.addListener('error', _this.errorHandler); //监听视频加载出错
+                //_this.player.addListener('loadedmetadata', _this.loadedMetaDataHandler); //监听元数据
+                _this.player.addListener('duration', _this.durationHandler); //监听播放时间
+                _this.player.addListener('time', _this.timeHandler); //监听播放时间
+                _this.player.addListener('play', _this.playHandler); //监听暂停播放
+                _this.player.addListener('pause', _this.pauseHandler); //监听暂停播放
+                _this.player.addListener('buffer', _this.bufferHandler); //监听缓冲状态
+                _this.player.addListener('full', _this.fullHandler); //监听全屏/非全屏切换
+                _this.player.addListener('ended', _this.endedHandler); //监听播放结束
+                _this.player.addListener('definitionChange', _this.definitionChangeHandler); //监听清晰度切换事件
+                _this.player.addListener('speed', _this.speedHandler); //监听加载速度
+            },
+
+            errorHandler() {
+                console.log('出错')
+                changeText('.playerstate', '状态：视频加载错误，停止执行其它动作，等待其它操作');
+            },
+            loadedMetaDataHandler() {
+                //var metaData = player.getMetaDate();
+                //console.log(metaData)
+                //var html = ''
+                //console.log(metaData);
+                //if(parseInt(metaData['videoWidth']) > 0) {
+                //	changeText('.playerstate', '状态：获取到元数据信息，如果数据错误，可以使用延迟获取');
+                //	html += '总时间：' + metaData['duration'] + '秒，';
+                //	html += '音量：' + metaData['volume'] + '（范围0-1），';
+                //	html += '播放器的宽度：' + metaData['width'] + 'px，';
+                //	html += '播放器的高度：' + metaData['height'] + 'px，';
+                //	html += '视频宽度：' + metaData['videoWidth'] + 'px，';
+                //	html += '视频高度：' + metaData['videoHeight'] + 'px，';
+                //	html += '视频原始宽度：' + metaData['streamWidth'] + 'px，';
+                //	html += '视频原始高度：' + metaData['streamHeight'] + 'px，';
+                //	html += '是否暂停状态：' + metaData['paused'];
+                //} else {
+                //	changeText('.playerstate', '状态：未正确获取到元数据信息');
+                //	html = '没有获取到元数据';
+                //}
+                //changeText('.metadata', html);
+            },
+
+            //监听播放时间
+            durationHandler(duration) {
+                this.changeText('.duration', '总时间（秒）：' + duration);
+            },
+
+            timeHandler(time) {
+                this.changeText('.currenttimestate', '当前播放时间（秒）：' + time);
+            },
+
+            //监听暂停播放
+            playHandler() {
+                //player.animateResume();//继续播放所有弹幕
+                this.changeText('.playstate', this.getHtml('.playstate') + ' 播放');
+                window.setTimeout(function () {
+                    this.loadedMetaDataHandler();
+                }, 1000);
+                this.loadedMetaDataHandler();
+            },
+
+            //监听暂停
+            pauseHandler() {
+                //player.animatePause();//暂停所有弹幕
+                this.changeText('.playstate', getHtml('.playstate') + ' 暂停');
+                this.loadedMetaDataHandler();
+            },
+
+            //监听缓冲状态
+            bufferHandler(buffer) {
+                //console.log(buffer);
+                this.changeText('.bufferstate', '缓冲：' + buffer);
+            },
+
+            //监听全屏/非全屏切换
+            fullHandler(b) {
+                if (b) {
+                    //html = ' 全屏';
+                } else {
+                    //html = ' 否';
+                }
+
+            },
+
+            //监听播放结束
+            endedHandler() {
+                this.changeText('.endedstate', '播放结束');
+            },
+
+            //监听清晰度切换事件
+            definitionChangeHandler(num) {
+                this.changeText('.definitionChange', getHtml('.definitionChange') + ',切换清晰度编号' + num);
+            },
+
+            //监听加载速度
+            speedHandler(n) {
+                var _this = this;
+                _this.buff = n;
+                console.info("加载速度")
+                _this.changeText('.speed', '当前加载速率：' + n);
+            }
+        },
+        mounted() {
+            var _this = this;
+            if(_this.getCustomer()){
+
+            }
+
+        }
+    });
+
+</script>

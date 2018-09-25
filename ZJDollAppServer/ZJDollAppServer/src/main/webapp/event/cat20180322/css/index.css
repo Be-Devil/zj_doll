@@ -1,0 +1,527 @@
+.maxBox,.c_gifts_top,.c_gifts,.c_gifts_cen,.c_gifts_bon,.gift_tost_c,.gift_tost_t,.gift_tost_b,.collect,.clooect_t,.collect_c,.collect_b,.gift_s,
+.gift_s_t,.gift_s_c,.me_list,.as,.as_t,.as_c,.as_t,.rankList{
+    width:100%;
+    height:auto;
+    position: relative;
+}
+.c_gifts,.collect{
+    margin:-1.88rem auto 0 auto;
+    z-index:1;
+}
+.c_gifts_top,.gift_tost_t,.clooect_t,.gift_s_t,.gift_s_t,.as_t{
+    width:100%;
+    height:1.1rem;
+    background: url("http://lianai-image-sys.qiniudn.com/task/btop_1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    line-height: 1.25rem;
+    text-align: center;
+    letter-spacing:2px;
+    color:#fff;
+    font-size: 0.34rem;
+}
+.c_gifts_top>img,.gift_tost_t>img,.clooect_t>img,.gift_s_t>img,.as_t>img{
+    vertical-align: middle;
+    display: inline;
+}
+.c_gifts_cen,.gift_tost_c,.collect_c,.gift_s_c,.as_c{
+    /*height:4.64rem;*/
+    background: url("http://lianai-image-sys.qiniudn.com/task/cen.png") center center repeat-y;
+    -webkit-background-size: 100%;
+    background-size: 100%;
+}
+.c_gifts_bon,.gift_tost_b,.collect_b,.gift_s_b,.as_b{
+    height:0.72rem;
+    background: url("http://lianai-image-sys.qiniudn.com/task/bon.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.c_gifts_cen>p{
+    width:80%;
+    text-align: center;
+    color:#ff8c83;
+    font-size: 0.24rem;
+    margin: 0 auto;
+    padding:0.4rem 0 0.26rem 0;
+    box-sizing: border-box;
+}
+.c_gifts_cen>ul,.gift_s_c>ul{
+    width:93%;
+    margin:0 auto;
+    height:3.35rem;
+    padding:0 0.4rem;
+    box-sizing: border-box;
+}
+.c_gifts_cen>ul>li,.gift_s_c>ul>li{
+    width:1.86rem;
+    height:100%;
+    background: url("http://lianai-image-sys.qiniudn.com/task/gift_b.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    float: left;
+}
+.c_gifts_cen>ul>li:nth-of-type(2),.gift_s_c>ul>li:nth-of-type(2){
+    margin:0 0.28rem;
+}
+.gift_pic{
+    width:1.54rem;
+    height:1.88rem;
+    margin:0.14rem auto 0.24rem auto;
+    display:block;
+    font-size: 0.18rem;
+    color:#ff9a52;
+    text-align: center;
+    padding:0.05rem 0;
+    box-sizing: border-box;
+}
+.c_gifts_cen>ul>li>p{
+    text-align: center;
+    font-size: 0.2rem;
+    color:#ff8c83;
+}
+.c_gifts_cen .opt{
+    width:1.2rem;
+    height:0.49rem;
+    display: block;
+    background: url("http://lianai-image-sys.qiniudn.com/task/opt.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin:0.16rem auto;
+}
+
+.clooect_t{
+    background:url("http://lianai-image-sys.qiniudn.com/task/btop_2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.pk_time{
+    text-align: center;
+    color:#ff8c83;
+    font-size: 0.24rem;
+    padding: 0.42rem 0 0.48rem 0;
+    box-sizing: border-box;
+}
+.pk_time>p{
+    display: inline-block;
+    height:100%;
+    line-height: 0.58rem;
+}
+.pk_time>p>strong{
+    font-size: 0.28rem;
+}
+.collect_c_body{
+    width:93%;
+    height:auto;
+    margin:0 auto;
+    padding:0 0.2rem 0 0.95rem ;
+    box-sizing: border-box;
+}
+.c_body_l{
+    width:1.5rem;
+    height:1.5rem;
+    float: left;
+    border:0.02rem solid #ffc286;
+    box-sizing: border-box;
+    border-radius: 6px;
+    padding:0.05rem 0.1rem;
+    margin-right:0.35rem;
+}
+.c_body_r{
+    width:auto;
+    float: left;
+    color:#e9785c;
+}
+.c_body_r>h6{
+    font-size: 0.3rem;
+}
+.c_body_r>h6>i{
+    font-weight: normal;
+    display: inline-block;
+    background: #fec59f;
+    color:#fff;
+    font-size: 0.18rem;
+    padding:0.04rem 0.15rem;
+    box-sizing: border-box;
+    border-radius: 20px;
+    margin-top:-0.02rem;
+}
+.c_body_r>p{
+    font-size: 0.2rem;
+    margin-top:0.04rem;
+}
+.c_body_r>p>b>img{
+    display: inline;
+    width:0.24rem;
+}
+.gift_s_t{
+    background: url("http://lianai-image-sys.qiniudn.com/task/btop_3.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.gift_s_c{
+    padding:0.54rem 0;
+    overflow: hidden;
+}
+.gift_s_c>ul>li{
+    position: relative;
+}
+.gift_s_c>ul>li:nth-of-type(1){
+    background: url("http://lianai-image-sys.qiniudn.com/task/stage_1.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.gift_s_c>ul>li:nth-of-type(2){
+    background: url("http://lianai-image-sys.qiniudn.com/task/stage_2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.gift_s_c>ul>li:nth-of-type(3){
+    background: url("http://lianai-image-sys.qiniudn.com/task/stage_3.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.gift_s_pic{
+    width:1.54rem;
+    height:1.88rem;
+    background: #ffefdf;
+    margin:0.82rem auto 0 auto;
+    display: block;
+    border-radius: 8px;
+    padding:0.13rem 0.2rem;
+    box-sizing: border-box;
+}
+.gift_s_pic>p{
+    margin-top:0.15rem;
+    color:#ff9a52;
+    font-size: 0.18rem;
+    text-align: center;
+}
+.gift_schedule{
+    position: relative;
+    margin:0 auto;
+    text-align: center;
+    font-size: 0.22rem;
+    color:#f06275;
+}
+.gift_schedule>span{
+    width:1.54rem;
+    height:0.2rem;
+    border-radius: 0.6rem;
+    background: #f06275;
+    display: block;
+    margin:0.2rem auto;
+    position: relative;
+}
+.gift_schedule>span>i{
+    height:0.2rem;
+    display: block;
+    background: #fecba7;
+    border-radius: 0.2rem;
+        position: absolute;
+    top:0;
+    left:0;
+}
+.gift_schedule>span>p{
+    width:100%;
+    height:0.2rem;
+    line-height: 0.2rem;
+    position: relative;
+    z-index:3;
+    text-align: center;
+    font-size: 0.16rem;
+    color:#fff;
+    text-shadow: 1px 2px 1px rgba(240,98,117,0.7);
+}
+.gift_schedule>span>p>b{
+    font-weight: normal;
+}
+.gift_schedule>h6{
+    font-weight: normal;
+    margin:0.2rem 0;
+    text-align: center;
+}
+.gift_bg{
+    position: absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(240,98,117,0.5);
+    border-radius: 0.18rem;
+}
+.gift_s_c>ul>li>button{
+    width:1.09rem ;
+    height:1.09rem;
+    background: url("http://lianai-image-sys.qiniudn.com/task/over.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    position: absolute;
+    bottom:0.5rem;
+    right:-0.3rem;
+}
+.me{
+    margin:0;
+}
+.me_list{
+    width:92%;
+    margin:0 auto;
+    padding:0.58rem 0 0 0;
+    text-align: center;
+}
+.me_list>div{
+    width:50%;
+    height:100%;
+    float: left;
+    margin-bottom:0.64rem;
+}
+.me_list>div>p{
+    margin:0.1rem 0 0 0;
+    font-size: 0.27rem;
+    color:#e9785c;
+}
+.me_list_l{
+    border-right:1px solid #fec497;
+    box-sizing: border-box;
+}
+.me_list>p{
+    font-size: 0.24rem;
+    color:#f3857d;
+}
+.me_list>p>em{
+    color:#35bae9;
+}
+.as_t{
+    background: url("http://lianai-image-sys.qiniudn.com/task/btop_4.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.rankList{
+    padding:0.3rem 0 0 0;
+}
+.rankList>li{
+    width:93%;
+    height:1.2rem;
+    margin:0 auto;
+}
+.rankList>li:nth-of-type(even) {
+    background: #fdf2f2;
+}
+.rankLeft>i{
+    font-size: 0.2rem;
+    height:100%;
+    display: block;
+    float:left;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 1.2rem;
+    color:#e9785c;
+}
+.rankLeft>i>img{
+    display: inline;
+    margin-top:0.37rem;
+}
+.rankLeft{
+    width:36%;
+    height:100%;
+    float: left;
+    padding:0 0 0 0.5rem;
+    box-sizing: border-box;
+}
+.rankLeft>span{
+    display: block;
+    width:0.88rem;
+    height:0.88rem;
+    border-radius: 50%;
+    border:0.02rem solid #e9785c;
+    background: #fdf2f2;
+    float: left;
+    margin:0.16rem 0 0.14rem 0.2rem;
+    position: relative;
+}
+.rankLeft>span>img{
+    width:100%;
+    height:100%;
+    border-radius: 50%;
+}
+.rankLeft>span>em{
+    position: absolute;
+    width:0.44rem;
+    height:0.41rem;
+    display: block;
+    top:-0.16rem;
+    right:-0.07rem;
+}
+.rankRight{
+    float: left;
+    width:62%;
+    height:100%;
+    padding-top:0.26rem;
+    box-sizing: border-box;
+}
+.rankRight>p{
+    line-height: 0.38rem;
+    font-size: 0.26rem;
+    color:#e9785c;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    width: 100%;
+}
+.rankRight>p:last-of-type{
+    font-size: 0.24rem;
+}
+.as_c>span{
+    width: 0.28rem;
+    height: 0.27rem;
+    display: block;
+    margin: 0.2rem auto 0 auto;
+    background: #000;
+}
+.as_c>span.down{
+    background: url("http://lianai-image-sys.qiniudn.com/task/down.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.as_c>span.up{
+    background: url("http://lianai-image-sys.qiniudn.com/task/up.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.rankListBody{
+    padding:0 !important;
+}
+.rankListBody>li:nth-of-type(odd){
+    background: #fdf2f2;
+}
+.cTle{
+    text-align: center;
+    font-size: 0.26rem;
+    color:#ff8c83;
+    line-height: 1.28rem;
+}
+.cIcon{
+    width:1.82rem;
+    height:1.82rem;
+    display: block;
+    position: absolute;
+    right: 0.5rem;
+    bottom: -0.25rem;
+    background: url("http://lianai-image-sys.qiniudn.com/task/over.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.zColor{
+    background:#ff877e !important;
+}
+.gColor{
+    background: #b92c2f !important;
+}
+.rlist{
+    width:93%;
+    margin:0 auto;
+}
+.rlist>h6{
+    font-weight: normal;
+    padding:0.4rem 0 0.28rem 0.48rem;
+    box-sizing: border-box;
+}
+.rlist>h6>i{
+    float: left;
+    display: block;
+    text-align: center;
+    line-height: 0.28rem;
+    font-size: 0.27rem;color:#e9785c;
+}
+.rlist>h6>i:nth-of-type(1){
+    width:15%;
+    border-right: 1px solid #fec497;
+    box-sizing: border-box;
+
+}
+.rlist>h6>i:nth-of-type(2){
+    width:25%;
+    border-right: 1px solid #fec497;
+    box-sizing: border-box;
+}
+.rlist>h6>i:nth-of-type(3){
+    width:60%;
+}
+.rlist>ul>li{
+    width:100%;
+    padding-left:0.48rem;
+    box-sizing: border-box;
+}
+.rlist>ul .rankLeft{
+    width:40%;
+    padding:0 0 0 0.2rem;
+}
+.rlist>ul .rankLeft>span{
+    margin-left:0.72rem;
+}
+.rlist>ul .rankRight{
+    width:60%;
+    padding:0 5%;
+    box-sizing: border-box;
+}
+
+
+.footer{
+    color:#fff;
+    opacity: 0.4;
+    font-size: 0.18rem;
+    text-align: center;
+    padding-bottom:0.4rem;
+    box-sizing: border-box;
+}
+.background{
+    width:100%;
+    height:100%;
+    position: fixed;
+    top:0;
+    left:0;
+    background: rgba(0,0,0,0.6);
+    z-index:5;
+    display: block;
+}
+.gift_tost{
+    width:90%;
+    height:auto;
+    position: absolute;
+    top:30%;
+    left:5%;
+    z-index: 6;
+    text-align: center;
+    display: block;
+}
+.gift_tost_c>p{
+    padding:0.43rem 0 0.52rem 0;
+    box-sizing: border-box;
+    line-height: 1.25rem;
+    font-size: 0.24rem;
+    color:#ff8c83;
+}
+.gift_tost_c>p>img{
+    height:1.13rem;
+    display: inline;
+    vertical-align: middle ;
+}
+.gift_btn{
+    width:4.4rem;
+    height:0.66rem;
+    margin:0 auto;
+}
+.gift_btn>span{
+    width:2rem;
+    height:100%;
+    display: inline-block;
+    background: url("http://lianai-image-sys.qiniudn.com/task/close.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    float: left;
+}
+.gift_btn>span:last-of-type{
+    float: right;
+    background: url("http://lianai-image-sys.qiniudn.com/task/opt_2.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}

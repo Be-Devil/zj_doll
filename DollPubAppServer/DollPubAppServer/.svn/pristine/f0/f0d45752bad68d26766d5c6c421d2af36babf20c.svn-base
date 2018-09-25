@@ -1,0 +1,171 @@
+package com.imlianai.dollpub.app.modules.core.trade.callback.service;
+
+import java.util.Date;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.imlianai.dollpub.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.dollpub.app.modules.core.doll.service.DollService;
+import com.imlianai.dollpub.app.modules.core.trade.catalog.service.ChargeCatalogService;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.publics.log.service.LogService;
+import com.imlianai.dollpub.app.modules.publics.msg.service.MsgService;
+import com.imlianai.dollpub.app.modules.support.event.newyearRecharge20180207.service.EventNewyearRecharge20180207Service;
+import com.imlianai.dollpub.app.modules.support.shipping.service.ShippingService;
+import com.imlianai.dollpub.app.modules.support.shopkeeper.service.ShopkeeperService;
+import com.imlianai.dollpub.app.modules.support.userdoll.service.UserDollService;
+import com.imlianai.dollpub.domain.doll.DollInfo;
+import com.imlianai.dollpub.domain.doll.user.UserDoll;
+import com.imlianai.dollpub.domain.log.LogPage;
+import com.imlianai.dollpub.domain.msg.MsgNotice;
+import com.imlianai.dollpub.domain.msg.MsgType;
+import com.imlianai.dollpub.domain.trade.ChargeCatalog;
+import com.imlianai.dollpub.domain.trade.ChargeCatalog.ChargeCatalogType;
+import com.imlianai.dollpub.domain.trade.TradeAccount;
+import com.imlianai.dollpub.domain.trade.TradeCharge;
+import com.imlianai.dollpub.domain.trade.TradeChargeType;
+import com.imlianai.dollpub.domain.trade.TradeCostType;
+import com.imlianai.dollpub.domain.trade.TradeRecord;
+import com.imlianai.dollpub.domain.trade.TradeType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+
+@Service
+public class PayBackExcuteServiceImpl implements PayBackExcuteService {
+
+	private final BaseLogger logger = BaseLogger
+			.getLogger(PayBackExcuteServiceImpl.class);
+
+	@Resource
+	private UserService userService;
+	@Resource
+	private TradeChargeService tradeChargeService;
+	@Resource
+	private ChargeCatalogService chargeCatalogService;
+	@Resource
+	private TradeService tradeService;
+	@Resource
+	private LogService logService;
+
+	@Resource
+	private MsgService msgService;
+	@Resource
+	private ShopkeeperService shopkeeperService;
+	@Resource
+	EventNewyearRecharge20180207Service eventNewyearRecharge20180207Service;
+	@Resource
+	DollService dollService;
+	@Resource
+	ShippingService shippingService;
+	@Resource
+	UserDollService userDollService;
+	@Resource
+	DollInfoService dollInfoService;
+	
+	public static void main(String[] args) {
+		String vString=String.format("%.2f",( (float)((float)190/(float)100))).toString();
+		System.out.println(vString);
+	}
+	@Override
+	public void commonExcute(TradeCharge c) {
+		try {
+			logService.add(LogPage.CHARGE, c, this.getClass());
+			ChargeCatalog item = chargeCatalogService.getCatalog(c
+					.getItemCode());
+			if (c.getChargeType() == TradeChargeType.SHIPPING_BILL.type) {// 发货订单付费
+				shippingService.handleShippingPayed(c);
+			} else {
+				if (item.getIsFirst() == 1) {
+					long lastId = tradeChargeService.hasChargeSpecialAmt(
+							c.getUid(), item.getCode());
+					if (lastId != c.getId()) {// 成功的订单不是此笔订单
+						item.setAwardExtra(0);
+						item.setDollId(0);
+					}
+				}
+				if (item.getType()==ChargeCatalogType.DAILY_CHARGE.type) {
+					long lastId =tradeChargeService.hasChargeToday(c.getUid(), c
+							.getItemCode());
+					if (lastId != c.getId()) {
+						item.setDollId(0);
+						item.setAwardExtra(0);
+					}
+				}
+				if (item.getType()==ChargeCatalogType.FOREVER_CHARGE.type) {
+					long lastId =tradeChargeService.hasChargeSpecialAmt(c.getUid(), c
+					.getItemCode());
+					if (lastId != c.getId()) {
+						item.setDollId(0);
+						item.setAwardExtra(0);
+					}
+				}
+				String priceString = item.getPrice()
+						+ (item.getUnit() == 0 ? "元" : "分");
+				try {
+					if (item.getUnit() == 1) {
+						priceString=String.format("%.2f",( (float)((float)item.getPrice()/(float)100))).toString()+"元";
+					}
+				} catch (Exception e) {
+					
+				}
+				StringBuffer msgBuffer = new StringBuffer("恭喜，充值成功！充值金额：");
+				StringBuffer tradeBuffer = new StringBuffer("充值" + priceString
+						+ "，获得" + item.getCoin() + "币");
+				msgBuffer.append(priceString);
+				msgBuffer.append("，获得" + item.getCoin() + "币");
+				if (item.getAwardExtra() > 0) {
+					msgBuffer.append("，额外赠送");
+					msgBuffer.append(item.getAwardExtra());
+					msgBuffer.append("币");
+					tradeBuffer.append("，额外赠送");
+					tradeBuffer.append(item.getAwardExtra());
+					tradeBuffer.append("币");
+				}
+				TradeRecord record = new TradeRecord(c.getUid(), c.getUid(),
+						TradeType.CHARGE.type, item.getCode(), item.getCoin()
+								+ item.getAwardExtra(),
+						TradeCostType.COST_COIN.type, tradeBuffer.toString());
+				tradeService.charge(record);
+				TradeAccount account = tradeService.getAccount(c.getUid());
+				if (account != null) {
+					msgBuffer.append("，当前余额：");
+					msgBuffer.append(account.getCoin());
+				}
+				MsgNotice msg = new MsgNotice(c.getUid(),
+						MsgType.NOTICE_SYS.type, msgBuffer.toString());
+				msg.setPushMsg(msgBuffer.toString());
+				msg.setJumpCharge();
+				msgService.sendMsg(msg);
+				if (item.getDollId()>0) {
+					DollInfo dollInfo = dollInfoService.getDollInfo(item.getDollId());
+                    if (dollInfo != null) {
+                    	 UserDoll userDoll = new UserDoll();
+                         userDoll.setUid(c.getUid());
+                         userDoll.setDollId(item.getDollId());
+                         userDoll.setOptId(0);
+                         userDoll.setStatus(0);
+                         userDoll.setRemark("充值赠送");
+     					userDollService.saveUserDoll(userDoll);
+                    }
+				}
+			}
+			eventNewyearRecharge20180207Service.handleRecharge(c.getCost(),
+					c.getUid());
+			try {
+				shopkeeperService.chargeHandle(c.getUid(), (int)c.getCost());
+			} catch (Exception e) {
+				PrintException.printException(logger, e);
+			}
+		} catch (Exception e) {
+			logger.info(e);
+			logger.error(e, e);
+		}
+	}
+
+}

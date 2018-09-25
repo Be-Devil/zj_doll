@@ -1,0 +1,39 @@
+package com.imlianai.dollpub.app.modules.core.hoodle.controller;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.hoodle.consts.HoodleConsts;
+import com.imlianai.dollpub.app.modules.core.hoodle.vo.OperateHoodleReqVo;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.dollpub.machine.iface.IMachineRemoteService;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-07-13 22:21
+ **/
+@Component("hoodle")
+public class HoodleCmd extends RootCmd {
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+
+    @ApiHandle
+    @Path("api/hoodle/start")
+    public BaseRespVO start(OperateHoodleReqVo vo){
+        iMachineConnectRemoteService.handleDirective(vo.getBusId(), HoodleConsts.START,"");
+        iMachineConnectRemoteService.handleDirective(vo.getBusId(), HoodleConsts.BET,"");
+        iMachineConnectRemoteService.handleDirective(vo.getBusId(), HoodleConsts.BALL,"");
+        //iMachineConnectRemoteService.handleDirective(vo.getBusId(), HoodleConsts.FORCE,"");
+        iMachineConnectRemoteService.handleDirective(vo.getBusId(), HoodleConsts.LAUNCH,"");
+        return new BaseRespVO(200,true,"指令发送成功");
+    }
+
+}

@@ -1,0 +1,24 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.cmd;
+
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.Unity3DReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-05-19 16:47
+ **/
+@Component("pushCoinUnity")
+public class PushCoinUnityCmd extends RootCmd{
+
+    @ApiHandle
+    @Path("api/pushCoinUnity/save")
+    public BaseRespVO save(Unity3DReqVO vo){
+        return new BaseRespVO(100,true,vo.getData());
+    }
+
+}

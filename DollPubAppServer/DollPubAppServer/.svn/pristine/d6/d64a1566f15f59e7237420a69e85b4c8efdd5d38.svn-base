@@ -1,0 +1,56 @@
+package com.imlianai.dollpub.app.modules.core.pinball.controller;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.pinball.consts.PinballConsts;
+import com.imlianai.dollpub.app.modules.core.pinball.service.PinballService;
+import com.imlianai.dollpub.app.modules.core.pinball.vo.OperatePinballReqVo;
+import com.imlianai.dollpub.app.modules.core.pinball.vo.PinballStartGameReqVO;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-07-13 22:21
+ **/
+@Component("pinball")
+public class PinballCmd extends RootCmd {
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @Resource
+    private PinballService pinballService;
+
+
+    @ApiHandle
+    @Path("api/pinball/start")
+    public BaseRespVO start(PinballStartGameReqVO vo) {
+        return pinballService.start(vo.getBusId(), vo.getUid(), vo.getGameId(), vo.getTimeOut(), vo.getBet());
+    }
+
+    @ApiHandle
+    @Path("api/pinball/ball")
+    public BaseRespVO ball(OperatePinballReqVo vo){
+
+        iMachineConnectRemoteService.handleDirective(vo.getBusId(), PinballConsts.BALL,"");
+
+        return new BaseRespVO(200,true,"发送下球指令成功");
+    }
+
+    @ApiHandle
+    @Path("api/pinball/launch")
+    public BaseRespVO launch(OperatePinballReqVo vo){
+
+        iMachineConnectRemoteService.handleDirective(vo.getBusId(), PinballConsts.LAUNCH,"");
+        return new BaseRespVO(200,true,"发送发射指令成功");
+    }
+
+
+
+}

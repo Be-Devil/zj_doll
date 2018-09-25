@@ -1,0 +1,73 @@
+package com.imlianai.zjdoll.app.modules.core.push.dao.impl;
+
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import com.imlianai.zjdoll.app.modules.core.push.dao.PushCoinBoxDao;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBox;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxLog;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxPool;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-05-25 16:30
+ **/
+@Repository
+public class PushCoinBoxDaoImpl implements PushCoinBoxDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public PushCoinBox getBox(int busId) {
+        return jdbcHandler.queryOneBySql(PushCoinBox.class,"SELECT * FROM push_coin_box WHERE busId=?",busId);
+    }
+
+    @Override
+    public List<PushCoinBox> getBoxList() {
+        return jdbcHandler.queryBySql(PushCoinBox.class,"SELECT * FROM push_coin_box");
+    }
+
+    @Override
+    public int addJackpot(int busId, int jackpot) {
+        return jdbcHandler.executeSql("UPDATE push_coin_box SET jackpot=jackpot+?,updateTime=NOW() WHERE busId=?",jackpot,busId);
+    }
+
+    @Override
+    public int addBoxCoin(int busId, int coin, long lastUid) {
+        return jdbcHandler.executeSql("INSERT INTO push_coin_box(busId,createTime) VALUE(?,NOW()) ON DUPLICATE KEY UPDATE current=current+?,lastId=?,updateTime=NOW()",busId,coin,lastUid);
+    }
+
+    @Override
+    public int openBox(int busId) {
+        return jdbcHandler.executeSql("UPDATE push_coin_box SET current=current-total,boxId=boxId+1,jackpot=0,updateTime=NOW() WHERE busId=? AND current>=total",busId);
+    }
+
+    @Override
+    public int addOpenBoxRecord(PushCoinBoxLog boxLog) {
+        return jdbcHandler.executeSql("INSERT INTO push_coin_box_log(uid,busId,boxId,type,num,rate,lastId,createTime) VALUES(?,?,?,?,?,?,?,NOW())",
+                boxLog.getUid(),boxLog.getBusId(),boxLog.getBoxId(),boxLog.getType(),boxLog.getNum(),boxLog.getRate(),boxLog.getLastId());
+    }
+
+    @Override
+    public int getRecordCount(int busId, int boxId, long uid) {
+        return jdbcHandler.queryCount("SELECT COUNT(1) FROM push_coin_box_log WHERE busId=? AND boxId=? AND uid=?",busId,boxId,uid);
+    }
+
+    @Override
+    public PushCoinBoxPool getBoxPool(int id) {
+        return jdbcHandler.queryOneBySql(PushCoinBoxPool.class,"SELECT * FROM push_coin_box_pool WHERE id=?",id);
+    }
+
+    @Override
+    public int updateBoxPoolCurrent(int id, int money) {
+        return jdbcHandler.executeSql("UPDATE push_coin_box_pool SET current=current+? WHERE id=?",money,id);
+    }
+
+    @Override
+    public int emptyBoxPool(int id) {
+        return jdbcHandler.executeSql("UPDATE push_coin_box_pool SET current=current-total,updateTime=NOW() WHERE id=? AND current>=total",id);
+    }
+}

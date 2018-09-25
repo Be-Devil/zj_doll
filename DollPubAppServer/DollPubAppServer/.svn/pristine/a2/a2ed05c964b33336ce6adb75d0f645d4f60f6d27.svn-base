@@ -1,0 +1,15 @@
+package com.imlianai.dollpub.app.modules.core.user.dao;
+
+import com.imlianai.dollpub.domain.user.UserSrc;
+
+/**
+ * @author wurui
+ * @create 2018-01-24 11:03
+ **/
+public interface UserSrcDao {
+
+    public int saveSrcUser(UserSrc userSrc);
+    public int updateSrcUser(UserSrc userSrc);
+
+    public UserSrc getUserSrcBySrcUidAndCusId(String srcId,int customerId);
+}

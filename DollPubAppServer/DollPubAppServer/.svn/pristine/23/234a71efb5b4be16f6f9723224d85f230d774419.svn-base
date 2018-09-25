@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+
+<head lang=en>
+    <meta charset=utf-8>
+    <meta http-equiv=X-UA-Compatible content="IE=edge">
+    <title>萌趣抓娃娃</title>
+    <meta name=viewport content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name=description content="萌趣抓娃娃 成功捉取">
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-title content="萌趣抓娃娃 成功捉取">
+    <meta name=apple-mobile-web-app-status-bar-style content=black>
+    <meta http-equiv=Cache-Control content=no-siteapp>
+    <meta http-equiv=Cache-Control content=no-transform>
+    <meta name=format-detection content="telephone=no">
+    <link rel=stylesheet href=./style.css type=text/css>
+    <link href=./static/css/app.0027baaada2acf6bf58ef12497fe8338.css rel=stylesheet>
+</head>
+
+<body style="font-size: 12px">
+    <div id=app></div>
+    <script type=text/javascript src=./static/js/manifest.aa3f99d552f65c655405.js></script>
+    <script type=text/javascript src=./static/js/vendor.0b7784265c08ed6e1b26.js></script>
+    <script type=text/javascript src=./static/js/app.1a8075afc3c73f393b2f.js></script>
+</body>
+<script>
+(function(win) {
+    var doc = win.document;
+    var docEl = doc.documentElement;
+    var tid;
+
+    function refreshRem() {
+        var width = docEl.getBoundingClientRect().width;
+        if (width > 768) { // 最大宽度
+            width = 768;
+        }
+        var rem = width / 7.5;
+        docEl.style.fontSize = rem + 'px';
+        docEl.style.fontSize = rem + 'px';
+        docEl.style.fontSize = rem + 'px';
+    }
+    win.addEventListener('resize', function() {
+        clearTimeout(tid);
+        tid = setTimeout(refreshRem, 300);
+    }, false);
+    win.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            clearTimeout(tid);
+            tid = setTimeout(refreshRem, 300);
+        }
+    }, false);
+    refreshRem();
+})(window);
+</script>
+
+</html>

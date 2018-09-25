@@ -1,0 +1,65 @@
+package com.imlianai.zjdoll.app.modules.core.push.vo;
+
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+
+/**
+ * @author wurui
+ * @create 2018-05-23 9:55
+ **/
+public class CallbackReqVO extends BaseReqVO {
+
+    private int busId;
+    private long optId;
+    private int outCoin;
+    private int win;
+    private int isFinal;
+    private String auto;
+
+    public int getBusId() {
+        return busId;
+    }
+
+    public void setBusId(int busId) {
+        this.busId = busId;
+    }
+
+    public long getOptId() {
+        return optId;
+    }
+
+    public void setOptId(long optId) {
+        this.optId = optId;
+    }
+
+    public int getOutCoin() {
+        return outCoin;
+    }
+
+    public void setOutCoin(int outCoin) {
+        this.outCoin = outCoin;
+    }
+
+    public int getIsFinal() {
+        return isFinal;
+    }
+
+    public void setIsFinal(int isFinal) {
+        this.isFinal = isFinal;
+    }
+
+    public String getAuto() {
+        return auto;
+    }
+
+    public void setAuto(String auto) {
+        this.auto = auto;
+    }
+
+    public int getWin() {
+        return win;
+    }
+
+    public void setWin(int win) {
+        this.win = win;
+    }
+}

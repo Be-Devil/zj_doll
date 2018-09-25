@@ -1,0 +1,70 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.cmd;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.coinfactory.consts.PushCoinCmdConst;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.OperateReqVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.Unity3DReqVO;
+import com.imlianai.dollpub.domain.coinfactory.Unity3DCoinXYZ;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.Path;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-05-19 16:47
+ **/
+@Component("pushCoinUnity")
+public class PushCoinUnityCmd extends RootCmd{
+
+    private BaseLogger logger  = BaseLogger.getLogger(getClass());
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @ApiHandle
+    @Path("api/pushCoinUnity/save")
+    public BaseRespVO save(Unity3DReqVO vo){
+        if (!StringUtil.isNullOrEmpty(vo)){
+            logger.info(JSON.toJSONString(vo.getList()));
+            if (!StringUtil.isNullOrEmpty(vo.getList())){
+                BaseRespVO respVO =  new BaseRespVO(100,true,"数据请求成功!");
+                respVO.setData(vo.getList());
+                return respVO;
+            }
+        }
+        BaseRespVO respVO =  new BaseRespVO(100,true,"数据请求失败!");
+        respVO.setData(vo.getList());
+        return respVO;
+    }
+
+    @ApiHandle
+    @Path("api/pushCoinUnity/test")
+    public BaseRespVO test(BaseReqVO vo){
+
+        if (vo.getUid()==1){
+            byte[] data2_default = {(byte) 0x8a, (byte) 0x03, (byte) 0x02,
+                    (byte) 0x01, (byte) 0xff,(byte) 0x05, (byte) 0x55};
+            iMachineConnectRemoteService.handleDirective(132,data2_default,"");
+
+        }
+
+        if (vo.getUid()==2){
+            byte[] data2_weak = {(byte) 0x8a, (byte) 0x03, (byte) 0x02,
+                    (byte) 0x01, (byte) 0x00,(byte) 0x06, (byte) 0x55};
+            iMachineConnectRemoteService.handleDirective(132,data2_weak,"");
+        }
+
+        return new BaseRespVO(100,true,"数据请求成功!");
+    }
+
+
+}

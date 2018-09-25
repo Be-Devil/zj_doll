@@ -1,0 +1,439 @@
+package com.imlianai.zjdoll.app.modules.support.pack.service;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.domain.doll.BaseDollInfo;
+import com.imlianai.zjdoll.domain.doll.DollAppealRecord;
+import com.imlianai.zjdoll.domain.doll.DollDetails;
+import com.imlianai.zjdoll.domain.doll.DollExchangeRecord;
+import com.imlianai.zjdoll.domain.doll.DollExchangeRes;
+import com.imlianai.zjdoll.domain.doll.DollGetRecord;
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+import com.imlianai.zjdoll.domain.doll.DollOptRecord;
+import com.imlianai.zjdoll.domain.doll.DollOrderExpress;
+import com.imlianai.zjdoll.domain.doll.DollOrderInfo;
+import com.imlianai.zjdoll.domain.doll.DollOrderRecord;
+import com.imlianai.zjdoll.domain.doll.DollRecycleRecord;
+import com.imlianai.zjdoll.domain.doll.LogisticsInfo;
+import com.imlianai.zjdoll.domain.doll.user.UserDoll;
+import com.imlianai.zjdoll.domain.msg.Msg;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.trade.TradeCostType;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.zjdoll.domain.user.UserAttribute;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.zjdoll.app.modules.core.doll.list.DollListService;
+import com.imlianai.zjdoll.app.modules.core.doll.record.DollRecordService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.attribute.UserAttributeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.support.exchange.dao.DollExchangeDao;
+import com.imlianai.zjdoll.app.modules.support.exchange.service.DollComposeService;
+import com.imlianai.zjdoll.app.modules.support.exchange.service.DollExchangeSevice;
+import com.imlianai.zjdoll.app.modules.support.exchange.service.DollGetService;
+import com.imlianai.zjdoll.app.modules.support.pack.constants.PackConstants;
+import com.imlianai.zjdoll.app.modules.support.pack.vo.AppealInfo;
+import com.imlianai.zjdoll.app.modules.support.pack.vo.GetDescRespVO;
+import com.imlianai.zjdoll.app.modules.support.pack.vo.GetDollListReqVO;
+import com.imlianai.zjdoll.app.modules.support.pack.vo.OptRecordInfo;
+import com.imlianai.zjdoll.app.modules.support.pack.vo.ReceiveReqVO;
+import com.imlianai.zjdoll.app.modules.support.shipping.dao.ShippingDao;
+import com.imlianai.zjdoll.app.modules.support.shipping.service.ShippingService;
+import com.imlianai.zjdoll.app.modules.support.userdoll.service.UserDollService;
+
+@Service
+public class PackServiceImpl implements PackService{
+	
+	private static final BaseLogger LOG = BaseLogger.getLogger(PackServiceImpl.class);
+
+	@Resource
+	DollInfoService dollInfoService;
+	@Resource
+	DollListService dollListService;
+	@Resource
+	UserDollService userDollService;
+	@Resource
+	DollExchangeSevice dollExchangeSevice;
+	@Resource
+	DollRecordService dollRecordService;
+	@Resource
+	MsgService msgService;
+	@Resource
+	TradeService tradeService;
+	@Resource
+	DollComposeService dollComposeService;
+	@Resource
+	UserService userService;
+	@Resource
+	DollGetService dollGetService;
+	@Resource
+	ShippingDao shippingDao;
+	@Resource
+	DollExchangeDao dollExchangeDao;
+	@Resource
+	UserAttributeService userAttributeService;
+	
+	@Override
+	public Map<String, Object> getDollList(GetDollListReqVO reqVO) {
+		Long uid = reqVO.getUid();
+		long lastId = reqVO.getLastId();
+		int status = reqVO.getStatus();
+		LOG.info("getDollList:uid-" + uid + ",lastId-" + lastId + ",status-" + status);
+		Map<String, Object> map = new HashMap<String, Object>();
+		List<BaseDollInfo> dollInfoList = new ArrayList<BaseDollInfo>();
+		int size = 0;
+		if(reqVO.getVersion() < 130) {
+			size = userDollService.getUserDollSizeByParams(uid, status);
+		} else {
+			size = userDollService.getUserDollSizeByParamsAfter130(uid, status);
+		}
+		List<UserDoll> userDolls = new ArrayList<UserDoll>();
+		if(reqVO.getVersion() < 130) {
+			userDolls = dollListService.getDollListByPage(uid, lastId, PackConstants.DOLL_PAGE_SIZE, status); // 用户娃娃列表
+		} else {
+			userDolls = dollListService.getDollListByPageAfter130(uid, lastId, PackConstants.DOLL_PAGE_SIZE, status); // 用户娃娃列表
+		}
+		if(!StringUtil.isNullOrEmpty(userDolls)) {
+			for(UserDoll userDoll : userDolls) {
+				DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+				if(dollInfo != null) {
+					int curDay = DateUtils.daysBetweenNow(DateUtils.dateToString(userDoll.getCreateTime(), "yyyy-MM-dd")) + 1;
+					BaseDollInfo baseDollInfo = new BaseDollInfo(userDoll, dollInfo.getName(), dollInfo.getImgSummry(), dollInfo.getCoin());
+					if(userDoll.getStatus() == UserDoll.DollStatus.EXCHANGED.status) { // 已兑换
+						DollExchangeRecord eRecord = dollExchangeSevice.getExchangeRecordByUserDollId(userDoll.getId());
+						baseDollInfo.setEcoin(eRecord == null ? 0 : eRecord.getCoin());
+						baseDollInfo.setGetTime(eRecord == null ? baseDollInfo.getGetTime() : 
+							eRecord.getCreateTime().getTime());
+					} else if(userDoll.getStatus() == UserDoll.DollStatus.RECYCLED.status) { // 已回收
+						DollRecycleRecord rRecord = dollComposeService.getRecycleRecordByUDollId(userDoll.getId());
+						baseDollInfo.setRjewel(rRecord == null ? 0 : rRecord.getJewel());
+						baseDollInfo.setGetTime(rRecord == null ? baseDollInfo.getGetTime() : 
+							rRecord.getCreateTime().getTime());
+					} else if(userDoll.getStatus() == UserDoll.DollStatus.APPLY_SUCC.status
+							|| userDoll.getStatus() == UserDoll.DollStatus.SHIP_SUCC.status
+							|| userDoll.getStatus() == UserDoll.DollStatus.REJECTED.status) {
+						if(dollInfo.getGoodsType() == 0) { // 实物
+							DollOrderInfo dollOrderInfo = shippingDao.getDollOrderInfoByUDollId(userDoll.getId());
+							LOG.info("getDollList dollOrderInfo:"+JSON.toJSONString(dollOrderInfo));
+							if (dollOrderInfo!=null) {
+								//查询订单支付状态
+								DollOrderRecord record=shippingDao.getDollOrderRecord(dollOrderInfo.getOrderNum());
+								LOG.info("getDollList DollOrderRecord:"+JSON.toJSONString(record));
+								if (record!=null) {
+									baseDollInfo.setPayStatus(record.getPayStatus());
+									baseDollInfo.setOrderNum(dollOrderInfo.getOrderNum());
+								}
+							}
+							baseDollInfo.setGetTime(dollOrderInfo == null ? baseDollInfo.getGetTime() : 
+								dollOrderInfo.getCreateTime().getTime());
+						} else if(dollInfo.getGoodsType() == 1) { // 虚拟
+							DollGetRecord dollGetRecord = dollGetService.getDollGetRecord(userDoll.getId());
+							baseDollInfo.setGetTime(dollGetRecord == null ? baseDollInfo.getGetTime() : 
+								dollGetRecord.getCreateTime().getTime());
+						}
+						
+					}
+					int totalDay = PackConstants.SAVE_MAX_DAYS;
+				    baseDollInfo.setCurDay(curDay);
+					baseDollInfo.setTotalDay(totalDay);
+					baseDollInfo.setDollType(userDoll.getType());
+					baseDollInfo.setGoodsType(dollInfo.getGoodsType());
+					baseDollInfo.setJewel(dollInfo.getReturnJewel());
+					baseDollInfo.setSpecType(dollInfo.getSpecType());
+					dollInfoList.add(baseDollInfo);
+				}
+			}
+		}
+		map.put("dollInfoList", dollInfoList);
+		map.put("size", size);
+		return map;
+	}
+
+	@Override
+	public DollDetails getDollDetail(long id) {
+		DollDetails dollDetail = new DollDetails();
+		UserDoll userDoll = userDollService.getUserDollById(id); // 用户某个娃娃
+		if(userDoll != null) {
+			DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId()); // 娃娃信息
+			if(dollInfo != null) {
+				long exchangeTime = 0;
+				long recycleTime = 0;
+				long applyTime = 0; // 申请发货
+				int ecoin = 0;
+				int rjewel = 0;
+				String rejectReason = "";
+				String otherInfo = "";
+				List<LogisticsInfo> logisticsInfos = null;
+				DollGetRecord dollGetRecord = null;
+				if(userDoll.getStatus() == UserDoll.DollStatus.APPLY_SUCC.status
+						|| userDoll.getStatus() == UserDoll.DollStatus.SHIP_SUCC.status
+						|| userDoll.getStatus() == UserDoll.DollStatus.REJECTED.status) {
+					if(dollInfo.getGoodsType() == 0) { // 实物
+						DollOrderInfo dollOrderInfo = shippingDao.getDollOrderInfoByUDollId(id);
+						if(dollOrderInfo != null) {
+							applyTime = dollOrderInfo.getCreateTime().getTime();
+						}
+					} else if(dollInfo.getGoodsType() == 1) { // 虚拟
+						dollGetRecord = dollGetService.getDollGetRecord(userDoll.getId());
+						if(dollGetRecord != null) {
+							applyTime = dollGetRecord.getCreateTime().getTime();
+							otherInfo = dollGetRecord.getOtherInfo();
+						}
+					}
+				}
+				if(userDoll.getStatus() == UserDoll.DollStatus.EXCHANGED.status) { // 已兑换
+					DollExchangeRecord record = dollExchangeSevice.getExchangeRecordByUserDollId(userDoll.getId());
+					if(record != null) {
+						exchangeTime = record.getCreateTime().getTime();
+						ecoin = record.getCoin();
+					}
+				}
+				if(userDoll.getStatus() == UserDoll.DollStatus.REJECTED.status) { // 已拒绝
+					rejectReason = userDoll.getReason();
+				}
+				if(userDoll.getStatus() == UserDoll.DollStatus.RECYCLED.status) { // 已回收
+					DollRecycleRecord rRecord = dollComposeService.getRecycleRecordByUDollId(userDoll.getId());
+					if(rRecord != null) {
+						rjewel = rRecord.getJewel();
+						recycleTime = rRecord.getCreateTime().getTime();
+					}
+				}
+				// 最新兑换的娃娃列表
+				List<DollExchangeRes> edolls = new ArrayList<DollExchangeRes>();
+				List<DollInfo> dollInfoList = dollInfoService.getRecentExchangeDollInfos(2);
+				if(!StringUtil.isNullOrEmpty(dollInfoList)) {
+					for(DollInfo doll : dollInfoList) {
+						DollExchangeRes dollExchangeRes = dollExchangeSevice.getDollExchangeRes(doll.getDollId());
+						edolls.add(dollExchangeRes);
+					}
+				}
+				UserAttribute userAttribute = userAttributeService.getUserAttribute(userDoll.getUid());
+				int eflag = 1;
+				if(userAttribute != null && userAttribute.getTotalCharge() > 0) { // 充值过
+					eflag = 0;
+				} else {
+					if(new Date().getTime() - userDoll.getCreateTime().getTime() > 24*3600*1000) { // 超过24小时
+						eflag = 0;
+					}
+				}
+				/*dollDetail = new DollDetails(userDoll, dollInfo.getName(), dollInfo.getImgSummry(), userDoll.getExpressName(), 
+						userDoll.getTrackingNum(), exchangeTime, dollInfo.getCoin());*/
+				dollDetail = new DollDetails(userDoll, dollInfo, exchangeTime, dollGetRecord);
+				int curDay = DateUtils.daysBetweenNow(DateUtils.dateToString(userDoll.getCreateTime(), "yyyy-MM-dd")) + 1;
+				dollDetail.setCurDay(curDay);
+				dollDetail.setTotalDay(PackConstants.SAVE_MAX_DAYS);
+				dollDetail.setEcoin(ecoin);
+				dollDetail.setRejectReason(rejectReason);
+				dollDetail.setRjewel(rjewel);
+				dollDetail.setRecycleTime(recycleTime);
+				dollDetail.setApplyTime(applyTime);
+				dollDetail.setOtherInfo(otherInfo);
+				dollDetail.setEdolls(edolls);
+				dollDetail.setEflag(eflag);
+			}
+		}
+		LOG.info("getDollDetail:id-" + id + ",dollDetail=" + JSON.toJSONString(dollDetail));
+		return dollDetail;
+	}
+
+	@Override
+	public BaseRespVO exchange(long id, Long uid) {
+		try {
+			UserDoll userDoll = userDollService.getUserDollById(id);
+			if(userDoll == null || userDoll.getUid() != uid.longValue()) {
+				return new BaseRespVO(-1, false, "娃娃不存在~");
+			}
+			if(userDoll.getStatus() == 3) { // 已兑换
+				return new BaseRespVO(-1, false, "娃娃已兑换，不可重复兑换~");
+			}
+			DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+			if(dollInfo == null) {
+				return new BaseRespVO(-1, false, "娃娃已下架，不可兑换~");
+			}
+			if(dollInfo.getType() != 0) {
+				return new BaseRespVO(-1, false, "该娃娃不可兑换~");
+			}
+			UserAttribute userAttribute = userAttributeService.getUserAttribute(uid);
+			if(userAttribute == null || (userAttribute.getTotalCharge() == 0 
+					&& new Date().getTime() - userDoll.getCreateTime().getTime() <= 24*3600*1000)) {
+				return new BaseRespVO(700, false, "抓中24小时后可兑换游戏币，充值用户可享受特权马上兑换~~");
+			}
+			
+			if(userDollService.updateUserDollStatus(id, 3) > 0) {
+				dollExchangeSevice.saveExchangeRecord(id, dollInfo.getCoin());
+				TradeRecord tradeRecord = new TradeRecord(uid, uid,
+						TradeType.EXCHANGE_RETURN.type, 0, dollInfo.getCoin(),
+						TradeCostType.COST_COIN.type, "兑换" + dollInfo.getCoin() + "个游戏币");
+				tradeService.charge(tradeRecord);
+				Msg msg = new Msg(uid, MsgType.NOTICE_SYS.type,
+						"小主成功把" + dollInfo.getName() + "兑换成" + dollInfo.getCoin() + "币");
+				msgService.sendMsg(msg);
+				return new BaseRespVO(0, true, "成功兑换" + dollInfo.getCoin() +"币!");
+			} else {
+				return new BaseRespVO(-1, false, "兑换失败，请重试~");
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "兑换失败，请重试~");
+		}
+	}
+
+	@Override
+	public List<OptRecordInfo> getOptRecords(long lastId, Long uid) {
+		List<OptRecordInfo> recordInfos = new ArrayList<OptRecordInfo>();
+		List<DollOptRecord> optRecords = dollRecordService.getOptRecords(lastId, uid, PackConstants.RECORD_PAGE_SIZE);
+		if(!StringUtil.isNullOrEmpty(optRecords)) {
+			for(DollOptRecord dollOptRecord : optRecords) {
+				DollInfo dollInfo = dollInfoService.getDollInfo(dollOptRecord.getDollId());
+				if(dollInfo == null) continue;
+				OptRecordInfo recordInfo = new OptRecordInfo(dollOptRecord.getOptId(), dollInfo.getName(), dollInfo.getImgSummry(), 
+						dollOptRecord.getStartTime().getTime(), dollOptRecord.getResult(), dollOptRecord.getBusId());
+				recordInfos.add(recordInfo);
+			}
+		}
+		return recordInfos;
+	}
+
+	@Override
+	public BaseRespVO appeal(long optId, Long uid, String reason) {
+		try {
+			DollOptRecord record = dollRecordService.getOptRecord(optId);
+			if(record == null || record.getUid() != uid.longValue()) {
+				return new BaseRespVO(-1, false, "操作记录不存在，不可申诉~");
+			}
+			if(record.getResult() == 1) {
+				return new BaseRespVO(-1, false, "已成功抓取娃娃，不可申诉~");
+			}
+			if(StringUtils.isBlank(reason)) {
+				return new BaseRespVO(-1, false, "申诉理由不可为空~");
+			}
+			dollRecordService.saveDollAppealRecord(optId, uid, reason);
+		} catch(Exception e){
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "申诉失败，请稍后再试~");
+		}
+		return new BaseRespVO();
+	}
+
+	@Override
+	public AppealInfo appealStatus(long optId, Integer version) {
+		AppealInfo info = null;
+		DollOptRecord optRecord = dollRecordService.getOptRecord(optId);
+		Date time = optRecord.getEndTime() == null ? optRecord.getStartTime() : optRecord.getEndTime();
+		if(version.intValue() >= 110 && 
+				new Date().getTime() - time.getTime() > 24*3600*1000) { // 超过24小时
+			info = new AppealInfo(optId, 2, null);
+			return info;
+		}
+		DollAppealRecord record = dollRecordService.getAppealRecord(optId);
+		if(record != null) {
+			info = new AppealInfo(optId, record.getStatus(), record.getReason());
+		}
+		return info;
+	}
+
+	@Override
+	public BaseRespVO recycle(long id, Long uid) {
+		try {
+			UserDoll userDoll = userDollService.getUserDollById(id);
+			if(userDoll == null || userDoll.getUid() != uid.longValue()) {
+				return new BaseRespVO(-1, false, "娃娃不存在~");
+			}
+			if(userDoll.getStatus() == 5) { // 已回收
+				return new BaseRespVO(-1, false, "娃娃已回收，不可重复回收~");
+			}
+			DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+			if(dollInfo == null) {
+				return new BaseRespVO(-1, false, "娃娃已下架，不可回收~");
+			}
+			if(dollInfo.getType() != 1 && dollInfo.getType() != 0) {
+				return new BaseRespVO(-1, false, "该娃娃不可回收~");
+			}
+			if(userDollService.updateUserDollStatus(id, 5) > 0) {
+				dollComposeService.saveRecycleRecord(id, dollInfo.getReturnJewel());
+				TradeRecord tradeRecord = new TradeRecord(uid, uid,
+						TradeType.RECYCLE_RETURN.type, 0, dollInfo.getReturnJewel(),
+						TradeCostType.COST_JEWEL.type, "回收" + dollInfo.getReturnJewel() + "钻");
+				tradeService.charge(tradeRecord);
+				// 系统通知
+				String textString = dollInfo.getName() + "已被回收并获得" + dollInfo.getReturnJewel() + "钻";
+				MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type, textString);
+				msg.setJumpDoll(userDoll.getId());
+				msgService.sendMsg(msg);
+				return new BaseRespVO(0, true, "已回收！获得" + dollInfo.getReturnJewel() + "钻！");
+			} else {
+				return new BaseRespVO(-1, false, "回收失败，请重试~");
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "回收失败，请重试~");
+		}
+	}
+
+	@Override
+	public BaseRespVO getNotice(int dollId) {
+		GetDescRespVO respVO = new GetDescRespVO();
+		DollInfo dollInfo = dollInfoService.getDollInfo(dollId);
+		respVO.setContent(dollInfo == null ? "" : dollInfo.getApplyNotice());
+		return respVO;
+	}
+
+	@Override
+	public BaseRespVO receive(ReceiveReqVO reqVO) {
+		try {
+			Long uid = reqVO.getUid();
+			long id = reqVO.getId();
+			UserBase userBase = userService.getUserBase(uid);
+			if(userBase == null || (userBase != null && userBase.getNumber() == 0)) { // 验证手机绑定
+				return new BaseRespVO(ResCodeEnum.PHONE_BIND);
+			}
+			UserDoll userDoll = userDollService.getUserDollById(id);
+			if(userDoll.getStatus() != 0 ) {
+				return new BaseRespVO(-1, false, "该娃娃不满足领取条件~");
+			}
+			DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+			if(dollInfo == null) {
+				return new BaseRespVO(-1, false, "娃娃已下架，不可领取~");
+			}
+			if(dollInfo.getGoodsType() != 1) {
+				return new BaseRespVO(-1, false, "该娃娃不是虚拟物品，不可领取~");
+			}
+			DollGetRecord record = new DollGetRecord();
+			record.setuDollId(id);
+			record.setUid(uid);
+			record.setPhone(reqVO.getPhone());
+			record.setType(dollInfo.getSpecType());
+			record.setStatus(0);
+			record.setRemark(reqVO.getRemark());
+			if(dollGetService.saveDollGetRecord(record) > 0) {
+				userDollService.updateUserDollStatus(id, 1);
+				return new BaseRespVO();
+			} else {
+				return new BaseRespVO(-1, false, "网络异常，请重试~");
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "领取失败，请重试~");
+		}
+	}
+}

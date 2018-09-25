@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.antgroup.zmxy.openplatform.api:zmxy-sdk:1.0-20170503">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/antgroup/zmxy/openplatform/api/zmxy-sdk/1.0-20170503/zmxy-sdk-1.0-20170503.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/antgroup/zmxy/openplatform/api/zmxy-sdk/1.0-20170503/zmxy-sdk-1.0-20170503-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/antgroup/zmxy/openplatform/api/zmxy-sdk/1.0-20170503/zmxy-sdk-1.0-20170503-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

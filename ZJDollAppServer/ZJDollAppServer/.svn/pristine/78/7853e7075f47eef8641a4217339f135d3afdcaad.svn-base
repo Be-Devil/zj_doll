@@ -1,0 +1,371 @@
+body{
+    background: #EBEBEB;
+}
+.top{
+    background: #3A3A3E;
+    width: 7.50rem;
+    height: 1.28rem;
+}
+.log_in{
+    width: 7.50rem;
+    height: 0.4rem;
+}
+.log_in p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.1rem;
+    color: #FFFFFF;
+    letter-spacing: 0;
+    line-height: 0.3rem;
+}
+.title{
+    width: 7.50rem;
+    height: 0.88rem;
+    text-align: center;
+}
+
+.title p{
+    font-family: PingFangSC-Medium;
+    font-size: 0.36rem;
+    color: #FFFFFF;
+    letter-spacing: 0;
+    line-height: 0.36rem;
+    display: inline-block;
+    margin-top: 0.26rem;
+}
+.back_img{
+    width: 0.48rem;
+    height: 0.48rem;
+    float: left;
+    margin: 0.2rem 0 0.2rem 0.24rem;
+}
+.back_img img{
+    width: 0.48rem;
+    height: 0.48rem;
+}
+.right_img{
+    float: right;
+    width: 0.4rem;
+    height: 0.4rem;
+    margin: 0.24rem 0.36rem 0.2rem 0;
+}
+.right_img img{
+    width: 0.4rem;
+    height: 0.4rem;
+}
+.portrait {
+    position: relative;
+    width: 7.5rem;
+    height: 6.28rem;
+    background: url("http://lianai-image-sys.qiniudn.com/deposit/bg@2x.png");
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.portrait ul{
+    position: absolute;
+    left: 50%;
+    top: 2.72rem;
+    transform: translate(-50%);
+    text-align: center;
+}
+.portrait ul li:nth-child(1){
+    font-family: PingFangSC-Regular;
+    font-size: 0.24rem;
+    color: #333333;
+    line-height: 0.28rem;
+    margin-bottom: 0.16rem;
+}
+.portrait ul li img{
+    width: 1.44rem;
+    height: 1.44rem;
+    border-radius: 50%;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin-bottom: 0.24rem;
+}
+.portrait ul li:nth-child(3){
+     font-family: PingFangSC-Medium;
+     font-size: 0.28rem;
+     color: #333333;
+     line-height: 0.28rem;
+    margin-bottom: 0.12rem;
+ }
+.portrait ul li:nth-child(4){
+    font-family: PingFangSC-Regular;
+    font-size: 0.24rem;
+    color: #333333;
+    line-height: 0.24rem;
+}
+.account_content{
+    margin-left: 0.48rem;
+}
+.account_content .account_p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.28rem;
+    color: #666666;
+    line-height: 0.28rem;
+    margin-top: 0.48rem;
+    margin-bottom: 0.24rem;
+}
+.account_from{
+    width: 6.54rem;
+    height: 1.96rem;
+    background: #FFFFFF;
+    border-radius: 8px;
+    position: relative;
+}
+.account_from hr{
+    background: #D8D8D8;
+    border-radius: 12px;
+    position: absolute;
+    left: 0.96rem;
+    top: 46%;
+    width: 5.34rem;
+    height: 0.01rem;
+}
+.account_from .account_iph{
+    width: 100%;
+    height: 0.98rem;
+    position: relative;
+}
+.account_from .account_iph_img{
+    width: 0.72rem;
+    height: 0.72rem;
+    margin: 0.26rem 0.34rem 0 0.30rem;
+    display: inline-block;
+    float: left;
+}
+.account_from .account_iph_img img{
+    width: 0.48rem;
+    height: 0.48rem;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin-top: 0.05rem;
+}
+.account_from .account_iph .account_ihp_num{
+    position: absolute;
+    margin-top: 0.36rem;
+    margin-left: 0.96rem;
+    overflow:hidden;
+}
+.account_from .account_iph .account_ihp_num input{
+    border:none;
+    font-family: PingFangSC-Regular;
+    font-size: 0.28rem;
+    height: 0.4rem;
+    color: #AAAAAA;
+    line-height: 0.4rem;
+    width: 5rem;
+}
+.account_from .account_iph .account_ihp_num img{
+    float: right;
+    padding-right: 0.2rem;
+}
+.account_num{
+    width: 100%;
+    position: relative;
+}
+.account_num .account_num_img{
+    width: 0.48rem;
+    height: 0.48rem;
+    position: absolute;
+    top: 0.30rem;
+    left: 0.24rem;
+}
+.account_num .account_num_img img{
+    width: 0.48rem;
+    height: 0.48rem;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.account_num .account_num_inp{
+    position: absolute;
+    margin-top: 0.36rem;
+    margin-left: 0.96rem;
+}
+.account_num .account_num_inp input{
+    font-family: PingFangSC-Regular;
+    font-size: 0.28rem;
+    color: #AAAAAA;
+    line-height: 0.4rem;
+    border:none;
+}
+.account_num .account_num_inp .btn{
+    background: url("http://lianai-image-sys.qiniudn.com/deposit/btn_diable_20@2x.png");
+    width: 1.55rem;
+    height: 0.5rem;
+    margin-left: -0.2rem;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.active{
+    background: url("http://lianai-image-sys.qiniudn.com/deposit/btn_red_20_normal@2x.png") no-repeat!important;
+    width: 1.5rem!important;
+    height: 0.5rem!important;
+    -webkit-background-size: 100% 100% !important;
+    background-size: 100% 100%!important;
+}
+.account_num .account_num_inp button{
+    border: none;
+    position: absolute;
+    top: 0.05rem;
+    left:4.8rem;
+    font-family: PingFangSC-Regular;
+    color: #FFFFFF;
+}
+.account_num .account_num_inp button p{
+    line-height: 0.28rem;
+    font-size: 0.28rem;
+}
+/*.account_from .confirm{*/
+    /*background-image: linear-gradient(-135deg, #E23333 0%, #FF5C5C 100%);*/
+    /*border-radius: 100px;*/
+/*}*/
+.account_from button{
+    background: url("http://lianai-image-sys.qiniudn.com/deposit/2.png");
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    position: absolute;
+    top: 2.8rem;
+    left: 50%;
+    transform: translate(-50%);
+    width: 2.40rem;
+    height: 0.64rem;
+    border: none;
+    margin-bottom: 1.72rem;
+    font-family: PingFangSC-Medium;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.32rem;
+}
+.active1{
+    background: url("http://lianai-image-sys.qiniudn.com/deposit/Rectangle%2011%20Copy@2x.png")!important;
+    -webkit-background-size: 100% 100%!important;
+    background-size: 100% 100%!important;
+}
+/*完成打钩*/
+.accomplish{
+    text-align: center;
+}
+.accomplish ul{
+    margin-top: 0.74rem;
+}
+.accomplish ul li{
+    font-family: PingFangSC-Regular;
+    font-size: 0.3rem;
+    color: #666666;
+    line-height: 0.44rem;
+}
+.accomplish ul li img{
+    width: 1.36rem;
+    height: 1.36rem;
+    margin-bottom: 0.32rem;
+}
+/*完成打钩结束*/
+/*提示*/
+/*.reminder{*/
+    /*position: relative;*/
+    /*text-align: center;*/
+/*}*/
+ .reminder_iph{
+    position: fixed;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%);
+    background: #333333;
+    border-radius: 100px;
+    width: 4.42rem;
+    height: 0.72rem;
+     text-align: center;
+}
+ .reminder_iph1{
+     position: fixed;
+     top: 48%;
+     left: 50%;
+     transform: translate(-50%);
+     background: #333333;
+     border-radius: 100px;
+     width: 5rem;
+     height: 0.72rem;
+     text-align: center;
+ }
+.reminder_iph1 p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.72rem;
+}
+.reminder_iph2{
+    position: fixed;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%);
+    background: #333333;
+    border-radius: 100px;
+    width: 5rem;
+    height: 0.72rem;
+    text-align: center;
+}
+.reminder_iph2 p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.72rem;
+}
+.reminder_iph3{
+    position: fixed;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%);
+    background: #333333;
+    border-radius: 100px;
+    width: 7rem;
+    height: 0.72rem;
+    text-align: center;
+}
+.reminder_iph3 p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.72rem;
+}
+
+.reminder_iph p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.72rem;
+}
+ .reminder_verify{
+     text-align: center;
+    width: 5rem;
+    height: 0.72rem;
+    background: #333333;
+    border-radius: 100px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%);
+}
+ .reminder_verify p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.72rem;
+}
+.reminder_verify2{
+    text-align: center;
+    width: 5rem;
+    height: 0.72rem;
+    background: #333333;
+    border-radius: 100px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%);
+}
+.reminder_verify2 p{
+    font-family: PingFangSC-Regular;
+    font-size: 0.32rem;
+    color: #FFFFFF;
+    line-height: 0.72rem;
+}

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+		
+	<bean class="com.imlianai.rpc.support.manager.SpringContextHolder"></bean>
+		
+	<!-- redis连接池的配置 -->
+	<bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+		<property name="maxTotal" value="${redis.pool.maxTotal}" />
+		<property name="maxIdle" value="${redis.pool.maxIdle}" />
+		<property name="minIdle" value="${redis.pool.minIdle}" />
+		<property name="maxWaitMillis" value="${redis.pool.maxWaitMillis}" />
+		<property name="testOnBorrow" value="${redis.pool.testOnBorrow}" />
+		<property name="testOnReturn" value="${redis.pool.testOnReturn}" />
+		<property name="testWhileIdle" value="${redis.pool.testWhileIdle}" />
+		<property name="timeBetweenEvictionRunsMillis" value="${redis.pool.timeBetweenEvictionRunsMillis}" />
+	</bean>
+	<bean class="com.imlianai.rpc.support.manager.cache.JedisPoolBuilder">   
+		<property name="jedisPoolConfig" ref="jedisPoolConfig" />
+	</bean>
+	
+	<!-- 新版 CacheManager -->
+	<bean id="cacheManager" class="com.imlianai.rpc.support.manager.cache.CacheManager">
+		<property name="jedisPool" ref="jedisPool" />
+	</bean>
+	
+	<!-- <bean id="mongoServer" class="com.imlianai.rpc.support.manager.mongo.MongoServer" init-method="init">  
+		<property name="port" value="${mongo.port}" />
+		<property name="host" value="${mongo.host}" />
+		<property name="poolSize" value="${mongo.poolSize}" />
+		<property name="blockSize" value="${mongo.blockSize}" />
+		<property name="dbName" value="${mongo.dbName}" />
+		<property name="userName" value="${mongo.userName}" />
+		<property name="password" value="${mongo.password}" />
+	</bean>	
+	<bean id="mongoManager" class="com.imlianai.rpc.support.manager.mongo.MongoManager" init-method="init">
+		<property name="mongoServer" ref="mongoServer" />
+	</bean> -->	
+	
+	<!-- <bean name="msgServerSender" class="com.imlianai.rpc.support.manager.msg.MsgServerSender" init-method="init" destroy-method="shutdownPool">
+		<property name="hosts" value="${msgServerSender.hosts}" />
+		<property name="msgNameMap">
+			<map>
+				<entry key="1" value="MsgWeb"></entry>
+				<entry key="2" value="MsgRoom"></entry>
+				<entry key="3" value="MsgNotice"></entry>
+				<entry key="4" value="MsgLeanCloud"></entry>
+			</map>
+		</property>
+	</bean> -->
+	
+	
+	<!-- ============================== JdbcHandler配置 ===================================== -->	
+	<bean id="jdbcTemplateApp" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSourceApp"></constructor-arg>
+	</bean>
+	<bean id="jdbcTemplateAppSlave" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSourceAppSlave"></constructor-arg>
+	</bean>
+
+	<bean id="dbMapper" class="com.imlianai.rpc.support.manager.dbhandler.DBMapper"/>
+    <bean id="jdbcHandler" class="com.imlianai.rpc.support.manager.dbhandler.JdbcHandler"/>	
+
+	 <!-- 配置JdbcTemplatePool -->
+     <bean id="jdbcTemplatePool" class="com.imlianai.rpc.support.manager.dbhandler.JdbcTemplatePool">  
+        <!-- 通过key-value的形式来配置主Template -->  
+        <property name="masterTemplateMap">  
+            <map key-type="java.lang.String">
+                <entry value-ref="jdbcTemplateApp" key="jdbcTemplateApp"></entry>
+                <!-- <entry value-ref="jdbcTemplateEvent" key="jdbcTemplateEvent"></entry> -->    
+             </map>  
+        </property>
+        <!-- 配置从 jdbcTemplate -->
+         <property name="slaveTemplateMap">
+        	<map key-type="java.lang.String">  
+                <entry value-ref="jdbcTemplateAppSlave" key="jdbcTemplateAppSlave"></entry> 
+             </map>  
+         </property>
+     </bean>
+     
+</beans>

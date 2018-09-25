@@ -1,0 +1,38 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao.impl;
+
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinVirtualConfigDao;
+import com.imlianai.dollpub.domain.coinfactory.PushCoinVirtualConfig;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-07-09 11:54
+ **/
+@Repository
+public class PushCoinVirtualConfigDaoImpl implements PushCoinVirtualConfigDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public int insertOrUpdateVirtualPushCoinConfig(PushCoinVirtualConfig virtualConfig) {
+
+        String sql = "insert into push_coin_unity_set(busId,createTime) value(?,now()) on duplicate key update gap=?,suction=?,lean=?,game=?,dial=?,sway=?,playTime=?,updateTime=now()";
+
+        return jdbcHandler.executeSql(sql,virtualConfig.getBusId(),
+                virtualConfig.getGap(),virtualConfig.getSuction(),virtualConfig.getLean(),virtualConfig.getGame(),virtualConfig.getDial(),virtualConfig.getSway(),virtualConfig.getPlayTime());
+    }
+
+    @Override
+    public int initConfig(int busId) {
+        return jdbcHandler.executeSql("insert into push_coin_unity_set(busId,createTime) value(?,now())",busId);
+    }
+
+    @Override
+    public PushCoinVirtualConfig getVirtualConfigByBusId(int busId) {
+        return jdbcHandler.queryOneBySql(PushCoinVirtualConfig.class,"select * from push_coin_unity_set where busId=?",busId);
+    }
+}

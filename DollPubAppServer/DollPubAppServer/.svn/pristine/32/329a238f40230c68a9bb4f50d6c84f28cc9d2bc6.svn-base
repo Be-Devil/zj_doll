@@ -1,0 +1,20 @@
+package com.imlianai.dollpub.app.modules.core.hoodle.util;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ByteArrayUtil {
+
+	/**
+	 * byte[]与十六进制字符串转换
+	 * @param bytes
+	 * @return
+	 */
+    public static List<String> bytesToHexs(byte[] bytes) {
+        List<String> hexs = new ArrayList<String>();
+        for(byte b : bytes) { // 使用String的format方法进行转换
+        	hexs.add(String.format("%02x", new Integer(b & 0xff)));
+        }
+        return hexs;
+    }
+}

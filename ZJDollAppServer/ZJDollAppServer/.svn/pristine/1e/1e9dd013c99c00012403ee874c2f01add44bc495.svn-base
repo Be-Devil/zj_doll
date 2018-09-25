@@ -1,0 +1,96 @@
+package com.imlianai.zjdoll.app.modules.publics.msg.rabbitmq.pool;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.supply.rabbitMq.iface.RabbitMqFroZJDollRemoteService;
+import com.imlianai.zjdoll.app.modules.core.doll.list.DollListService;
+import com.imlianai.zjdoll.app.modules.publics.msg.leancloud.IMMsgService;
+import com.imlianai.zjdoll.app.modules.publics.msg.rabbitmq.task.*;
+import com.imlianai.zjdoll.app.modules.publics.umeng.service.IMPushService;
+
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.concurrent.*;
+
+/**
+ * Created by zhicheng on 2018/4/4.
+ */
+@Component
+public class DollMsgConsumerPool {
+
+    @Reference
+    private RabbitMqFroZJDollRemoteService rabbitMqRemoteService;
+
+    @Resource
+    private IMMsgService iMMsgService;
+    @Resource
+    IMPushService iMPushService;
+    @Resource
+    DollListService dollListService;
+
+    private ExecutorService privateMsgPool=Executors.newFixedThreadPool(5, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread th=new Thread(r);
+            th.setName("=======getPrivateMsgTask=======");
+            th.setDaemon(true);
+            return th;
+        }
+    });
+    private ExecutorService roomMsgPool=Executors.newFixedThreadPool(5, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread th=new Thread(r);
+            th.setName("=======getRoomMsgTask=======");
+            th.setDaemon(true);
+            return th;
+        }
+    });
+    private ExecutorService noticeMsgPool=Executors.newFixedThreadPool(5, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread th=new Thread(r);
+            th.setName("=======getNoticeMsgTask=======");
+            th.setDaemon(true);
+            return th;
+        }
+    });
+    private ExecutorService sysMsgPool=Executors.newFixedThreadPool(5, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread th=new Thread(r);
+            th.setName("=======getSysMsgTask=======");
+            th.setDaemon(true);
+            return th;
+        }
+    });
+    private ExecutorService msgByRoomPool=Executors.newFixedThreadPool(5, new ThreadFactory() {
+        @Override
+        public Thread newThread(Runnable r) {
+            Thread th=new Thread(r);
+            th.setName("=======getMsgByRoomTask=======");
+            th.setDaemon(true);
+            return th;
+        }
+    });
+
+    @PostConstruct
+    private void startTask(){
+//        for (int i=0;i<5;i++){
+//            privateMsgPool.execute(new SendPrivateMsgTask(rabbitMqRemoteService,iMMsgService));
+//        }
+//        for (int i=0;i<5;i++){
+//            roomMsgPool.execute(new SendRoomMsgTask(rabbitMqRemoteService,iMMsgService));
+//        }
+//        for (int i=0;i<5;i++){
+//            sysMsgPool.execute(new SendSysMsgTask(rabbitMqRemoteService,iMMsgService));
+//        }
+//        for (int i=0;i<5;i++){
+//            msgByRoomPool.execute(new SendMsgByRoomTask(rabbitMqRemoteService,iMMsgService,dollListService));
+//        }
+//        for (int i=0;i<5;i++){
+//            noticeMsgPool.execute(new SendNoticeMsgTask(rabbitMqRemoteService,iMPushService));
+//        }
+    }
+}

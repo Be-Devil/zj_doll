@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;" xmlns:v-bind="http://www.w3.org/1999/xhtml">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>我要当萌主</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="我要当萌主">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="我要当萌主">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="msapplication-tap-highlight" content="no">
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon"/>
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/style.css"/>
+    <link rel="stylesheet" href="css/index.css"/>
+
+
+
+</head>
+<body style="font-size: 12px;">
+
+<div class="rulesBtn"></div><!--玩法说明-->
+<div class="refurbish"></div><!--刷新-->
+<div class="indexVue">
+    <section class="maxBox">
+        <section class="BoxTop">
+            <img src="http://lianai-image-sys.qiniudn.com/m/bg-slogan.jpg" alt=""/>
+            <span></span><!--萌主头像-->
+            <div class="BoxTopPic">
+                <template>
+                    <img :src="champions.uhead" alt=""/>
+                    <p v-text="champions.uname"></p>
+                    <i v-text="busId+'号机'"></i>
+                    <h6 v-text="'本轮统计时间为：'+timeInfo.sMonthStr+'月'+timeInfo.sDayStr+'日中午12点-'+timeInfo.eMonthStr+'月'+timeInfo.eDayStr+'日中午12点'"></h6>
+                    <h6>距离本轮结束还有
+                        <!--倒计时-->
+                        <span class="timeBox">
+                          <span class="time-item">
+                            <p><strong class="hour_show">0</strong>时</p>
+                            <p><strong class="minute_show">0</strong>分</p>
+                            <p><strong class="second_show">0</strong>秒</p>
+                         </span>
+                    </span>
+                        <!--倒计时-->
+                    </h6>
+                </template>
+            </div>
+        </section>
+        <section class="bodyRanking">
+            <div class="bodyTop"></div>
+            <div class="bodyCen">
+                <!--我的排行-->
+                <template>
+                    <div class="bodyCenMe ks-clear">
+                        <span class="pm" v-text="userInfo.ranking===0?'未上榜':userInfo.ranking"></span>
+                        <span class="pic"><img :src="userInfo.uhead" alt=""></span><!--头像-->
+                        <span class="name" v-text="userInfo.uname"></span>
+                        <span class="number1 number" v-text="userInfo.catDollIndex"></span><!--抓娃娃指数-->
+                        <span class="number2 number" v-text="userInfo.shareValue"></span><!--分享值-->
+                        <span class="number3 number" v-text="userInfo.uindex"></span><!--机主指数-->
+                        <button class="lookBtn" @click="lookBtn()"></button><!--查看分享值-->
+                        <button class="addBtn" @click="addBtn()"></button><!--增加分享值-->
+                    </div>
+                </template>
+                <!--我的排行 end-->
+                <!--用户排行榜-->
+                <template v-for="(item,index) in playerRankingItems">
+                    <ul class="userListBox ks-clear">
+
+                        <li class="ks-clear userList" v-if="index>0">
+
+                            <span class="pm" v-text="item.ranking==0?'1':item.ranking"></span>
+                            <span class="pic">
+                                <i v-if="index === 1 && item.uname==='虚位以待'"><img src="http://lianai-image-sys.qiniudn.com/m/1.png" alt=""/></i><!--皇冠-->
+                                <i v-if="item.ranking==1"><img src="http://lianai-image-sys.qiniudn.com/m/1.png" alt=""/></i><!--皇冠-->
+                                <i v-if="item.ranking==2"><img src="http://lianai-image-sys.qiniudn.com/m/2.png" alt=""/></i><!--皇冠-->
+                                <i v-if="item.ranking==3"><img src="http://lianai-image-sys.qiniudn.com/m/3.png" alt=""/></i><!--皇冠-->
+                                <img :src="item.uhead" alt="">
+                            </span><!--头像-->
+
+                            <!--<span class="pic" v-if="item.ranking>3">-->
+                                <!--<img :src="item.uhead" alt="">-->
+                            <!--</span>-->
+
+                            <span class="name" v-text="item.uname"></span>
+                            <span class="number1 number" v-text="item.catDollIndex"></span><!--抓娃娃指数-->
+                            <span class="number2 number" v-text="item.shareValue"></span><!--分享值-->
+                            <span class="number3 number" v-text="item.uindex"></span><!--机主指数-->
+                        </li>
+
+                    </ul>
+                </template>
+                <!--用户排行榜 end-->
+            </div>
+            <div class="bodyBon"></div>
+        </section>
+    </section>
+    <section class="footer">
+    <p class="footertxt">本活动与苹果官方无关，活动解释权归萌趣抓娃娃所有</p>
+    <div class="footerNumer">
+        <div id="topNav" class="swiper-container">
+            <div id="div" class="swiper-wrapper">
+            </div>
+        </div>
+    </div>
+    </section>
+</div>
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script src="http://lianai-image-sys.qiniudn.com/js/font.js"></script>
+<script src="js/index_model/index_vue.js"></script>
+<script src="js/swiper.min.js"></script>
+<script src="js/index_model/index.js"></script>
+<style>
+    .machine>span>img{
+        width: 100%;
+        height: 100%;
+    }
+    .footer{
+        overflow: hidden !important;
+        /*overflow-x: auto !important;*/
+    }
+    .bodyCenMe>span.pm{
+        width: 13.5% !important;
+        text-align: center;
+    }
+</style>

@@ -1,0 +1,93 @@
+package com.imlianai.dollpub.app.modules.core.hoodle.service.impl;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.app.modules.core.hoodle.consts.HoodleConsts;
+import com.imlianai.dollpub.app.modules.core.hoodle.service.HoodleService;
+import com.imlianai.dollpub.app.modules.core.hoodle.util.ByteArrayUtil;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Random;
+
+/**
+ * 弹珠机服务实现
+ * @author wurui
+ * @create 2018-07-13 22:10
+ **/
+@Service
+public class HoodleServiceImpl implements HoodleService {
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+
+    @Override
+    public void handleResult(DollBus dollBus, String deviceId, List<String> hexs) {
+        logger.info("handleResult 结果：" + JSON.toJSONString(hexs));
+        if (dollBus != null){
+            if (!StringUtil.isNullOrEmpty(hexs)){
+
+                switch (hexs.get(7)){
+
+                    case "33":
+
+                        logger.info("结果：" + JSON.toJSONString(hexs));
+
+                        iMachineConnectRemoteService.handleDirective(dollBus.getBusId(), HoodleConsts.END,"");
+
+                        break;
+
+                    default:
+                        break;
+                }
+
+            }
+        }
+    }
+
+    @Override
+    public BaseRespVO start(int busId,long uid,int gameId, int time_out, int bet) {
+
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null && dollBus.getType() == 3){
+            //消息ID
+            Random msgId = new Random();
+            int mainId = msgId.nextInt(255);
+            int viceId = msgId.nextInt(255);
+
+
+            byte checkBit = (byte) (((byte)0x0c + (byte)0xa2 + (byte)gameId + (byte)time_out + (byte)bet) % 100);
+
+            byte[] start_cmd = {(byte)0xfe,(byte)mainId,(byte)viceId,(byte)0x01,(byte)(-mainId),(byte)(-viceId),(byte)0x0c,(byte)0xa2,(byte)gameId,(byte)time_out,(byte)bet,checkBit};
+
+            List<String> hexs = ByteArrayUtil.bytesToHexs(start_cmd);
+
+            logger.info("指令：" + JSON.toJSONString(hexs));
+
+            iMachineConnectRemoteService.handleDirective(busId,start_cmd,"弹珠机开局");
+
+            BaseRespVO respVO = new BaseRespVO(200,true,"数据发送成功");
+            respVO.setData(hexs);
+            return respVO;
+
+        }
+
+        return new BaseRespVO(0,false,"开局失败");
+
+    }
+
+
+}

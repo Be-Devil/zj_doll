@@ -1,0 +1,280 @@
+package com.imlianai.dollpub.app.modules.core.pinball.util;
+
+import com.alibaba.fastjson.JSON;
+import com.google.common.collect.Lists;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+
+/**
+ * 弹珠机核心指令
+ * @author wr
+ */
+public class PinballByteArrayUtil {
+
+	/**
+	 * byte[]与十六进制字符串转换
+	 * @param bytes
+	 * @return
+	 */
+    public static List<String> bytesToHexs(byte[] bytes) {
+        List<String> hexs = Lists.newArrayList();
+        for(byte b : bytes) { // 使用String的format方法进行转换
+        	hexs.add(String.format("%02x", b & 0xff));
+        }
+        return hexs;
+    }
+
+
+    /**
+     * 1：开局 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x0c）,cmd,gameid,time_out,bet, [校验位1]
+     * 开局可直接押分
+     * cmd = 0xa2 开局(非兼容模式，返回a2,参数不同)
+     * @param gameId 游戏局数
+     * @param timeOut 超时时间，单位秒。超过此时间自动结束游戏
+     * @param bet 押分  取值范围为0-255
+     * @return
+     */
+    public static byte[] startCmd(int gameId,int timeOut,int bet){
+        Random msgId = new Random();
+        int mainId = msgId.nextInt(255);
+        int viceId = msgId.nextInt(255);
+
+        if (gameId < 0 || gameId > 255){ return null; }
+        if (timeOut < 0 || timeOut > 255){ return null; }
+        if (bet < 0 || bet > 255){ return null; }
+
+        int checkBit = (12 + 162 + gameId + timeOut + bet) % 100;
+
+        return new byte[]{
+                (byte)0xfe,
+                (byte)mainId,(byte)viceId,
+                (byte)0x01,
+                (byte)~mainId,(byte)~viceId,
+                (byte)0x0c,
+                (byte)0xa2,
+                (byte)gameId,(byte)timeOut,(byte)bet,
+                (byte)checkBit
+        };
+
+    }
+
+    /**
+     * 2：押分 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x0a）,cmd,,bet, [校验位1]
+     * 押分在有更新的情况下，必须下发到机器
+     * cmd = 0xa4
+     * @param bet 押分  0-255
+     * @return
+     */
+    public static byte[] betCmd(int bet){
+        Random msgId = new Random();
+        int mainId = msgId.nextInt(255);
+        int viceId = msgId.nextInt(255);
+
+        if (bet < 0 || bet > 255){ return null; }
+
+        int checkBit = (10 + 164 + bet) % 100;
+
+        return new byte[]{
+                (byte)0xfe,
+                (byte)mainId,(byte)viceId,
+                (byte)0x01,
+                (byte)~mainId,(byte)~viceId,
+                (byte)0x0a,
+                (byte)0xa4,
+                (byte)bet,
+                (byte)checkBit
+        };
+
+    }
+
+    /**
+     * 3：下球 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x09）,cmd, [校验位1]
+     * 建议：在下球前，传送一次最后的押分
+     * cmd = 0xa5
+     * @return
+     */
+    public static byte[] ballCmd(){
+        return new byte[]{
+                (byte)0xfe,
+                (byte)0x00,(byte)0x00,
+                (byte)0x01,
+                (byte)0xff,(byte)0xff,
+                (byte)0x09,
+                (byte)0xa5,
+                (byte)0x4a
+        };
+    }
+
+
+    /**
+     * 4：力度 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x0a）,cmd,,power, [校验位1]
+     * 在一次发射中力度指令中的力度值只能递增或不变，不能小于之前的值。
+     * cmd = 0xa6
+     * @param power 力度  0-255
+     * @return
+     */
+    public static byte[] forceCmd(int power){
+        Random msgId = new Random();
+        int mainId = msgId.nextInt(255);
+        int viceId = msgId.nextInt(255);
+
+        if (power < 0 || power > 255){ return null; }
+
+        int checkBit = (10 + 166 + power) % 100;
+
+        return new byte[]{
+                (byte)0xfe,
+                (byte)mainId,(byte)viceId,
+                (byte)0x01,
+                (byte)~mainId,(byte)~viceId,
+                (byte)0x0a,
+                (byte)0xa6,
+                (byte)power,
+                (byte)checkBit
+        };
+    }
+
+    /**
+     * 5：发射 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x0b）,cmd,power,bet [校验位1]
+     * 最终结算的押分以发射下发的参数值为准,每一局在发射指令之前必须要先下发过下球指令
+     * cmd = 0xa7
+     * @param power 力度  0-255
+     * @param bet 押分 0-255
+     * @return
+     */
+    public static byte[] launchCmd(int power,int bet){
+        Random msgId = new Random();
+        int mainId = msgId.nextInt(255);
+        int viceId = msgId.nextInt(255);
+
+        if (power < 0 || power > 255){ return null; }
+        if (bet < 0 || bet > 255){ return null; }
+
+        int checkBit = (11 + 167 + power + bet) % 100;
+
+        return new byte[]{
+                (byte)0xfe,
+                (byte)mainId,(byte)viceId,
+                (byte)0x01,
+                (byte)~mainId,(byte)~viceId,
+                (byte)0x0b,
+                (byte)0xa7,
+                (byte)power,(byte)bet,
+                (byte)checkBit
+        };
+    }
+
+
+    /**
+     * 强制结束游戏 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x09）,cmd, [校验位1]
+     * 注：强制结束游戏，回到开局准备状态,机器会自动发射 游戏正常结束
+     * cmd = 0xa3
+     * @return
+     */
+    public static byte[] forcedEndGame(){
+        return new byte[]{
+                (byte)0xfe,
+                (byte)0x00,(byte)0x00,
+                (byte)0x01,
+                (byte)0xff,(byte)0xff,
+                (byte)0x09,
+                (byte)0xa3,
+                (byte)0x48
+        };
+    }
+
+
+    /**
+     * 设置参数 buff[]={0xfe，pid%256，pid/256,~ buff[0]，~ buff[1]，~ buff[2],包长度（length=0x0c）,cmd,item,value_low,value_high, [校验位1]
+     * cmd = 0xa0
+     * @param item 参数项
+     *             item=0表示游戏难度，值范围0~9，值越小表示难度越大，中奖率越低
+     *             各等级的	流出/流入 比例如下：
+     *                       0级：84%
+     *                       1级：86%
+     *                       2级：88%
+     *                       3级：90%
+     *                       4级：92%
+     *                       5级：94%
+     *                       6级：96%
+     *                       7级：98%  (建议难度等级 设置为7)
+     *                       8级：100%
+     *                       9级：110%
+     *
+     *             item=1表示彩票比例，值范围1-100
+     *
+     *              指令中的值 value = value_low  + value_hign*256
+     *              例子：fe 00 00 01 ff ff 0c A0 01 01 01 4b
+     *
+     * @param low 参数值低位
+     * @param high 参数值高位
+     * @return
+     */
+    public static byte[] setParam(int item,int low,int high){
+
+        Random msgId = new Random();
+        int mainId = msgId.nextInt(255);
+        int viceId = msgId.nextInt(255);
+
+        //难度
+        if (item == 0){
+
+            int checkBit = (12 + 160 + item + low + high) % 100;
+            return new byte[]{
+                    (byte)0xfe,
+                    (byte)mainId,(byte)viceId,
+                    (byte)0x01,
+                    (byte)~mainId,(byte)~viceId,
+                    (byte)0x0c,
+                    (byte)0xa0,
+                    (byte)item,(byte)low,(byte)high,
+                    (byte)checkBit
+            };
+        }
+
+        if (item == 1){
+            int checkBit = (12 + 160 + item + low + high) % 100;
+            return new byte[]{
+                    (byte)0xfe,
+                    (byte)mainId,(byte)viceId,
+                    (byte)0x01,
+                    (byte)~mainId,(byte)~viceId,
+                    (byte)0x0c,
+                    (byte)0xa0,
+                    (byte)item,(byte)low,(byte)high,
+                    (byte)checkBit
+            };
+        }
+
+        return null;
+    }
+
+
+    /**
+     * 接受游戏结束
+     * 注意:只有收到游戏结束 这一局才算结束
+     * 游戏结果在游戏结果产生后返回，游戏结束会在游戏结束后返回。
+     * 未中大奖的情况下，游戏结束会紧跟着游戏结果返回。在中大奖的情况下，游戏结果会先返回，游戏结束会在大奖效果完成后返回。
+     * cmd = 0xc1
+     * @return
+     */
+    public static byte[] acceptGameOverCmd(){
+
+        return null;
+
+    }
+
+
+    public static void main(String[] args) {
+
+        List<String> list = bytesToHexs(Objects.requireNonNull(launchCmd(160,20)));
+        System.out.println(JSON.toJSONString(list));
+
+
+    }
+
+
+}

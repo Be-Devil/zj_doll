@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="css/hi.css" />
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			
+			*,
+			*:after,
+			*:before {
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+			}
+			
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				font-family: "微软雅黑"
+			}
+			
+			html {
+				font-size: 10px
+			}
+			
+			body {
+				background-color: #f1f1f1;
+			}
+			
+			#app {
+				position: relative;
+				width: 100%;
+				height: 100%;
+				overflow-x: hidden;
+				overflow-y: hidden;
+				-webkit-overflow-scrolling: touch;
+			}
+			
+			.header {
+				position: absolute;
+				left: 0;
+				top: 0;
+				z-index: 50;
+				width: 100%;
+				height: 4rem;
+			}
+			
+			.colorful-text {
+				-webkit-background-clip: text, border-box;
+				background-clip: text, border-box;
+				color: transparent;
+				background-image: linear-gradient(to right, #e74c3c 20%, #f4d03f 40%, #2ecc71 60%, #5dade2 80%, #a569bd 100%);
+			}
+			
+			.logo {
+				color: #fff;
+			}
+			
+			.logo,
+			.login,
+			.menu,
+			.yue {
+				text-align: center;
+				line-height: 4rem;
+				font-size: 1.3rem;
+				color: #fff;
+			}
+			
+			.yue span {
+				border-radius: 12px;
+				padding: 2px 6px;
+				background-color: rgba(255, 255, 255, .5)
+			}
+			
+			.logo span {
+				font-size: 1.8rem;
+			}
+			
+			.menu img {
+				width: 2.5rem;
+			}
+			
+			.bg {
+				background-image: -webkit-gradient(linear, 78% 100%, 68% 0%, from(#645af9), to(#708aff));
+				width: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+				height: 100%;
+			}
+			
+			.bg-img {
+				position: absolute;
+				left: -20%;
+				top: 0;
+				width: 140%;
+				height: 900px;
+			}
+			
+			.bg-stars {
+				position: absolute;
+				background: url(icon/bgstar.svg) no-repeat 0 0;
+				background-size: 100% 100%;
+				height: 100%;
+				z-index: 40;
+				width: 100%;
+			}
+			
+			.cloud {
+				position: relative;
+				top: 20rem;
+				left: 0%;
+				width: 100%;
+				height: 6rem;
+				overflow: hidden;
+			}
+			
+			.cloud.bottom {
+				position: absolute;
+				top: 45rem;
+				left: 0;
+				transform: rotateX(180deg);
+				/*background-color: #000;*/
+				z-index: 20;
+			}
+			
+			.cloud img {
+				float: left;
+				bottom: 0;
+				height: 100%;
+			}
+			
+			.cloud-wave-1,
+			.cloud-wave-2 {
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				width: 2000%;
+				height: 100%;
+				z-index: 50;
+			}
+			
+			.cloud-wave-1 {
+				animation: wave1 400s linear 0s infinite
+			}
+			
+			.cloud-wave-2 {
+				left: -1900% !important;
+				animation: wave2 400s linear 0s infinite
+			}
+			
+			.cloud-img {
+				width: 5%;
+			}
+			
+			@-webkit-keyframes wave1 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: -1900%
+				}
+			}
+			
+			@-webkit-keyframes wave2 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: 1900%;
+				}
+			}
+			
+			@keyframes wave1 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: -1900%
+				}
+			}
+			
+			@keyframes wave2 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: 1900%;
+				}
+			}
+			
+			.content {
+				position: relative;
+				left: 0;
+				top: 20rem;
+				width: 100%;
+				height: 20rem;
+				background-color: #fff
+			}
+			
+			.btn {
+				position: absolute;
+				left: 50%;
+				top: 0;
+				transform: translateX(-50%);
+				width: 60%;
+				text-align: center;
+				margin-top: 1rem;
+				background-color: #F16543;
+				color: #fff;
+				height: 3.8rem;
+				line-height: 3.8rem;
+				border-radius: 1.6rem;
+				z-index: 100;
+				font-size: 1.4rem;
+				box-shadow: 0 0 5px 0 rgba(0, 0, 0, .1);
+				background-image: linear-gradient(to right, #e74c3c, #a569bd);
+				background-image: -webkit-linear-gradient(to right, #e74c3c, #a569bd);
+			}
+			
+			.btn-1 {
+				top: 3rem;
+			}
+			
+			.btn-2 {
+				top: 9rem;
+			}
+			.state{
+				position: absolute;
+				display: none;
+				top: -50px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 500;
+				text-align: center;
+				font-size: 17px;
+				color: #a569bd;
+			}
+			#rjst{
+				display: none;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="app">
+			<div class="bg">
+				<div class="bg-stars"></div>
+
+				<div class="cloud">
+					<div class="cloud-wave-1" id="cloud1">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud1.png">
+					</div>
+					<div class="cloud-wave-2" id="cloud2">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud2.png">
+					</div>
+				</div>
+				<div class="content">
+					<div class="state">
+						<span>申请状态：</span>
+						<span id="state"></span>
+					</div>
+					<div class="btn btn-1" onclick="login()">代理商登录</div>
+					<div class="btn btn-2" id="rjst" onclick="register()">申请代理商</div>
+				</div>
+				<div class="cloud bottom">
+					<div class="cloud-wave-1" id="cloud3">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud1.png">
+					</div>
+					<div class="cloud-wave-2" id="cloud4">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud2.png">
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+		<script>
+			function GetRequest() {
+				var url = location.search; //获取url中"?"符后的字串 
+				var theRequest = {};
+				if(url.indexOf("?") != -1) {
+					var str = url.substr(1);
+					strs = str.split("&");
+					for(var i = 0; i < strs.length; i++) {
+						theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+					}
+				}
+				return theRequest;
+			}
+			var query = GetRequest();
+			axios.post('../api/uAgency/index', {
+				uid: query.uid,
+				loginKey: query.loginKey
+			}, {
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded'
+				}
+			}).then(function(res) {
+				console.log(res.data)
+				if(res.data.result != 0){
+					document.querySelector('.state').style.display = 'block';
+					document.getElementById('state').innerText = res.data.msg
+					document.getElementById('rjst').style.display = 'block';
+				}
+				if(res.data.result == 200){
+					document.getElementById('rjst').style.display = 'none';
+				}
+			}).catch(function(res) {
+				huiModal({
+					msg: res.data.msg,
+					modal: false
+				})
+			});
+
+			function login() {
+				location.href = 'daili_login.html?'+query.uid+'&'+query.loginKey //跳转页面
+			}
+
+			function register() {
+				location.href = 'daili_register.html?'+query.uid+'&'+query.loginKey //跳转页面
+			}
+
+			function cloudFn(id) {
+				var cloud1 = document.getElementById(id),
+					cloud2;
+				for(var i = 0; i < 19; i++) {
+					cloud2 = cloud1.childNodes[1].cloneNode();
+					cloud1.appendChild(cloud2);
+				}
+			}
+			cloudFn('cloud1');
+			cloudFn('cloud2');
+			cloudFn('cloud3');
+			cloudFn('cloud4');
+		</script>
+	</body>
+
+</html>

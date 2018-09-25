@@ -1,0 +1,128 @@
+package com.imlianai.zjdoll.app.modules.support.version.vo;
+
+import java.util.List;
+
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+import com.imlianai.zjdoll.domain.banner.BannerRes;
+import com.imlianai.zjdoll.domain.version.Version;
+import com.imlianai.zjdoll.domain.version.VersionBootimg;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+@SuppressWarnings("serial")
+@ApiModel(value="版本更新返回")
+public class VersionRespVO extends BaseRespVO{
+	
+	@ApiModelProperty(value="版本信息")
+	private Version versionInfo;
+	@ApiModelProperty(value="闪屏")
+	private VersionBootimg bootimgInfo;
+	@ApiModelProperty(value="闪屏列表")
+	private List<BannerRes> bootimgInfoList;
+	@ApiModelProperty(value="弹窗广告-带跳转")
+	private BannerRes adJump;
+	
+	@ApiModelProperty(value="弹窗广告")
+	private VersionBootimg ad;
+	@ApiModelProperty(value="关于我们的微信公众号信息")
+	private VersionAboutInfo aboutInfo;
+	@ApiModelProperty(value="游戏音乐压缩包下载地址")
+	private String bgmUrl;//"http://lianai-image-sys.qiniudn.com/e20171213/e20171226.zip";
+	@ApiModelProperty(value="评价地址")
+	private String commUrl;
+	
+	public VersionRespVO(){
+		this.aboutInfo=new VersionAboutInfo();
+	}
+	public Version getVersionInfo() {
+		return versionInfo;
+	}
+	public void setVersionInfo(Version versionInfo) {
+		this.versionInfo = versionInfo;
+	}
+	public VersionBootimg getBootimgInfo() {
+		return bootimgInfo;
+	}
+	public void setBootimgInfo(VersionBootimg bootimgInfo) {
+		this.bootimgInfo = bootimgInfo;
+	}
+	public VersionBootimg getAd() {
+		return ad;
+	}
+	public void setAd(VersionBootimg ad) {
+		this.ad = ad;
+	}
+	
+	public VersionAboutInfo getAboutInfo() {
+		return aboutInfo;
+	}
+	public void setAboutInfo(VersionAboutInfo aboutInfo) {
+		this.aboutInfo = aboutInfo;
+	}
+
+	public String getBgmUrl() {
+		return bgmUrl;
+	}
+	public void setBgmUrl(String bgmUrl) {
+		this.bgmUrl = bgmUrl;
+	}
+
+	public BannerRes getAdJump() {
+		return adJump;
+	}
+	public void setAdJump(BannerRes adJump) {
+		this.adJump = adJump;
+	}
+	
+	public String getCommUrl() {
+		return commUrl;
+	}
+	public void setCommUrl(String commUrl) {
+		this.commUrl = commUrl;
+	}
+
+
+	public List<BannerRes> getBootimgInfoList() {
+		return bootimgInfoList;
+	}
+	public void setBootimgInfoList(List<BannerRes> bootimgInfoList) {
+		this.bootimgInfoList = bootimgInfoList;
+	}
+
+
+	public class VersionAboutInfo{
+		
+		private String qrcode="http://lianai-image-sys.qiniudn.com/e20180125/mqwwqr.jpg";
+		
+		private String name="娃娃星球助手";
+
+		private String id="coolcooltt";
+		
+		public String getQrcode() {
+			return qrcode;
+		}
+
+		public void setQrcode(String qrcode) {
+			this.qrcode = qrcode;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getId() {
+			return id;
+		}
+
+		public void setId(String id) {
+			this.id = id;
+		}
+		
+		
+	}
+}

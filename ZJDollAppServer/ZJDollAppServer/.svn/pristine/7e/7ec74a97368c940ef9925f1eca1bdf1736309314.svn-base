@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>关注公众号 领取红包</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <style>
+        html,body{margin:0;padding:0;background: #ebebeb;font-family: "verdana";}
+        .gainBox{width:100%;height:auto;padding:20px 12px 10px;box-sizing:border-box;font-size: 16px;}
+        .gainTle{color:#000;margin:0;}
+        .gainTle>em{color:#ee1e1e;}
+        .number{width:223px;height:34px;display: block;background: #fff;border-radius:35px;margin:20px auto 30px;color:#333;text-align: center;line-height: 34px;}
+        .number>button{width:50px;height:26px;font-size: 14px;display: block;float: right;
+            background: #f6d82c;border:none;border-radius: 50px;margin:4px;line-height: 26px;padding:0;}
+        .number>a{display: inline ;width:80px;border:none;background: none;font-size: 16px;}
+        img{width:95%;display: block;margin:6px auto 0;}
+        .prompt{position: fixed;top:35%;left:50%;width:110px;height:34px;background: #515151 url("http://lianai-image-sys.qiniudn.com/new/gou.png") no-repeat 15% 50% ;-webkit-background-size: 16px;background-size: 16px;color:#fff;text-align: center;line-height: 34px;border-radius: 35px;margin-left:-55px;letter-spacing: 1px;font-size: 14px;}
+        
+    </style>
+</head>
+<body>
+    <section class="gainBox">
+        <p class="gainTle">提现红包将通过“真景直播抓娃娃解决方案”公众号发到您绑定的微信</p>
+        <span class="number">微信号:<a class="invite_code" id="selector">gh_ee4ff4978556</a><button id="copy">复制</button></span>
+        <p class="gainTle">为确保红包正常发放，请用您绑定的微信搜索微信号“<em>gh_ee4ff4978556</em>”，关注后点击“红包绑定”</p>
+        <img src="http://lianai-image-sys.qiniudn.com/shuangzhu/zj.jpg" alt="">
+    </section>
+    <!-- 提示 -->
+    <div class="prompt" style="display:none;">已复制</div>
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script type="text/javascript">
+
+    var aEle = document.querySelector('#copy');
+    aEle.addEventListener('click',function(){
+    var copyDOM = document.querySelector('#selector');  
+    var range = document.createRange();  
+    range.selectNode(copyDOM);
+    window.getSelection().addRange(range);
+    var successful = document.execCommand('copy');  
+    try {  
+    // Now that we've selected the anchor text, execute the copy command  
+
+    var msg = successful ? 'successful' : 'unsuccessful';  
+    console.log('Copy email command was ' + msg);  
+    } catch(err) {  
+    console.log('Oops, unable to copy');  
+    }
+    window.getSelection().removeAllRanges();  
+    $(".prompt").fadeIn().delay(1000).fadeOut(3000);
+},false);
+
+</script>

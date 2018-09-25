@@ -1,0 +1,68 @@
+package com.imlianai.dollpub.app.modules.support.shopkeeper.dao.impl;
+
+import com.imlianai.dollpub.app.modules.support.shopkeeper.dao.ShopkeeperInfoDao;
+import com.imlianai.dollpub.domain.shopkeeper.ShopkeeperInfo;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-04-26 15:44
+ **/
+@Repository
+public class ShopkeeperInfoDaoImpl implements ShopkeeperInfoDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public int init(ShopkeeperInfo info) {
+        return jdbcHandler.executeSql("INSERT INTO shopkeeper_info(uid,ratioId,type,totalInviteNum,totalIncomeMoney,totalWithdrawMoney,maxWithdrawMoney,minWithdrawMoney,totalWithdrawDay,withdrawFn,status,createTime) " +
+                "VALUES(?,1,0,0,0,0,1000,10,3,1,0,NOW())",info.getUid());
+    }
+
+    @Override
+    public int updateTypeAndRatio(long uid, int type, int ratio) {
+        return jdbcHandler.executeSql("UPDATE shopkeeper_info SET type=?,ratioId=?,updateTime=NOW() WHERE uid=?",type,ratio,uid);
+    }
+
+    @Override
+    public int updateTotalInviteNum(long uid, int totalInviteNum) {
+        return jdbcHandler.executeSql("UPDATE shopkeeper_info SET totalInviteNum=totalInviteNum+?,updateTime=NOW() WHERE uid=?",totalInviteNum,uid);
+    }
+
+    @Override
+    public int updateTotalIncome(long uid, int totalIncome) {
+        return jdbcHandler.executeSql("UPDATE shopkeeper_info SET totalIncomeMoney=totalIncomeMoney+?,updateTime=NOW() WHERE uid=?",totalIncome,uid);
+    }
+
+    @Override
+    public int updateTotalWithdraw(long uid, int totalWithdraw) {
+        return jdbcHandler.executeSql("UPDATE shopkeeper_info SET totalWithdrawMoney=totalWithdrawMoney+?,updateTime=NOW() WHERE uid=?",totalWithdraw,uid);
+    }
+
+    @Override
+    public int updateTotalCanWithdraw(long uid, int totalCanWithdrawMoney) {
+        return jdbcHandler.executeSql("UPDATE shopkeeper_info SET totalCanWithdrawMoney=totalCanWithdrawMoney+?,updateTime=NOW() WHERE uid=?",totalCanWithdrawMoney,uid);
+    }
+
+    @Override
+    public int updateStatus(int status,long uid) {
+        return jdbcHandler.executeSql("UPDATE shopkeeper_info SET `status`=? WHERE uid=? AND `status`<>?",status,uid,status);
+    }
+
+    @Override
+    public ShopkeeperInfo getInfoByUid(long uid) {
+        return jdbcHandler.queryOneBySql(ShopkeeperInfo.class,"SELECT * FROM shopkeeper_info WHERE uid=?",uid);
+    }
+
+    @Override
+    public List<ShopkeeperInfo> getInfoList() {
+        return jdbcHandler.queryBySql(ShopkeeperInfo.class,"SELECT * FROM shopkeeper_info ORDER BY createTime DESC");
+    }
+
+
+}

@@ -1,0 +1,115 @@
+package com.imlianai.dollpub.app.modules.core.doll.vo;
+
+import io.swagger.annotations.ApiModelProperty;
+
+import com.imlianai.rpc.support.common.BaseModel;
+
+public class DollSuccessRes extends BaseModel {
+	@ApiModelProperty("夹中的玩家")
+	private long uid;
+	@ApiModelProperty("玩家邀请码")
+	private long inviteNum;
+	@ApiModelProperty("房间成功抓取图片")
+	private String imgSuccess;
+	@ApiModelProperty("分享图片")
+	private String imgShare;
+	@ApiModelProperty("娃娃id")
+	private int dollId;
+	@ApiModelProperty("娃娃名称")
+	private String dollName;
+	@ApiModelProperty("娃娃机id")
+	private int busId;
+	@ApiModelProperty("周排名")
+	private int week;
+	@ApiModelProperty("邀请二维码")
+	private String qrcode = "http://lianai-image-sys.qiniudn.com/zjgw/gzh.png";
+
+	public long getUid() {
+		return uid;
+	}
+
+	public void setUid(long uid) {
+		this.uid = uid;
+	}
+
+	public long getInviteNum() {
+		return inviteNum;
+	}
+
+	public void setInviteNum(long inviteNum) {
+		this.inviteNum = inviteNum;
+	}
+
+	public String getImgSuccess() {
+		return imgSuccess;
+	}
+
+	public void setImgSuccess(String imgSuccess) {
+		this.imgSuccess = imgSuccess;
+	}
+
+	public String getImgShare() {
+		return imgShare;
+	}
+
+	public void setImgShare(String imgShare) {
+		this.imgShare = imgShare;
+	}
+
+	public int getDollId() {
+		return dollId;
+	}
+
+	public void setDollId(int dollId) {
+		this.dollId = dollId;
+	}
+
+	public int getBusId() {
+		return busId;
+	}
+
+	public void setBusId(int busId) {
+		this.busId = busId;
+	}
+
+	public DollSuccessRes() {
+	}
+
+	public DollSuccessRes(long uid, long inviteNum, String imgSuccess,
+			String imgShare, int dollId, String dollName, int busId, int week) {
+		super();
+		this.uid = uid;
+		this.inviteNum = inviteNum;
+		this.imgSuccess = imgSuccess;
+		this.imgShare = imgShare;
+		this.dollId = dollId;
+		this.busId = busId;
+		this.dollName = dollName;
+		this.week = week;
+	}
+
+	public String getDollName() {
+		return dollName;
+	}
+
+	public void setDollName(String dollName) {
+		this.dollName = dollName;
+	}
+
+	public int getWeek() {
+		return week;
+	}
+
+	public void setWeek(int week) {
+		this.week = week;
+	}
+
+	public String getQrcode() {
+		return qrcode;
+	}
+
+	public void setQrcode(String qrcode) {
+		this.qrcode = qrcode;
+	}
+
+}

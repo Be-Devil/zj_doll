@@ -1,0 +1,113 @@
+package com.imlianai.dollpub.app.modules.core.dice.service;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.dice.consts.DiceConsts;
+import com.imlianai.dollpub.app.modules.core.dice.dao.DiceDao;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.domain.dice.Dice;
+import com.imlianai.dollpub.domain.dice.DiceStatus;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 11:55
+ **/
+@Service
+public class DiceServiceImpl implements DiceService {
+
+    BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private DiceDao diceDao;
+
+    @Override
+    public long start(int busId) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null && dollBus.getType() == 2){
+            //上机
+            logger.info("骰子机类型");
+            long optId = diceDao.addDiceRecord(new Dice(dollBus.getDeviceId(),dollBus.getBusId()));
+            if( optId > 0){
+                logger.info("新增骰子记录");
+                if(diceDao.addDiceStatus(new DiceStatus(dollBus.getBusId(),dollBus.getDeviceId(),optId,0)) > 0){
+                    logger.info("新增摇骰子上机状态");
+                    logger.info("发送要骰子指令");
+                    iMachineConnectRemoteService.handleDirective(dollBus.getBusId(), DiceConsts.SHAKE_DICE,"");
+                    return optId;
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public boolean isPlay(int busId) {
+        boolean result = false;
+        DiceStatus diceStatus = diceDao.getDiceStatusByBusId(busId);
+        if (diceStatus == null){
+            result = true;
+        }
+        return result;
+    }
+
+    @Override
+    public void resultHandle(DollBus dollBus, String deviceId, List<String> hexs) {
+        if (!StringUtil.isNullOrEmpty(hexs)){
+            switch (hexs.get(2)) {
+                case "02"://结果
+                    logger.info("dollBus=>" + JSON.toJSONString(dollBus) + ",deviceId=>" + deviceId + ",hexs" + JSON.toJSONString(hexs));
+                    updateResult(dollBus,deviceId,Integer.parseInt(hexs.get(4), 16),JSON.toJSONString(hexs));
+                    break;
+                case "03"://摇骰子回调
+                    if (hexs.get(3).equals("02") && hexs.get(4).equals("08")){
+                        logger.info("摇骰子正常,发送查询结果指令");
+                        iMachineConnectRemoteService.handleDirective(dollBus.getBusId(),DiceConsts.QUERY_RETURN,"");
+                    }
+                    break;
+                case "04":
+                    if (hexs.get(3).equals("02")){
+                        logger.info("识别点数回调成功");
+                        updateResult(dollBus,deviceId,Integer.parseInt(hexs.get(4), 16),JSON.toJSONString(hexs));
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        //删除状态
+        if(diceDao.deleteDiceStatus(dollBus.getBusId()) > 0){
+            logger.info("删除骰子机状态");
+        }
+    }
+
+    private void updateResult(DollBus dollBus,String deviceId,int point,String remark){
+        DiceStatus diceStatus = diceDao.getDiceStatusByBusId(dollBus.getBusId());
+        logger.info("diceStatus=>" + JSON.toJSONString(diceStatus));
+        if (diceStatus != null && diceStatus.getDeviceId().equals(deviceId)){
+            Dice dice = diceDao.getDiceByOptId(diceStatus.getOptId());
+            logger.info("dice=>" + JSON.toJSONString(dice));
+            if (dice != null && dice.getStatus() == 0){
+                if(diceDao.updateDiceResult(diceStatus.getOptId(),point, remark) > 0){
+                    logger.info("骰子=>" + diceStatus.getOptId() + ",结果=>" + point);
+                }
+            }
+        }
+    }
+
+
+}

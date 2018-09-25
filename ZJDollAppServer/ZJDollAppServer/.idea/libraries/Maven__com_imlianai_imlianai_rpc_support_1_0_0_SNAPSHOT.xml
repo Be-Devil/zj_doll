@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.imlianai:imlianai-rpc-support:1.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/imlianai-rpc-support/1.0.0-SNAPSHOT/imlianai-rpc-support-1.0.0-20180508.123245-1450.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/imlianai-rpc-support/1.0.0-SNAPSHOT/imlianai-rpc-support-1.0.0-20180508.123245-1450-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/imlianai-rpc-support/1.0.0-SNAPSHOT/imlianai-rpc-support-1.0.0-20180508.123245-1450-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>分享红包</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/style.css" type="text/css"/>
+    <style>
+        html,body{margin:0;padding:0;background: #a42753;position: relative;}
+        img{width:100%;display: block;}
+        .maxBox{width:100%;height:auto;position: relative;}
+        .topDown{width:100%;height:1.04rem;position: fixed;top:0;left:0;background: url("http://lianai-image-sys.qiniudn.com/h/download.png") no-repeat center center;-webkit-background-size: 100% 100%;background-size: 100% 100%;}
+        .center{width:100%;height:auto;position: absolute;top:1.3rem;left:0;}
+        .h_pic{width:1.44rem;height:1.44rem;background: #fff;border-radius: 50%;display: block;margin:0 auto;overflow: hidden;}
+        .h_pic>img{width:1.34rem;border-radius: 50%;margin:0.05rem auto; }
+        .h_name{text-align: center;color:#990000;font-size: 0.28rem;margin-top:0.12rem;}
+        .h_txt{font-size: 0.26rem;width:60%;height:auto;text-align: center;margin:0.64rem auto 0;color:#990000;}
+        .h_txt>em{color:#e9003b;}
+        .h_btn{width:3.66rem;height:0.8rem;background:url("http://lianai-image-sys.qiniudn.com/h/btn.png") no-repeat center center;-webkit-background-size: 100% 100%;background-size: 100% 100%;margin:1.96rem auto 0;display: block;}
+        .h_list{width:6.92rem;height:auto;background:#841851;border-radius: 0.1rem;margin:1.5rem auto 0.5rem;padding:0 0.1rem 0.5rem;box-sizing:border-box;}
+        #news{width:100%;height:3.6rem;overflow: hidden;}
+        .list_box{width:100%;height: 100%;}
+        .h_list_tle{width:100%;height:0.8rem;position: relative;}
+        .h_list_tle>i{display: block;position: absolute;width:80%;height:1px;background: #fff;left:10%;top:0.52rem;}
+        .h_list_tle>em{position: absolute;background:#841851 ;color:#fff;display: block;width:auto;padding:0 0.2rem;font-size:0.32rem ;top:0.3rem;left:32%;}
+        .list_txt{font-size:0.24rem; color:#fff;line-height: 25pt;}
+        .list_txt>em:nth-of-type(2){overflow: hidden;text-overflow:ellipsis;white-space: nowrap;width:1rem;display: block;float: left;}
+        .list_txt>em:nth-of-type(1){float: left;}
+        .list_txt>i{color:#fdb63c;}
+        .list_txt>span{float: right;color:#c18ba8;}
+        .bonTxt{text-align: center;font-size: 0.12rem;color:#fff;opacity: 0.6;width:100%;letter-spacing: 1px;margin:-0.35rem 0 0.2rem;}
+    </style>
+</head>
+<body>
+<div id="pageInfo">
+  <section class="maxBox">
+      <img src="http://lianai-image-sys.qiniudn.com/h/newBg.jpg" alt="">
+      <div class="center">
+          <span class="h_pic">
+              <img v-bind:src="(uhead != null && uhead != undefined && uhead != '')?uhead:'http://lianai-image-sys.qiniudn.com/mqww/head/pic_avatar_n.jpg'" alt="" class="head"/></span>
+          </span>
+          <p class="h_name" v-text="uname"></p>
+          <div class="h_txt">
+              <p>抓娃娃还能领现金红包，</p><p>我已累计有 <em v-text="uamt"></em>元可提现，</p><p>你也一起来领红包提现吧！</p>
+          </div>
+          <button class="h_btn" v-on:click="get()"></button>
+
+          <div class="h_list ks-clear" >
+              <div class="h_list_tle">
+                  <i></i>
+                  <em>红包领取记录</em>
+              </div>
+              <div id="news">
+                <ul class="list_box">
+                    <li v-for="(record, key, index) in records" class="list_txt ks-clear">
+                      	<em>恭喜</em><em v-text="record.name"></em>在<em v-text="record.busId"></em>号机抓娃娃获得<i><em v-text="record.amt"></em>元天降红包</i> <span v-text="record.time"></span>
+                    </li>
+                 </ul>
+              </div>
+          </div>
+          <p class="bonTxt">活动解释权归萌趣抓娃娃所有</p>
+
+      </div>
+  </section>
+  <div class="topDown" v-on:click="download()"></div>
+</div>  
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script src="http://lianai-image-sys.qiniudn.com/js/font.js"></script>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>
+<script src="js/vue_model.js"></script>
+<script src="js/main_vue.js"></script>
+<script type="text/javascript">
+$(function() {
+  var $this = $("#news");
+  var scrollTimer;
+  $this.hover(function() {
+  clearInterval(scrollTimer);
+  }, function() {
+  scrollTimer = setInterval(function() {
+  scrollNews($this);
+  }, 2000);
+  }).trigger("mouseleave");
+
+   
+
+  function scrollNews(obj) {
+  var $self = obj.find("ul");
+  var lineHeight = $self.find("li:first").height();
+  $self.animate({
+  "marginTop": -lineHeight + "px"
+  }, 600, function() {
+  $self.css({
+  marginTop: 0
+  }).find("li:first").appendTo($self);
+  })
+  }
+})
+</script>

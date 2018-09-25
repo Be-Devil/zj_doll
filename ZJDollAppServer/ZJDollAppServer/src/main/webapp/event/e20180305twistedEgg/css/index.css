@@ -1,0 +1,268 @@
+@charset "utf-8";
+/* 禁用iPhone中Safari的字号自动调整 */
+/*html {*/
+/*!*-webkit-background-size: 100%;*!*/
+/*background-size: 100%;*/
+/*!*overflow-x: hidden;*!*/
+/*}*/
+
+/*!* 去除iPhone中默认的input样式 *!*/
+/*input[type="submit"],*/
+
+/*input[type="reset"],*/
+
+/*input[type="button"],*/
+input{-webkit-appearance:none; resize:none;outline:none;}
+/* 取消链接高亮  */
+body,div,ul,li,ol,h1,h2,h3,h4,h5,h6,input,textarea,select,p,dl,dt,dd,a,img,button,form,table,th,tr,td,tbody,article,
+aside, details,figcaption,figure,footer,header,hgroup, menu,nav,section{ -webkit-tap-highlight-color:rgba(0, 0, 0, 0); }
+/* 设置HTML5元素为块 */
+article, aside, details,figcaption,figure,footer,header,hgroup, menu,nav,section {
+    display: block;
+}
+/* 图片自适应 */
+img {
+    max-width: 100%;
+    height: auto;
+    width:auto\9; /* ie8 */
+    -ms-interpolation-mode:bicubic;/*为了照顾ie图片缩放失真*/
+    display: block;
+}
+body{
+    -webkit-touch-callout:none;
+    -webkit-user-select:none;
+    -khtml-user-select:none;
+    -moz-user-select:none;
+    -ms-user-select:none;
+    user-select:none;
+    -webkit-user-select: none;/*禁用手机浏览器的用户选择功能 */
+    -moz-user-select: none;
+
+}
+/* 初始化 */
+body,div,ul,li,ol,h1,h2,h3,h4,h5,h6,input,textarea,select,p,dl,dt,dd,a,img,button,form,table,th,tr,td,tbody,article,
+aside, details,figcaption,figure,footer,header,hgroup, menu,nav,section{margin:0; padding:0; border:none;}
+body{font-family: '微软雅黑';}
+em,i{font-style:normal;}
+strong{font-weight: normal;}
+a{text-decoration:none; color:#eec285; font-family: '微软雅黑';}
+a:hover{ text-decoration:none;}
+
+/* a:visited{color:#9a9a9a;} */
+ul,ol{list-style:none;}
+h1, h2, h3, h4, h5, h6{ font-size:100%; font-family: '微软雅黑';}
+img{border: none;}
+input,textarea,button{
+    border:none;
+    outline:medium;
+    resize:none;
+}
+html,body{
+    width:100%;
+    height:auto;
+    margin: 0;
+    /*-webkit-tap-highlight-color: transparent;*/
+    /*background: #fff203;*/
+    /*background: url('http://lianai-image-sys.qiniudn.com/niudanbg.jpg');*/
+    /*-webkit-background-size: 100% 100%;*/
+    /*background-size: 100% 100%;*/
+}
+html{
+    position: relative;
+}
+/* 清除浮动 */
+.ks-clear:after, .clear:after {
+    content: '\20';
+    display: block;
+    height: 0;
+    clear: both;
+}
+.ks-clear, .clear {
+    *zoom: 1;
+}
+input,button,select,textarea{outline:none;}
+/*初始化end----------------------------*/
+
+/*body,ul,ol,li,p,h1,h2,h3,h4,h5,h6,form,fieldset,table,td,img,div,dl,dt,dd,input{margin:0;padding:0;}*/
+/*body{font-size:12px;}*/
+/*img{border:none;}*/
+/*li{list-style:none;}*/
+/*input,select,textarea{outline:none;}*/
+/*textarea{resize:none;}*/
+/*a{text-decoration:none;color:#656565;}*/
+
+
+/*!*清除浮动*!*/
+/*.clearfix:after{content:"";display:block;clear:both;}*/
+/*.clearfix{zoom:1;}*/
+
+/*html{*/
+/*position: relative;*/
+/*}*/
+.bg_box{
+    width: 100%;
+    height:auto;
+    /*text-align: center;*/
+    text-align: center;
+}
+.bg_box .data{
+    text-align: center;
+    width: 100%;
+    height:0.36rem;
+    font-size: 0.4rem;
+    line-height: 0.4rem;
+    color: #ffef41;
+    position: absolute;
+    /*left: 50%;*/
+    top: 17.75rem;
+    /*transform: translate(-50%);*/
+}
+.bg_box .dtzw{
+    width: 100%;
+    height:0.36rem;
+    font-size: 0.3rem;
+    line-height: 0.4rem;
+    color: #ffef41;
+    position: absolute;
+    /*left: 50%;*/
+    top: 18.35rem;
+    /*text-align: center;*/
+    /*transform: translate(-40%);*/
+}
+/*.bg_box .dtzw p{*/
+    /*!*position: absolute;*!*/
+    /*!*transform: translate(-80%);*!*/
+    /*!*text-align: center;*!*/
+/*}*/
+.bg_box ul{
+    width: 100%;
+    height: auto;
+    position: absolute;
+    /*top: 18.55rem;*/
+    top: 19.00rem;
+    left: 0;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    /*background-color: #fff;*/
+}
+.bg_box ul li{
+    width: 2.10rem;
+    height: 1.60rem;
+    padding-top: 0.19rem;
+    margin-left: 0.18rem;
+    background: url("http://lianai-image-sys.qiniudn.com/niudanbg_ticket.png");
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin-bottom: 0.20rem;
+    text-align: center;
+    /*border-radius:;*/
+}
+.bg_box ul li:nth-child(1){
+    margin-left: 0.42rem;
+}
+.bg_box ul li:nth-child(4){
+    margin-left: 0.42rem;
+}
+.bg_box ul li span{
+    font-size: 0.24rem;
+    line-height: 0.36rem;
+    color: #b45814;
+    margin-top: 0.19rem;
+    margin-bottom: 0.07rem;
+}
+.bg_box ul li p{
+    font-size: 0.28rem;
+    line-height: 0.36rem;
+    margin-bottom: 0.35rem;
+    color: #994507;
+    font-weight:bold;
+}
+.bg_box ul li .past{
+    font-size: 0.28rem;
+    line-height: 0.36rem;
+    color: #c38c17;
+}
+.bg_box ul li .btn1{
+    text-align: center;
+    width: 1.40rem;
+    height: 0.44rem;
+    border-radius: 0.22rem;
+    background-color: #ff9759;
+    color: #ffffff;
+    font-size: 0.28rem;
+    line-height: 0.26rem;
+}
+
+/*蒙版*/
+.masking{
+    background-color: rgba(0,0,0,0.5);
+    /*opacity: 0.5;*/
+    width: 7.50rem;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+}
+.box_show{
+    width: 100%;
+    /*height: 100%;*/
+    position: fixed;
+    top: 4.39rem;
+    left: 0;
+}
+.bg_tk{
+    background-color: #ffe65e;
+    z-index: 2;
+    width: 5.00rem;
+    height: 3.00rem;
+    border-radius: 0.24rem;
+    position: relative;
+    /*top: 20%;*/
+    /*left: 50%;*/
+    /*transform: translate(-50%);*/
+    margin: 0 auto;
+}
+.bg_tk p{
+    text-align: center;
+    font-size: 0.32rem;
+    color: #682e03;
+    line-height: 0.36rem;
+    margin-top: 0.90rem;
+    font-family:'Medium';
+    padding-top: 0.8rem;
+    margin-bottom: 0.90rem;
+    font-weight: bold;
+}
+.bg_tk hr{
+    width: 4.94rem;
+    height: 0.01rem;
+    color: #8f5600;
+    margin-bottom: 0.25rem;
+}
+.bg_tk .In{
+    font-size: 0.32rem;
+    line-height: 0.36rem;
+    color: #682e03;
+    font-family:'PingFangSC-Regular';
+    width: 5rem;
+    background-color: rgba(0,0,0,0);
+}
+.sx{
+    position: fixed;
+    top: 60%;
+    right: 0;
+    z-index: 2;
+}
+.sx img{
+    width: 0.72rem;
+    height: 0.64rem;
+}
+/*.bg_long{*/
+    /*width: 100%;*/
+    /*height: 2.0rem;*/
+    /*background-color: #6655BC;*/
+    /*!*margin-top: -1rem;*!*/
+    /*!*z-index: 10;*!*/
+/*}*/

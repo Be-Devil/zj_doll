@@ -1,0 +1,239 @@
+package com.imlianai.dollpub.app.modules.publics.oauth.wechat.callback;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WebWeixinToken;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WeiXinArticles;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.event.service.WechatEventService;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.service.WechatService;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinDATA;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinDataHandler;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinTokenHandler;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinUserInfoHandler;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinXmlUtils;
+import com.imlianai.dollpub.domain.oauth.WechatAppSetting;
+import com.imlianai.dollpub.domain.user.UserBase;
+import com.imlianai.dollpub.domain.user.UserOauth;
+import com.imlianai.dollpub.domain.user.UserBase.UserSrcType;
+import com.imlianai.rpc.support.common.cmd.CmdKit;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+/**
+ * 微信回调
+ * 
+ * @author tensloveq
+ * 
+ */
+@Component("wxaCallback")
+public class WebWeixinCallback extends RootCmd {
+
+	private final static Logger logger = Logger
+			.getLogger(WebWeixinCallback.class);
+
+	@Resource
+	private UserService userService;
+
+	@Resource
+	private WechatEventService wechatEventService;
+
+	@Resource
+	private WechatService wechatService;
+
+	@Override
+	public String doBack(HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		logger.info("=====================/web_wx_back.do post=======================");
+		Map<String, String> receiveMap = null;
+		try {
+			receiveMap = WebWeixinDataHandler.getMapFromWeixin(request);
+		} catch (Exception e) {
+			String backStr = "萌小宝遇到点问题暂时无法为您服务Σ( ° △ °|||)︴";
+			logger.info("back_info:" + backStr);
+			PrintWriter pw = response.getWriter();
+			pw.print(backStr);
+			pw.flush();
+			pw.close();
+			return null;
+		}
+		String typeStr = receiveMap.get(WebWeixinDATA.MsgType.DATA);
+		typeStr = null == typeStr ? "99" : typeStr;
+		int type = Integer.parseInt(typeStr);
+		//公众号id
+		String publicAccountID = receiveMap.get(WebWeixinDATA.ToUserName.DATA);
+		//用户openId
+		String openId = receiveMap.get(WebWeixinDATA.FromUserName.DATA);
+		logger.info("================XXXXXXXXXXXXXXXXXX==============publicAccountID:"
+				+ publicAccountID);
+		logger.info("================XXXXXXXXXXXXXXXXXX==============receiveMap:"
+				+ receiveMap);
+		String backStr = "";
+		switch (type) {
+		case 1: {// 文字内容信息
+			String content = receiveMap.get(WebWeixinDATA.Content.DATA);
+			if (StringUtils.isNotBlank(content)) {
+				if (content.indexOf("授权") >= 0) {
+				} 
+			} else {// 直播时长查询
+					// 空白的内容
+				backStr = "";
+			}
+		}
+			break;
+		case 2: {// pic
+			backStr = "";
+		}
+			break;
+		case 3: {// view
+			backStr = "";
+		}
+			break;
+		case 4: {// click
+			String event = receiveMap.get(WebWeixinDATA.EventKey.DATA);
+			if (event.trim().equals("consult")) {
+				backStr = "【商务合作】\n" + "抓娃娃联运及娃娃机一体化解决方案合作请添加微信：18102715921";
+				backStr = WebWeixinXmlUtils.setBackTextMsg(openId,
+						publicAccountID, backStr);
+			} else if (event.trim().equals("day_sign")) {
+				wechatEventService.getSignReward(publicAccountID, openId);
+			} else if (event.trim().equals("invite_reward")) {
+				backStr =wechatEventService.getInviteMsg(publicAccountID, openId);
+				backStr = WebWeixinXmlUtils.setBackTextMsg(openId,
+						publicAccountID, backStr);
+			} else if (event.trim().equals("red_5_pic")){
+				List<WeiXinArticles> list=wechatEventService.get5Redpacket();
+				backStr =WebWeixinXmlUtils.setBackPicListMsg(openId, publicAccountID, list);
+			}else if (event.trim().equals("meng_you")){
+				backStr =WebWeixinXmlUtils.setBackPicMsgNoCDATA(openId, publicAccountID, "G1mPr5vYZQ9vKaayEPTMYtaBAJl_XZnDQ6p9I7NbnMY");
+			}
+		}
+			break;
+		case 5: {// 订阅消息推送
+			// String Msg =
+			backStr = wechatEventService.getFollowMsg(publicAccountID,openId );
+			backStr = WebWeixinXmlUtils.setBackTextMsg(openId, publicAccountID,
+					backStr);
+		}
+			break;
+		case 6: {// 取消订阅
+			backStr = "";
+		}
+			break;
+		case 7: {// 发送坐标
+			backStr = "";
+		}
+			break;
+
+		case 99: {// 未做处理的类型
+			backStr = "";
+		}
+			break;
+		}
+		UserBase userBase=userService.getUserBaseBySrc(UserSrcType.WECHAT_PUBLIC.type, openId, null, 84);
+		if (userBase!=null) {
+			userService.updateUserFollow(userBase.getUid());
+		}
+		logger.info("back_info:" + backStr);
+		PrintWriter pw = response.getWriter();
+		pw.print(backStr);
+		pw.flush();
+		pw.close();
+		return null;
+	}
+
+	public String doBackGet(HttpServletRequest request,
+			HttpServletResponse response) throws IOException {
+		String backStr = null;
+		String signature = request.getParameter("timestamp");
+		String timestamp = request.getParameter("signature");
+		String nonce = request.getParameter("nonce");
+		String echostr = request.getParameter("echostr");
+		logger.info("timestamp--------------------" + timestamp);
+		logger.info("signature--------------------" + signature);
+		logger.info("nonce--------------------" + nonce);
+		logger.info("echostr--------------------" + echostr);
+		logger.info("timestamp:" + timestamp + " nonce:" + nonce + " echostr:"
+				+ echostr + " signature:" + signature);
+		backStr = echostr;
+		logger.info("backStr:" + backStr);
+		PrintWriter pw = response.getWriter();
+		pw.print(backStr);
+		pw.flush();
+		pw.close();
+		return null;
+	}
+
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public static Map<String, String> getParameterMap(HttpServletRequest request) {
+		// 参数Map
+		// Map<String, String> properties = request.getParameterMap();
+		Map<String, Object> propertiesObj = CmdKit.getParaMapForWEB(request);
+		Map<String, String> properties = new HashMap<String, String>();
+		for (Map.Entry<String, Object> entry : propertiesObj.entrySet()) {
+			String key = entry.getKey();
+			String value = entry.getValue().toString();
+			properties.put(key, value);
+		}
+
+		// 返回值Map
+		Map<String, String> returnMap = new HashMap<String, String>();
+		Iterator<Entry<String, String>> entries = properties.entrySet()
+				.iterator();
+		Map.Entry entry;
+		String name = "";
+		String value = "";
+		while (entries.hasNext()) {
+			entry = (Map.Entry) entries.next();
+			name = (String) entry.getKey();
+			Object valueObj = entry.getValue();
+			if (null == valueObj) {
+				value = "";
+			} else if (valueObj instanceof String[]) {
+				String[] values = (String[]) valueObj;
+				for (int i = 0; i < values.length; i++) {
+					value = values[i] + ",";
+				}
+				value = value.substring(0, value.length() - 1);
+			} else {
+				value = valueObj.toString();
+			}
+			returnMap.put(name, value);
+			logger.info("name:" + name + " , value:" + value);
+		}
+		return returnMap;
+	}
+
+	public String getUnionId(String openId, String publicAccountID) {
+		WechatAppSetting setting = wechatService
+				.getWechatAppSettingBySrcid(publicAccountID);
+		Map<Integer, WebWeixinToken> tokenMap = wechatService
+				.getWebTokenByAppid(setting.getAppid());
+		String accessToken = tokenMap.get(
+				WebWeixinTokenHandler.ACCESS_TOKEN_TYPE).getToken_ticket();
+		logger.info("-------------accessToken:" + accessToken);
+		UserOauth userInfo = WebWeixinUserInfoHandler
+				.getUserInfoMapByOpenID(accessToken, openId);
+		if (!StringUtil.isNullOrEmpty(userInfo)
+				&& !StringUtil.isNullOrEmpty(userInfo.getUnionId())) {
+			return userInfo.getUnionId();
+		}
+		return null;
+	}
+
+}

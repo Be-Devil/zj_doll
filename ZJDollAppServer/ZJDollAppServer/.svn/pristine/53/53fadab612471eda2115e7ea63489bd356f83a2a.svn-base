@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">  <meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+<meta name="Keywords" content="提现说明">
+<meta name="description" content="提现说明">
+<meta http-equiv="Content-Language" content="zh-cn">
+<meta name="robots" content="all">
+<meta name="author" content="Lianai-KF">
+<meta name="Copyright" content="Lianai">
+<head>
+<title>提现说明</title>
+<link rel="stylesheet" rev="stylesheet" href="http://mob.imlianai.com/mobile/helper/css/faq.css" type="text/css" media="screen">
+<link rel="stylesheet" rev="stylesheet" href="http://mob.imlianai.com/mobile/helper/css/theme_lianai.css">
+<style>
+.faq_cont{
+padding-top:1rem;
+	padding-left:1rem;
+	padding-right:1rem;
+	font-size: 1.1rem;
+	line-height:1.8rem;
+}
+.h2_tit{
+font-size: 1.2rem;
+}
+.cont_info{
+padding-left:2rem;
+padding-top:0.5rem;
+padding-bottom:0.7rem;
+color:#666666;
+}
+body{
+background-color:#f0f0f0;
+}
+.wrapper{
+background-color:#FFFFFF;
+}
+.auth_info{
+	    color: #666666;
+    text-align: center;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.9rem;
+}
+@MEDIA screen and (min-width: 320px) and (max-width: 359px) {
+     /*note2 安卓*/
+     .faq_cont{
+padding-top:0.7rem;
+	padding-left:0.6rem;
+	padding-right:1rem;
+	font-size: 0.8rem;
+	line-height:1.5rem;
+}
+.h2_tit{
+font-size: 0.9rem;
+}
+.cont_info{
+padding-left:1.3rem;
+padding-top:0.2rem;
+padding-bottom:0.4rem;
+color:#666666;
+}
+.auth_info{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.6rem;
+}
+}
+
+@media ( min-device-width : 320px) and (max-device-width : 640px) and
+     (-webkit-min-device-pixel-ratio : 2) {
+     /*iphone 5*/
+          .faq_cont{
+padding-top:0.7rem;
+	padding-left:0.6rem;
+	padding-right:1rem;
+	font-size: 0.8rem;
+	line-height:1.5rem;
+}
+.h2_tit{
+font-size: 0.9rem;
+}
+.cont_info{
+padding-left:1.3rem;
+padding-top:0.2rem;
+padding-bottom:0.4rem;
+color:#666666;
+}
+.auth_info{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.6rem;
+}
+}
+
+@MEDIA screen and (min-width: 360px) and (max-width: 400px) {
+     /*nexus5 mx4 安卓*/
+     .faq_cont{
+padding-top:0.7rem;
+	padding-left:0.8rem;
+	padding-right:1rem;
+	font-size: 1.0rem;
+	line-height:1.7rem;
+}
+.h2_tit{
+font-size: 1.0rem;
+}
+.cont_info{
+padding-left:1.5rem;
+padding-top:0.2rem;
+padding-bottom:0.4rem;
+color:#666666;
+}
+.auth_info{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.8rem;
+}
+}
+
+@media ( min-device-width : 375px) and (max-device-width : 667px) and
+     (-webkit-min-device-pixel-ratio : 2) {
+     /*iphone 6*/
+     .faq_cont{
+padding-top:0.7rem;
+	padding-left:0.8rem;
+	padding-right:1rem;
+	font-size: 1.0rem;
+	line-height:1.7rem;
+}
+.h2_tit{
+font-size: 1.1rem;
+}
+.cont_info{
+padding-left:1.5rem;
+padding-top:0.2rem;
+padding-bottom:0.4rem;
+color:#666666;
+}
+.auth_info{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 0.9rem;
+}
+}
+
+@media ( min-device-width : 414px) and (max-device-width : 736px) and
+     (-webkit-min-device-pixel-ratio : 3) {
+     /*iphone 6p*/
+     .faq_cont{
+padding-top:1rem;
+	padding-left:1rem;
+	padding-right:1rem;
+	font-size: 1.1rem;
+	line-height:1.8rem;
+}
+.h2_tit{
+font-size: 1.2rem;
+}
+.cont_info{
+padding-left:2rem;
+padding-top:0.5rem;
+padding-bottom:0.8rem;
+color:#666666;
+}
+.auth_info{
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 1rem;
+}
+}
+</style>
+</head>
+	<body><input type="hidden" id="pro_skin_app" name="pro_skin_app" value="./css/theme_lianai.css">
+    <!--首页外通用头部-begin-->
+    <!--首页外通用头部-end-->
+    <!--主内容区域-begin-->
+      <!--主内容区域-begin-->
+    <div class="wrapper" role="main">        
+        <!--faq详情-->
+        <section class="faq_main">
+            <article class="faq_cont">
+                <h2 class="h2_tit">1.提现流程</h2>
+                <div class="cont_info">
+                	<div>如实填写实名认证信息（仅首次提现所需），微信搜索公众号“萌趣抓娃娃助手”（微信号：coolcooltt）并绑定，在“玩法指南”里，点击“红包绑定”，即绑定成功！绑定后，回到萌趣提现即可。</div>
+                </div>
+                
+                <h2 class="h2_tit"></i>2.一个微信号是否绑定多个娃娃星球号？</h2>
+                <div class="cont_info">
+                	<div>由于微信限制，一个微信号只能绑定一个萌趣号。</div>	
+                </div>
+                
+                <h2 class="h2_tit">3.提现有手续费吗？</h2>
+                <div class="cont_info">
+                	<div>提现暂无手续费。</div>	
+                </div>
+                
+                <h2 class="h2_tit">4.提现的次数及额度限制是多少？</h2>
+                <div class="cont_info">
+                	<div>每人首次提现金额为50-200元（非首次提现金额为10-200元），每日只能提现1次。
+</div>	
+                </div>
+                
+                <h2 class="h2_tit">5.什么时候到账？</h2>
+                <div class="cont_info">
+                	<div>提现的钱将于5个工作日内（周六、日不审核）通过微信红包的形式发放。发放后24小时内不领取，红包会过期，届时请通过“用户反馈”联系我方客服人员。另外，微信规定北京时间0:00-8:00公众号无法发送红包。</div>	
+                </div>
+            </article>
+        </section>
+		</div> 
+		<div class="auth_info">
+              <div>提现比例及相关规则最终解释权归娃娃星球官方所有</div>
+        </div>     <!--主内容区域-end-->
+<footer class="mod_footer" style="display:none">
+</footer>
+</body>
+</html>

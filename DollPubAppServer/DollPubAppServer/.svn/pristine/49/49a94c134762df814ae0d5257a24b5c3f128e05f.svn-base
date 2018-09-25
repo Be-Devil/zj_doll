@@ -1,0 +1,17 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.PushBusStatusVirtual;
+
+
+/**
+ * @author wurui
+ * @create 2018-03-28 17:34
+ **/
+public interface PushBusStatusVirtualDao {
+
+    int insert(PushBusStatusVirtual pushBusStatusVirtual, int playTime);
+    int delete(int busId,long optId);
+    PushBusStatusVirtual get(int busId,long optId);
+    PushBusStatusVirtual get(int busId,long uid,int customerId);
+
+}

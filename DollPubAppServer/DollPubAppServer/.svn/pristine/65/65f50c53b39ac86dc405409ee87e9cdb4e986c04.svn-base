@@ -1,0 +1,36 @@
+package com.imlianai.dollpub.app.modules.core.api.vo;
+
+import com.imlianai.dollpub.app.controller.vo.BaseSignReqVO;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * @author wurui
+ * @create 2018-06-04 16:57
+ **/
+public class DollBusApplyTypeReqVO extends BaseSignReqVO {
+
+
+    @ApiModelProperty(value = "机器id", required = true)
+    private int busId;
+
+    @ApiModelProperty(value = "上机下爪类型(1：默认抓力，2：强爪抓力)")
+    private int type = 0;
+
+
+    public int getBusId() {
+        return busId;
+    }
+
+    public void setBusId(int busId) {
+        this.busId = busId;
+    }
+
+
+    public int getType() {
+        return type;
+    }
+
+    public void setType(int type) {
+        this.type = type;
+    }
+}

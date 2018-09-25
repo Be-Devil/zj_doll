@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+	
+	<!-- the god damn httpclient -->
+	<bean id="httpclient" class="org.apache.http.impl.client.DefaultHttpClient">
+		<constructor-arg index="0" ref="threadSafeClientConnManager" />
+		<constructor-arg index="1" ref="httpParams" />
+	</bean>	
+	
+	<bean id="connConnectionParamBean" class="org.apache.http.params.HttpConnectionParamBean">
+		<constructor-arg index="0" ref="httpParams" />
+		<property name="connectionTimeout">
+			<value>5000</value>
+		</property>
+		<property name="soTimeout">
+			<value>8000</value>
+		</property>
+		<property name="linger">
+			<value>0</value>
+		</property>
+	</bean>
+
+	<bean id="connManagerParamBean" class="org.apache.http.conn.params.ConnManagerParamBean">
+		<constructor-arg index="0" ref="httpParams" />
+		<property name="connectionsPerRoute" ref="connPerRouteBean" />
+		<property name="maxTotalConnections">
+			<value>10000</value>
+		</property>
+		<property name="timeout">
+			<value>5000</value>
+		</property>
+	</bean>
+
+	<bean id="connPerRouteBean" class="org.apache.http.conn.params.ConnPerRouteBean">
+		<property name="defaultMaxPerRoute">
+			<value>3000</value>
+		</property>
+	</bean>
+	
+	<bean id="httpParams" class="org.apache.http.params.BasicHttpParams">
+	</bean>
+
+	<bean id="threadSafeClientConnManager"
+		class="org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager"
+		destroy-method="shutdown">
+		<constructor-arg index="0" ref="httpParams" />
+		<constructor-arg index="1" ref="schemeRegistry" />
+	</bean>	
+	
+	<bean id="schemeRegistry" class="org.apache.http.conn.scheme.SchemeRegistry">
+		<property name="items">
+			<map>
+				<entry key="http">
+					<ref bean="httpScheme" />
+				</entry>
+				<entry key="https">
+					<ref bean="httpsScheme" />
+				</entry>
+			</map>
+		</property>
+	</bean>
+	
+	<bean id="socketFactory" class="org.apache.http.conn.scheme.PlainSocketFactory" factory-method="getSocketFactory"/>
+	<bean id="sslSocketFactory" class="org.apache.http.conn.ssl.SSLSocketFactory" factory-method="getSocketFactory" />
+
+	<bean id="httpScheme" class="org.apache.http.conn.scheme.Scheme">
+		<constructor-arg index="0">
+			<value>http</value>
+		</constructor-arg>
+		<constructor-arg index="1" ref="socketFactory" />
+		<constructor-arg index="2">
+			<value>80</value>
+		</constructor-arg>
+	</bean>
+
+	<bean id="httpsScheme" class="org.apache.http.conn.scheme.Scheme">
+		<constructor-arg index="0">
+			<value>https</value>
+		</constructor-arg>
+		<constructor-arg index="1" ref="sslSocketFactory" />
+		<constructor-arg index="2">
+			<value>443</value>
+		</constructor-arg>
+	</bean>		
+
+</beans>

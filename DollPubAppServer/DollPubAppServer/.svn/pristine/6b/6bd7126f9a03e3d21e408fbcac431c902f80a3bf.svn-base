@@ -1,0 +1,55 @@
+package com.imlianai.dollpub.app.modules.support.xxrecharge.dao;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Repository;
+
+import com.imlianai.dollpub.domain.xxtrade.XinxingTradeCharge;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+
+@Repository
+public class XxingRechargeDaoImpl implements XxingRechargeDao {
+	
+	@Resource
+	JdbcHandler jdbcHandler;
+
+	private String saveXinxingTradeCharge = "insert into xinxing_trade_charge(orderNo,uid,phone,type,status,num,productCode,remark,createTime,updateTime,uDollId,customerId) values(?,?,?,?,?,?,?,?,now(),now(),?,?)";
+	@Override
+	public int saveXinxingTradeCharge(XinxingTradeCharge tradeCharge) {
+		return jdbcHandler.executeSql(saveXinxingTradeCharge, tradeCharge.getOrderNo(), tradeCharge.getUid(), tradeCharge.getPhone(), tradeCharge.getType(),
+				tradeCharge.getStatus(), tradeCharge.getNum(), tradeCharge.getProductCode(), tradeCharge.getRemark(), tradeCharge.getuDollId(), tradeCharge.getCustomerId());
+	}
+	
+	private String saveXinxingTradeChargeLog = "insert into xinxing_trade_charge_log(orderNo,uid,reqParams,respParams,createDate,createTime) values(?,?,?,?,?,now())";
+	@Override
+	public int saveXinxingTradeChargeLog(String orderNo, Long uid, String reqParams, String respParams, int createDate) {
+		return jdbcHandler.executeSql(saveXinxingTradeChargeLog, orderNo, uid, reqParams, respParams, createDate);
+	}
+	
+	private String updateTradeChargeSubmitStatus = "update xinxing_trade_charge set status=?,updateTime=now() where orderNo=?";
+	@Override
+	public int updateTradeChargeSubmitStatus(String orderNo, int status) {
+		return jdbcHandler.executeSql(updateTradeChargeSubmitStatus, status, orderNo);
+	}
+	
+	private String saveCallBackInfo = "update xinxing_trade_charge_log set callBackValue=?,callBackTime=now() where orderNo=?";
+	@Override
+	public int saveCallBackInfo(String orderNo, String callBackValue) {
+		return jdbcHandler.executeSql(saveCallBackInfo, callBackValue, orderNo);
+	}
+	
+	private String updateTradeChargeStatus = "update xinxing_trade_charge set status=?,updateTime=now(),reason=? where orderNo=? and status=2";
+	@Override
+	public int updateTradeChargeStatus(String orderNo, int status, String failReason) {
+		return jdbcHandler.executeSql(updateTradeChargeStatus, status, failReason, orderNo);
+	}
+	
+	private String queryRechargingOrderNo = "select * from xinxing_trade_charge where status=2 and createTime <= DATE_SUB(now(),INTERVAL 5 MINUTE)";
+	@Override
+	public List<XinxingTradeCharge> queryRechargingOrderNo() {
+		return jdbcHandler.queryBySql(XinxingTradeCharge.class, queryRechargingOrderNo);
+	}
+
+}

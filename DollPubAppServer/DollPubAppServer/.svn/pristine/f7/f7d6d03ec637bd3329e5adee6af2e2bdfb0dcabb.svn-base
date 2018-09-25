@@ -1,0 +1,288 @@
+package com.imlianai.dollpub.app.modules.publics.oauth.wechat.event.service;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.core.user.util.UserUtil;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WebWeixinToken;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WechatTemplateMsg;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WechatTemplateMsg.TemplateMsgId;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WechatTemplateMsgRes;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.domain.WeiXinArticles;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.event.dao.WechatEventDao;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.service.WechatService;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinMsgUtil;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinTokenHandler;
+import com.imlianai.dollpub.app.modules.publics.oauth.weixin.config.OauthWeiXinConfig;
+import com.imlianai.dollpub.app.modules.publics.qiniu.service.QiNiuService;
+import com.imlianai.dollpub.app.modules.publics.security.SecurityManager;
+import com.imlianai.dollpub.domain.oauth.WechatAppSetting;
+import com.imlianai.dollpub.domain.trade.TradeCostType;
+import com.imlianai.dollpub.domain.trade.TradeRecord;
+import com.imlianai.dollpub.domain.trade.TradeType;
+import com.imlianai.dollpub.domain.user.UserBase;
+import com.imlianai.dollpub.domain.user.UserBase.UserSrcType;
+import com.imlianai.dollpub.domain.user.UserGeneral;
+import com.imlianai.dollpub.domain.user.UserOauth;
+import com.imlianai.rpc.support.common.exception.TradeOperationException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+@Service
+public class WechatEventServiceImpl implements WechatEventService {
+
+	private final static Logger logger = Logger
+			.getLogger(WechatEventServiceImpl.class);
+
+	private static final int agentCustomerId = 84;
+
+	private static final int agentId = 1;
+
+	private static final int newRegReward = 30;
+
+
+	private static final int newRegReward91 = 50;
+	
+	private static final int newSignReward = 5;
+	@Resource
+	WechatEventDao wechatEventDao;
+	@Resource
+	UserService userService;
+	@Resource
+	TradeService tradeService;
+	@Resource
+	private WechatService wechatService;
+
+	@Resource
+	private SecurityManager securityManager;
+
+	@Resource
+	private QiNiuService qiNiuService;
+
+	@Override
+	public String getSignReward(String toUserID, String openId) {
+		UserOauth userOauth = wechatService.getUserOauthBySrc(toUserID, openId);
+		String urlString = UserUtil.getPlayUrl(agentCustomerId, agentId);
+		String userName = "";
+		if (userOauth != null) {
+			UserBase userBase = userService.getUserBaseBySrc(
+					UserSrcType.WECHAT_PUBLIC.type, openId,
+					userOauth.getUnionId(), agentCustomerId);
+			logger.info("getSignReward " + JSON.toJSONString(userBase));
+			if (userBase == null) {
+				String url = qiNiuService.captureAndGetFile(
+						userOauth.getHead(),
+						OauthWeiXinConfig.BUCKET_NAME,
+						OauthWeiXinConfig.KEY_FLAG + "/"
+								+ userOauth.getOpenId());
+				if (StringUtils.isNotBlank(url)) {
+					userOauth.setHead(url);
+				}
+				userBase = userService.initUserWechat(userOauth,
+						agentCustomerId, agentId);
+				String loginKey = securityManager
+						.getLoginSecurityCodeNew(userBase.getUid());
+				userBase.setLoginKey(loginKey);
+			}
+			if (userBase != null) {
+				if (wechatEventDao.hasGetSignReward(userBase.getUid()) == 0) {
+					if (wechatEventDao.addGetSignReward(userBase.getUid(),
+							newSignReward) == 1) {
+						TradeRecord record = new TradeRecord(userBase.getUid(),
+								userBase.getUid(),
+								TradeType.WECHAT_SIGN_COIN.type, newSignReward,
+								newSignReward, TradeCostType.COST_COIN.type,
+								"签到礼包奖励");
+						try {
+							tradeService.charge(record);
+						} catch (TradeOperationException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+				urlString = UserUtil.getPlayUrl(agentCustomerId, agentId,
+						userBase.getUid(), userBase.getLoginKey());
+				UserGeneral userGeneral = userService.getUserGeneral(userBase
+						.getUid());
+				if (userGeneral != null) {
+					userName = userGeneral.getName();
+				}
+			}
+		}
+		// 发送模板消息
+		WechatTemplateMsg msg = new WechatTemplateMsg(openId,
+				TemplateMsgId.SIGN_REWARD.id, urlString);
+		Map<String, Object> data = new HashMap<String, Object>();
+		Map<String, Object> value = new HashMap<String, Object>();
+		value.put("value", "恭喜小主获得签到礼包" + newSignReward + "币！");
+		data.put("first", value);
+		value = new HashMap<String, Object>();
+		value.put("value", userName);
+		data.put("keyword1", value);
+		value = new HashMap<String, Object>();
+		value.put("value", newSignReward + "币");
+		data.put("keyword2", value);
+		value = new HashMap<String, Object>();
+		value.put("value", DateUtils.dateToString(new Date()));
+		data.put("keyword3", value);
+		value = new HashMap<String, Object>();
+		value.put("value", "快快点击下方详情来抓我吧！");
+		data.put("remark", value);
+		msg.setData(data);
+		WechatAppSetting setting = wechatService
+				.getWechatAppSettingBySrcid(toUserID);
+		Map<Integer, WebWeixinToken> tokenMap = wechatService
+				.getWebTokenByAppid(setting.getAppid());
+		String accessToken = tokenMap.get(
+				WebWeixinTokenHandler.ACCESS_TOKEN_TYPE).getToken_ticket();
+		WechatTemplateMsgRes res = WebWeixinMsgUtil.sendTemplateMsg(msg,
+				accessToken);
+		logger.info("sendTemplateMsg:" + JSON.toJSONString(res));
+		return "";
+	}
+
+	@Override
+	public String getFollowMsg(String toUserID, String openId) {
+		UserOauth userOauth = wechatService.getUserOauthBySrc(toUserID, openId);
+		if (userOauth != null) {
+			UserBase userBase = userService.getUserBaseBySrc(
+					UserSrcType.WECHAT_PUBLIC.type, openId,
+					userOauth.getUnionId(), agentCustomerId);
+			if (userBase == null) {
+				String url = qiNiuService.captureAndGetFile(
+						userOauth.getHead(),
+						OauthWeiXinConfig.BUCKET_NAME,
+						OauthWeiXinConfig.KEY_FLAG + "/"
+								+ userOauth.getOpenId());
+				if (StringUtils.isNotBlank(url)) {
+					userOauth.setHead(url);
+				}
+				userBase = userService.initUserWechat(userOauth,
+						agentCustomerId, agentId);
+				String loginKey = securityManager
+						.getLoginSecurityCodeNew(userBase.getUid());
+				userBase.setLoginKey(loginKey);
+			}
+			String urlString = UserUtil.getPlayUrl(agentCustomerId, agentId,
+					userBase.getUid(), userBase.getLoginKey());
+			int flag = wechatEventDao.hasGetReward(userOauth.getUnionId());
+			if (flag == 0) {
+				wechatEventDao.addGetReward(userBase.getUid(), openId,
+						userOauth.getUnionId(), newRegReward);
+				TradeRecord record = new TradeRecord(userBase.getUid(),
+						userBase.getUid(), TradeType.WECHAT_FOLLOW_COIN.type,
+						newRegReward, newRegReward,
+						TradeCostType.COST_COIN.type, "关注公众号奖励");
+				try {
+					tradeService.charge(record);
+				} catch (TradeOperationException e) {
+					e.printStackTrace();
+				}
+				return "欢迎关注萌趣抓娃娃，新用户奖励" + newRegReward + "币，快去 <a href='"
+						+ urlString + "'>抓娃娃</a> 吧~";
+			}
+			return "邀请好友即可获得600金币~邀请越多，金币越多，快去 <a href='" + urlString
+					+ "'>邀请</a> 吧";
+		}
+		String urlString = UserUtil.getPlayUrl(agentCustomerId, agentId);
+		return "邀请好友即可获得600金币~邀请越多，金币越多，快去 <a href='" + urlString + "'>邀请</a> 吧";
+	}
+
+	@Override
+	public int hasReward(UserBase userBase){
+		if (userBase!=null&&userBase.getSrcType()==UserSrcType.WECHAT_PUBLIC.type&&userBase.getCustomerId()==84) {
+			int flag = wechatEventDao.hasGetReward(userBase.getSrcUnionId());
+			if (flag == 0) {
+				return newRegReward;
+			}
+		}
+		if (userBase!=null&&userBase.getSrcType()==UserSrcType.SRC_APP.type){
+			int flag = wechatEventDao.hasGetReward(userBase.getUid());
+			if (flag == 0) {
+				return newRegReward91;
+			}
+		}
+		return 0;
+	}
+	
+	@Override
+	public int getReward(UserBase userBase){
+		int reward = hasReward(userBase);
+		if (reward > 0) {
+			int flag=0;
+			if (userBase.getSrcType()==UserSrcType.SRC_APP.type) {
+				flag=wechatEventDao.addGetReward(userBase.getUid(), (userBase.getUid()+"-"+userBase.getCustomerId()+"-"+userBase.getAgentId()),
+						(userBase.getUid()+"-"+userBase.getCustomerId()+"-"+userBase.getAgentId()), reward);
+			}else{
+				flag=wechatEventDao.addGetReward(userBase.getUid(), userBase.getSrcId(),userBase.getSrcUnionId(),reward);
+			}
+			TradeRecord record = new TradeRecord(userBase.getUid(),
+					userBase.getUid(), TradeType.WECHAT_FOLLOW_COIN.type,
+					reward, reward,
+					TradeCostType.COST_COIN.type, "新用户奖励");
+			try {
+				if (flag>0) {
+					tradeService.charge(record);
+					return reward;
+				}
+			} catch (TradeOperationException e) {
+				e.printStackTrace();
+			}
+		}
+		return 0;
+	}
+	
+	@Override
+	public String getInviteMsg(String toUserID, String openId) {
+		UserOauth userOauth = wechatService.getUserOauthBySrc(toUserID, openId);
+		if (userOauth != null) {
+			UserBase userBase = userService.getUserBaseBySrc(
+					UserSrcType.WECHAT_PUBLIC.type, openId,
+					userOauth.getUnionId(), agentCustomerId);
+			if (userBase == null) {
+				String url = qiNiuService.captureAndGetFile(
+						userOauth.getHead(),
+						OauthWeiXinConfig.BUCKET_NAME,
+						OauthWeiXinConfig.KEY_FLAG + "/"
+								+ userOauth.getOpenId());
+				if (StringUtils.isNotBlank(url)) {
+					userOauth.setHead(url);
+				}
+				userBase = userService.initUserWechat(userOauth,
+						agentCustomerId, agentId);
+				String loginKey = securityManager
+						.getLoginSecurityCodeNew(userBase.getUid());
+				userBase.setLoginKey(loginKey);
+			}
+			String urlString = UserUtil.getPlayUrl(agentCustomerId, agentId,
+					userBase.getUid(), userBase.getLoginKey());
+			return "邀请好友即可获得600金币~邀请越多，金币越多，快去 <a href='" + urlString
+					+ "'>邀请</a> 吧";
+		}
+		String urlString = UserUtil.getPlayUrl(agentCustomerId, agentId);
+		return "邀请好友即可获得600金币~邀请越多，金币越多，快去 <a href='" + urlString + "'>邀请</a> 吧";
+	}
+
+	@Override
+	public List<WeiXinArticles> get5Redpacket() {
+		WeiXinArticles weiXinArticles = new WeiXinArticles("点击领取5元红包，可提现哦！",
+				"在线抓娃娃，红包金币送不停，更多精彩等你来~",
+				"http://sglive.imlianai.com/cmsdoll/20180321164536387",
+				"http://a.app.qq.com/o/simple.jsp?pkgname=os.imlive.android.doll");
+		List<WeiXinArticles> list = new ArrayList<WeiXinArticles>();
+		list.add(weiXinArticles);
+		return list;
+	}
+}

@@ -1,0 +1,50 @@
+package com.imlianai.dollpub.app.modules.core.hoodle.service.impl;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.hoodle.consts.HoodleConsts;
+import com.imlianai.dollpub.app.modules.core.hoodle.service.HoodleService;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * 弹珠机服务实现
+ * @author wurui
+ * @create 2018-07-13 22:10
+ **/
+@Service
+public class HoodleServiceImpl implements HoodleService {
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @Override
+    public void handleResult(DollBus dollBus, String deviceId, List<String> hexs) {
+        if (dollBus != null){
+            if (!StringUtil.isNullOrEmpty(hexs)){
+
+                switch (hexs.get(7)){
+
+                    case "33":
+
+                        logger.info("结果：" + JSON.toJSONString(hexs));
+
+                        iMachineConnectRemoteService.handleDirective(dollBus.getBusId(), HoodleConsts.END,"");
+
+                        break;
+
+                    default:
+                        break;
+                }
+
+            }
+        }
+    }
+}

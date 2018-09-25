@@ -1,0 +1,263 @@
+package com.imlianai.zjdoll.app.modules.core.trade.catalog.domain;
+
+import io.swagger.annotations.ApiModelProperty;
+
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+public class ChargeCatalog {
+
+	/**
+	 * 商品code
+	 */
+	@ApiModelProperty("商品code")
+	private int code;
+
+	/**
+	 * 商品类型 0通用 1android 2ios
+	 */
+	@ApiModelProperty("商品类型 0通用 1android 2ios")
+	private int type;
+
+	/**
+	 * 名称
+	 */
+	@ApiModelProperty("名称")
+	private String name;
+
+	/**
+	 * 价格
+	 */
+	@ApiModelProperty("价格")
+	private int price;
+
+	/**
+	 * 钻石
+	 */
+	@ApiModelProperty("游戏币")
+	private int coin;
+
+	/**
+	 * 图标
+	 */
+	@ApiModelProperty("图标")
+	private String icon;
+
+	/**
+	 * 额外奖励
+	 */
+	@ApiModelProperty("额外奖励")
+	private int awardExtra;
+
+	/**
+	 * 描述
+	 */
+	@ApiModelProperty("描述")
+	private String des;
+	
+	@ApiModelProperty("充值标签 0-常规充值 1-快捷充值")
+	private int tag;
+
+	@ApiModelProperty("首冲优惠 0-常规充值 1-首冲优惠 2-周卡 3-月卡")
+	private int isFirst;
+
+	@ApiModelProperty("返点比例文案，带%。如返100%")
+	private String repayText;
+	@ApiModelProperty("返点描述。如分30天返还 | 每天返34币")
+	private String repayDetail;
+	@ApiModelProperty("劲爆周卡，双倍月卡")
+	private String cardTitle;
+	@ApiModelProperty("商品详情")
+	private String itemDetail;
+
+	private int timeCoupons;
+
+	public ChargeCatalog() {
+
+	}
+
+	public int getCode() {
+		return code;
+	}
+
+	public void setCode(int code) {
+		this.code = code;
+	}
+
+	public int getType() {
+		return type;
+	}
+
+	public void setType(int type) {
+		this.type = type;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public int getPrice() {
+		return price;
+	}
+
+	public void setPrice(int price) {
+		this.price = price;
+	}
+
+	public int getCoin() {
+		return coin;
+	}
+
+	public void setCoin(int coin) {
+		this.coin = coin;
+	}
+
+	public String getIcon() {
+		return icon;
+	}
+
+	public void setIcon(String icon) {
+		this.icon = icon;
+	}
+
+	public int getAwardExtra() {
+		return awardExtra;
+	}
+
+	public void setAwardExtra(int awardExtra) {
+		this.awardExtra = awardExtra;
+	}
+
+	public String getDes() {
+		return des;
+	}
+
+	public void setDes(String des) {
+		this.des = des;
+	}
+
+	public int getTag() {
+		return tag;
+	}
+
+	public void setTag(int tag) {
+		this.tag = tag;
+	}
+
+	public int getIsFirst() {
+		return isFirst;
+	}
+
+	public void setIsFirst(int isFirst) {
+		this.isFirst = isFirst;
+	}
+
+	public String getRepayText() {
+		return repayText;
+	}
+
+	public void setRepayText(String repayText) {
+		this.repayText = repayText;
+	}
+
+	public String getRepayDetail() {
+		return repayDetail;
+	}
+
+	public void setRepayDetail(String repayDetail) {
+		this.repayDetail = repayDetail;
+	}
+
+	public String getCardTitle() {
+		return cardTitle;
+	}
+
+	public void setCardTitle(String cardTitle) {
+		this.cardTitle = cardTitle;
+	}
+
+	public String getItemDetail() {
+		return itemDetail;
+	}
+
+	public void setItemDetail(String itemDetail) {
+		this.itemDetail = itemDetail;
+	}
+
+	public int getTimeCoupons() {
+		return timeCoupons;
+	}
+
+	public void setTimeCoupons(int timeCoupons) {
+		this.timeCoupons = timeCoupons;
+	}
+
+	public static enum ChargeCatalogType {
+		/**
+		 * android充值列表
+		 */
+		ANDROID(1),
+		/**
+		 * ios充值列表
+		 */
+		IOS(2),
+		
+		/**
+		 * 公众号
+		 */
+		WECHAT(3),
+		
+		/**
+		 * 亲密付
+		 */
+		PAY_4_OTHER(4),
+		
+		/**
+		 * 首冲推送类型
+		 */
+		CHARGE_PUSH(8),
+
+		EGG(10)
+		;
+
+		public int type;
+
+		private ChargeCatalogType(int type) {
+			this.type = type;
+		}
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + code;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ChargeCatalog other = (ChargeCatalog) obj;
+		if (code != other.code)
+			return false;
+		if (name == null) {
+			if (other.name != null)
+				return false;
+		} else if (!name.equals(other.name))
+			return false;
+		return true;
+	}
+
+
+}

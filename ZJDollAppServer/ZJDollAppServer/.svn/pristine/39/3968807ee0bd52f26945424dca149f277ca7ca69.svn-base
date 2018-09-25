@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			
+			*,
+			*:after,
+			*:before {
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+			}
+			
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				font-family: "微软雅黑"
+			}
+			
+			input:focus {
+				outline: none;
+			}
+			
+			html {
+				font-size: 10px
+			}
+			
+			@media screen and (min-width:321px) and (max-width:375px) {
+				html {
+					font-size: 11px
+				}
+			}
+			
+			@media screen and (min-width:376px) and (max-width:414px) {
+				html {
+					font-size: 12px
+				}
+			}
+			
+			@media screen and (min-width:415px) and (max-width:639px) {
+				html {
+					font-size: 15px
+				}
+			}
+			
+			@media screen and (min-width:640px) and (max-width:719px) {
+				html {
+					font-size: 20px
+				}
+			}
+			
+			@media screen and (min-width:720px) and (max-width:749px) {
+				html {
+					font-size: 22.5px
+				}
+			}
+			
+			@media screen and (min-width:750px) and (max-width:799px) {
+				html {
+					font-size: 23.5px
+				}
+			}
+			
+			@media screen and (min-width:800px) {
+				html {
+					font-size: 25px
+				}
+			}
+			
+			body {
+				background-color: #fff;
+			}
+			
+			#app {
+				position: relative;
+				width: 100%;
+				height: 100%;
+			}
+			
+			.header {
+				width: 100%;
+				height: 80px;
+				line-height: 80px;
+				display: flex;
+			}
+			
+			.time,
+			.people-total {
+				flex: 1;
+				text-align: center;
+			}
+			
+			.btn {
+				color: #a569bd;
+				border-radius: 1.6rem;
+				font-size: 1.2rem;
+				padding: 4px 16px;
+			}
+			
+			.people-total .btn {
+				padding: 3px 12px !important;
+				margin: 0 5px;
+			}
+			
+			.btn1 {
+				background-color: #fff;
+				color: #a569bd;
+				border-radius: 1.6rem;
+				font-size: 1.1rem;
+				padding: 4px 16px;
+				box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
+				border: 1px solid #a569bd;
+			}
+			
+			.table {
+				width: 100%;
+				text-align: center;
+			}
+			
+			.table th {
+				font-size: 1.1rem;
+				color: #a569bd;
+				padding: 10px 0;
+			}
+			
+			.table td {
+				font-size: 1.1rem;
+				color: #333;
+				padding: 6px 0;
+				border: 1px solid #f2f2f2;
+			}
+			
+			#modal {
+				position: fixed;
+				top: 0%;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: none;
+				z-index: 50;
+				background-color: rgba(0, 0, 0, .5)
+			}
+			
+			#date {
+				position: fixed;
+				left: 50%;
+				bottom: 15%;
+				transform: translateX(-50%);
+				width: 90%;
+				z-index: 100;
+				padding: 20px 0;
+				background-color: #fff;
+				box-shadow: 0 0 15px 0 rgba(0, 0, 0, .1);
+				display: none;
+			}
+			
+			.ctrl {
+				z-index: 100;
+				position: fixed;
+				left: 50%;
+				bottom: 5%;
+				transform: translateX(-50%);
+				width: 90%;
+				display: none;
+			}
+			
+			.query,
+			.close {
+				text-align: center;
+				width: 100%;
+				border: 1px solid #ccc;
+				padding: 10px 0;
+				margin-top: 10px;
+				color: #a569bd;
+				background-color: #fff;
+				font-size: 15px;
+				/*box-shadow: 0 0 15px 0 rgba(0, 0, 0, .1);*/
+			}
+			
+			.time-box {
+				display: flex;
+				width: 100%;
+				height: 70px;
+				line-height: 70px;
+				text-align: center;
+			}
+			
+			.time-box>div {
+				flex: 1;
+			}
+			
+			.ctrl-btn {
+				font-size: 12px;
+				color: #fff;
+				padding: 2px 10px;
+				border-radius: 12px;
+			}
+			
+			.ctrl-btn.agree {
+				border: 1px solid #00CC33;
+				background-color: #00CC33;
+				margin-right: 4px;
+			}
+			
+			.ctrl-btn.reject {
+				border: 1px solid lightcoral;
+				background-color: lightcoral;
+				margin-left: 4px;
+			}
+			
+			.ctrl-btn.agreed {
+				color: #FFDE00;
+			}
+			
+			.input-warp {
+				padding: 5px 0;
+			}
+			
+			.ipt {
+				border: 1px solid #a569bd;
+				width: 100%;
+				padding: 6px 8px;
+				font-size: 1.4rem
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="app">
+
+			<div class="time-box">
+				<div class="time-query">
+					<span class="btn">申请列表</span>
+				</div>
+			</div>
+			<table class="table">
+				<tr>
+					<th>ID</th>
+					<th>电话</th>
+					<th>申请时间</th>
+					<th>操作</th>
+				</tr>
+				<tr v-for="(item,index) in list" :key="index">
+					<td>{{item.uid}}</td>
+					<td>{{item.phone}}</td>
+					<td>{{item.time}}</td>
+					<td v-if="item.status">
+						<span class="ctrl-btn agreed">已同意</span>
+					</td>
+					<td v-else>
+						<span class="ctrl-btn agree" @click="argee(index)">同意</span>
+						<!--<span class="ctrl-btn reject" @click="reject(index)">拒绝</span>-->
+					</td>
+				</tr>
+			</table>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.min.js"></script>
+		<script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+		<script>
+			function GetRequest() {
+				var url = location.search; //获取url中"?"符后的字串 
+				var theRequest = {};
+				if(url.indexOf("?") != -1) {
+					var str = url.substr(1);
+					strs = str.split("&");
+					for(var i = 0; i < strs.length; i++) {
+						theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+					}
+				}
+				return theRequest;
+			}
+			var query = GetRequest();;
+			var time = new Date();
+			var y = time.getFullYear() + 1;
+			var m = time.getMonth() + 1;
+			var d = time.getDate();
+			var app = new Vue({
+				el: '#app',
+				data: {
+					start: '2000-1-1',
+					end: y + '-' + m + '-' + d,
+					list: []
+				},
+				methods: {
+					argee: function(index) {
+						var vm = this;
+						var tmpl = '<div>' +
+							'<div style="text-align:center">设定代理密码</div>' +
+							'<div class="input-warp"><input type="text" class="ipt"></div>' +
+							'</div>'
+						huiModal({
+							msg: tmpl,
+							modal: false,
+							clickOk: function(next) {
+								var pwd = document.querySelector('.ipt').value;
+								if(pwd.trim() == '') {
+									huiModal({
+										msg: '未填写密码！',
+										modal: false
+									})
+								} else {
+									axios.post('../../api/uAgency/register', {
+										uid: vm.list[index].uid,
+										pwd: pwd
+									}, {
+										headers: {
+											'Content-Type': 'application/x-www-form-urlencoded'
+										}
+									}).then(function(res) {
+										huiModal({
+											msg: res.data.msg,
+											modal: false,
+											clickOk: function() {
+												location.reload()
+											},
+											clickCancel: function() {
+												location.reload()
+											}
+										})
+
+									}).catch(function(res) {
+										huiModal({
+											msg: res.data.msg,
+											modal: false
+										})
+									});
+
+								}
+							}
+						})
+					},
+					reject: function(index) {
+						var vm = this;
+						huiModal({
+							msg: '拒绝手机号为<span style="color:red">' + vm.list[index].phone + '</span>的用户成为代理商吗？',
+							modal: false,
+							clickOk: function() {
+								huiModal({
+									msg: '修改成功！',
+									modal: false,
+									clickOk: function() {},
+									clickCancel: function() {
+
+									}
+								})
+							}
+						})
+					}
+
+				},
+				mounted: function() {
+					var vm = this;
+					axios.post('../../api/uAgency/getAgencyList', {
+						// uid: query.uid,
+						// loginKey: query.loginKey,
+						pwd: 'f340663fcb254ebdb54ff42f00f80f45',
+						phone: '159753',
+						start: vm.start,
+						end: vm.end
+					}, {
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded'
+						}
+					}).then(function(res) {
+						if(res.data.state) {
+							console.log(res.data.data)
+							vm.list = res.data.data
+						}
+
+					}).catch(function(res) {
+						console.log(res.data)
+					});
+				}
+			})
+
+			function huiModal(obj) {
+				return(new newModal(obj))
+			}
+
+			function newModal(obj) {
+				var sf = this;
+				var modal = createDOM('div');
+				var box = createDOM('div');
+				var content = createDOM('div');
+				var tool = createDOM('div');
+				var ok = createDOM('div');
+				var cancel = createDOM('div');
+
+				function createDOM(tag) {
+					return document.createElement(tag)
+				}
+
+				function css(el, obj) {
+					for(var key in obj) {
+						el.style[key] = obj[key]
+					}
+				}
+
+				function getCss(el, attr) {
+					if(el.currentStyle) {
+						return el.currentStyle[attr]
+					} else {
+						return getComputedStyle(el, false)[attr]
+					}
+				}
+
+				function run() {
+					css(modal, {
+						position: 'fixed',
+						top: 0,
+						left: 0,
+						width: window.innerWidth + 'px',
+						height: window.innerHeight + 'px',
+						backgroundColor: 'rgba(0,0,0,0)',
+						zIndex: 2000
+					});
+					css(box, {
+						position: 'absolute',
+						top: '50%',
+						left: '50%',
+						width: 'auto',
+						backgroundColor: '#fff',
+						maxWidth: '100%',
+						minWidth: '300px',
+						padding: '0 30px 20px 30px',
+						transition: 'all .2s ease-out',
+						transform: 'translate(-50%,-50%) scale(.86)',
+						opacity: 0,
+						zIndex: 2050,
+						boxShadow: '1px 1px 35px 0 rgba(0,0,0,.06)'
+					});
+					css(content, {
+						position: 'relative',
+						top: 0,
+						left: 0,
+						fontSize: '15px',
+						padding: '20px 10px'
+					});
+					css(tool, {
+						position: 'relative',
+						top: 0,
+						left: 0,
+						display: 'flex',
+						justifyContent: 'space-around',
+						position: 'relative',
+						zIndex: 2200
+					});
+					css(ok, {
+						padding: '6px 14px',
+						margin: '0 5px',
+						fontSize: '12px',
+						borderRadius: '6px',
+						color: '#fff',
+						cursor: 'pointer',
+						backgroundColor: '#40A3FF',
+						border: '1px solid #40A3FF'
+					});
+					css(cancel, {
+						padding: '6px 14px',
+						margin: '0 5px',
+						fontSize: '12px',
+						borderRadius: '6px',
+						color: '#40A3FF',
+						cursor: 'pointer',
+						border: '1px solid #40A3FF'
+					});
+					ok.innerHTML = obj && obj.ok ? obj.ok : '确定';
+					ok.addEventListener('click', function(evt) {
+						//						var e = evt;
+						if(obj && obj.clickOk && typeof obj.clickOk == 'function' && obj.clickOk.length >= 1) {
+							obj.clickOk.call(this, sf.close)
+						} else if(obj && obj.clickOk && typeof obj.clickOk == 'function') {
+							obj.clickOk();
+							sf.close()
+						} else {
+							sf.close()
+						}
+					});
+					cancel.innerHTML = obj && obj.cancel ? obj.cancel : '取消';
+					cancel.addEventListener('click', function(evt) {
+						//						var e = evt || window.event;
+						//						window.event ? e.cancelBubble = true : e.stopPropagation();
+
+						if(obj && typeof obj.clickCancel == 'function' && obj.clickCancel.length >= 1) {
+							obj.clickCancel.call(this, sf.close)
+						} else if(obj && typeof obj.clickCancel == 'function') {
+							obj.clickCancel()
+							sf.close();
+						} else {
+							sf.close();
+						}
+					});
+					if(typeof obj == 'string') {
+						content.innerHTML = obj
+					} else {
+						content.innerHTML = obj && obj.msg ? obj.msg : ''
+					}
+					if(obj.ok !== false) {
+						tool.appendChild(ok);
+					}
+					if(obj.cancel !== false) {
+						tool.appendChild(cancel);
+					}
+					box.appendChild(content);
+					box.appendChild(tool);
+					if(obj.modal == false) {
+						document.body.appendChild(box)
+					} else {
+						modal.appendChild(box);
+						document.body.appendChild(modal)
+					}
+					setTimeout(function() {
+						if(obj.modal != false) {
+							css(modal, {
+								transition: 'all .2s ease-out',
+								backgroundColor: 'rgba(0,0,0,.6)'
+							});
+						}
+						css(box, {
+							opacity: 1,
+							transform: 'translate(-50%,-50%) scale(1)'
+						});
+					}, 50);
+				}
+				if(obj && typeof obj.init == 'function') {
+					if(obj.init.length >= 1) {
+						obj.init.call(this, run)
+					} else {
+						obj.init();
+						run()
+					}
+				} else {
+					run()
+				}
+				sf.close = function() {
+					css(box, {
+						opacity: 0,
+						transform: 'translate(-50%,-50%) scale(.86)'
+					});
+					setTimeout(function() {
+						if(box) {
+							document.body.removeChild(box);
+						}
+					}, 200);
+					if(obj.modal != false) {
+						css(modal, {
+							backgroundColor: 'rgba(0,0,0,0)'
+						});
+						setTimeout(function() {
+							if(modal) {
+								document.body.removeChild(modal);
+							}
+						}, 200);
+					}
+				}
+				return sf;
+			}
+		</script>
+	</body>
+
+</html>

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:apollo="http://www.ctrip.com/schema/apollo"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:task="http://www.springframework.org/schema/task"  
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+		http://www.ctrip.com/schema/apollo http://www.ctrip.com/schema/apollo.xsd">
+
+	<!--<apollo:config namespaces="${namespace.env},common,qiniu"/>-->
+	<!-- 注解探测器 -->
+    <!-- <context:annotation-config /> -->
+	<context:component-scan base-package="com.imlianai.zjdoll.app">
+		<context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+	</context:component-scan>	    
+    
+	<!--<context:property-placeholder location="${props.env.file},classpath:configs/properties/conf_common.properties,classpath:configs/properties/qiniu.properties" />-->
+    <bean class="org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor" />
+	<task:annotation-driven/> 
+    
+	<import resource="spring-datasource-druid.xml" />
+	<import resource="classpath:configs/spring/spring-support-layer.xml" />
+	<import resource="classpath:configs/spring/spring-http.xml" />
+	<import resource="classpath:configs/spring/spring-aop.xml" />
+	<!-- cat aop埋点的配置 -->
+	<!-- <import resource="classpath:configs/spring/spring-cat-monitor.xml" /> -->
+</beans>

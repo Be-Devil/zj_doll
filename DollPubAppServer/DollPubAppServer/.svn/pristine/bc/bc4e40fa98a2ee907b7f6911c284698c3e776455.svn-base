@@ -1,0 +1,165 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.virtual.fruits.PushCoinFruitsAllot;
+import com.imlianai.dollpub.domain.coinfactory.virtual.fruits.PushCoinFruitsResult;
+import com.imlianai.dollpub.domain.coinfactory.virtual.fruits.PushCoinFruitsValue;
+import com.imlianai.dollpub.domain.coinfactory.virtual.fruits.PushCoinFruitsWin;
+
+import java.util.List;
+
+/**
+ * 水果机相关dao
+ * @author wurui
+ * @create 2018-07-19 21:15
+ **/
+public interface PushCoinVirtualFruitsDao {
+
+
+
+
+    //================================push_coin_fruits_value================================
+
+    /**
+     * 获取水果机数值
+     * @return
+     */
+    List<PushCoinFruitsValue> getAllFruitsValue();
+
+
+
+    //================================push_coin_fruits_result================================
+
+
+    /**
+     * 新增结果
+     * @param result
+     * @return
+     */
+    int addResult(PushCoinFruitsResult result);
+
+
+    /**
+     * 通过类型获取水果机结果
+     * @param type
+     * @return
+     */
+    List<PushCoinFruitsResult> getResultByType(int type);
+
+
+    /**
+     * 清理所有结果
+     * @return
+     */
+    int clear();
+
+
+
+    //================================push_coin_fruits_win================================
+
+
+    /**
+     * 新增节点中奖记录
+     * @param fruitsWin
+     * @return
+     */
+    int addWinRecord(PushCoinFruitsWin fruitsWin);
+
+    /**
+     * 完成中奖分配
+     * @param id
+     * @return
+     */
+    int completeAssigned(int id,String remark);
+
+    /**
+     * 更新当前送奖
+     * @param id
+     * @param coin
+     * @return
+     */
+    int updateCurrent(int id,int coin);
+
+
+    /**
+     * 通过optId获取单条中奖记录
+     * @param optId
+     * @return
+     */
+    PushCoinFruitsWin getRecordByOptId(long optId);
+
+    /**
+     * 通过Id获取单条中奖记录
+     * @param id
+     * @return
+     */
+    PushCoinFruitsWin getRecordById(int id);
+
+
+    /**
+     * 通过busId,customerId,uid获取单条中奖记录
+     * @param busId
+     * @return
+     */
+    PushCoinFruitsWin getRecordByCondition(int busId,int customerId,long uid);
+
+
+    /**
+     * 拿到一条未使用的记录
+     * @return
+     */
+    PushCoinFruitsWin getRecordByOne();
+
+
+
+    //================================push_coin_fruits_allot================================
+
+
+    /**
+     * 新增奖励分配
+     * @param allot
+     * @return
+     */
+    int addWinAllot(PushCoinFruitsAllot allot);
+
+    /**
+     * 更新分配结果
+     * @param id
+     * @param result
+     * @return
+     */
+    int updateAllotResult(long id,int result,String remark);
+
+    /**
+     * 通过optId获取具体的奖项分配
+     * @param optId
+     * @return
+     */
+    List<PushCoinFruitsAllot> getWinAllotByOptId(long optId);
+
+    PushCoinFruitsAllot getOneWinAllotByOptId(long optId);
+
+    PushCoinFruitsAllot getOneWinAllotByWinId(int winId);
+
+    PushCoinFruitsAllot getOneWinAllotById(long id);
+
+    PushCoinFruitsAllot getOneWinAllotByCondition(int busId,int customerId,long uid);
+
+    /**
+     * 更新确认中奖结果
+     * @param id
+     * @param actual
+     * @param optId
+     * @param remark
+     * @return
+     */
+    int updateAllotAffirmResult(long id,int actual,long optId, String remark);
+
+
+    /**
+     * 获取所有未分配的结果
+     * @param winId
+     * @return
+     */
+    List<PushCoinFruitsAllot> getNoAllotByWinId(int winId);
+
+}

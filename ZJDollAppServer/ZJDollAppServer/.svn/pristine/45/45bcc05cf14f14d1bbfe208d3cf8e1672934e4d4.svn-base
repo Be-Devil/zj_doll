@@ -1,0 +1,197 @@
+package com.imlianai.zjdoll.app.modules.core.push.controller;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.dollpub.app.iface.IAppPushCoinRemoteService;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LoginCheck;
+import com.imlianai.zjdoll.app.controller.RootCmd;
+import com.imlianai.zjdoll.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.ZengjingUtils;
+import com.imlianai.zjdoll.app.modules.core.push.vo.OperateReqVO;
+import com.imlianai.zjdoll.app.modules.core.push.vo.PushCoinBusQueryReqVO;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-05-17 22:01
+ **/
+@Component("pushCoin")
+public class CmdPushCoin extends RootCmd {
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Reference
+    private IAppPushCoinRemoteService iAppPushCoinRemoteService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private UserService userService;
+
+    @Resource
+    private TradeService  tradeService;
+
+
+    /**
+     * 上机
+     *
+     * @return
+     */
+    @LoginCheck
+    @ApiHandle
+    @Path("api/pushCoin/apply")
+    public BaseRespVO apply(OperateReqVO vo) {
+        DollBus dollBus = dollBusService.getDollBus(vo.getBusId());
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "上机失败:类型错误");
+            }
+            UserBase userBase = userService.getUserBase(vo.getUid());
+            if (userBase != null){
+                try {
+                    TradeAccount tradeAccount = tradeService.getAccount(userBase.getUid());
+                    if (tradeAccount != null ){
+                        if (tradeAccount.getCoin() >= dollBus.getPrice()){
+                            return ZengjingUtils.apply(vo.getUid(), Integer.parseInt(dollBus.getDeviceId()), vo.getCustomerId());
+                        }else {
+                            return new BaseRespVO(0, false, "上机失败:余额不足");
+                        }
+                    }else {
+                        tradeService.initAccount(userBase.getUid());
+                        return new BaseRespVO(0, false, "上机失败:账户异常");
+                    }
+                }catch (Exception e){
+                    logger.info("apply=>" + e.getMessage());
+                    return new BaseRespVO(0, false, "上机失败:异常操作");
+                }
+            }else {
+                return new BaseRespVO(0, false, "上机失败:用户不存在");
+            }
+        }
+        return new BaseRespVO(0, false, "上机失败:机器不存在");
+    }
+
+    /**
+     * 投币
+     *
+     * @return
+     */
+    @LoginCheck
+    @ApiHandle
+    @Path("api/pushCoin/push")
+    public BaseRespVO push(OperateReqVO vo) {
+        DollBus dollBus = dollBusService.getDollBus(vo.getBusId());
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "推币失败:类型错误");
+            }
+
+            UserBase userBase = userService.getUserBase(vo.getUid());
+            if (userBase != null){
+                try {
+                    TradeAccount tradeAccount = tradeService.getAccount(userBase.getUid());
+                    if (tradeAccount != null ){
+                        if (tradeAccount.getCoin() >= dollBus.getPrice()){
+                            //return iAppPushCoinRemoteService.putCoin(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+                            //扣费
+                            TradeRecord record = new TradeRecord(userBase.getUid(),0, TradeType.PUSH_COIN.type,dollBus.getBusId(),dollBus.getPrice(),0,"推币机消费" + dollBus.getPrice()+"游戏币");
+                            if (tradeService.consume(record)){
+                                return ZengjingUtils.push(vo.getUid(), Integer.parseInt(dollBus.getDeviceId()), vo.getCustomerId());
+                            }
+                        }
+                        return new BaseRespVO(0, false, "推币失败:余额不足");
+                    }else {
+                        return new BaseRespVO(0, false, "推币失败:账户异常");
+                    }
+                }catch (Exception e){
+                    logger.info("apply=>" + e.getMessage());
+                    return new BaseRespVO(0, false, "推币失败:扣费失败");
+                }
+            }else {
+                return new BaseRespVO(0, false, "推币失败:用户不存在");
+            }
+        }
+        return new BaseRespVO(0, false, "推币失败:机器不存在");
+    }
+
+    /**
+     * 操作(摆动)
+     *
+     * @return
+     */
+    @LoginCheck
+    @ApiHandle
+    @Path("api/pushCoin/operate")
+    public BaseRespVO operate(OperateReqVO vo) {
+        DollBus dollBus = dollBusService.getDollBus(vo.getBusId());
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "上机失败:类型错误");
+            }
+            //return iAppPushCoinRemoteService.operate(vo.getUid(),vo.getBusId());
+            return ZengjingUtils.operate(vo.getUid(), Integer.parseInt(dollBus.getDeviceId()));
+        }
+        return new BaseRespVO(0, false, "上机失败:机器不存在");
+    }
+
+    /**
+     * 主动下机
+     *
+     * @return
+     */
+    @LoginCheck
+    @ApiHandle
+    @Path("api/pushCoin/finish")
+    public BaseRespVO finish(OperateReqVO vo) {
+        DollBus dollBus = dollBusService.getDollBus(vo.getBusId());
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "下机失败:机器类型错误");
+            }
+            //return iAppPushCoinRemoteService.finish(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+            return ZengjingUtils.finish(vo.getUid(), Integer.parseInt(dollBus.getDeviceId()), vo.getCustomerId());
+        }
+        return new BaseRespVO(0, false, "下机失败:机器不存在");
+
+    }
+
+    /**
+     * 查询流水
+     *
+     * @param vo
+     * @return
+     */
+    @ApiHandle
+    @Path("api/pushCoin/query")
+    public BaseRespVO query(PushCoinBusQueryReqVO vo) {
+        //return iAppPushCoinRemoteService.query(vo.getOptId(),vo.getCustomerId());
+        return ZengjingUtils.query(vo.getOptId(), vo.getCustomerId());
+    }
+
+}

@@ -1,0 +1,34 @@
+package com.imlianai.dollpub.app.modules.core.user.service.impl;
+
+import com.imlianai.dollpub.app.modules.core.user.dao.UserSrcDao;
+import com.imlianai.dollpub.app.modules.core.user.service.UserSrcService;
+import com.imlianai.dollpub.domain.user.UserSrc;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-01-24 11:49
+ **/
+@Service
+public class UserSrcServiceImpl implements UserSrcService {
+
+    @Resource
+    private UserSrcDao userSrcDao;
+
+    @Override
+    public int saveUserSrc(UserSrc userSrc) {
+        return userSrcDao.saveSrcUser(userSrc);
+    }
+
+    @Override
+    public int updateUserSrc(UserSrc userSrc) {
+        return userSrcDao.updateSrcUser(userSrc);
+    }
+
+    @Override
+    public UserSrc getUserSrcBySrcUidAndCusId(String srcId,int customerId) {
+        return userSrcDao.getUserSrcBySrcUidAndCusId(srcId,customerId);
+    }
+}

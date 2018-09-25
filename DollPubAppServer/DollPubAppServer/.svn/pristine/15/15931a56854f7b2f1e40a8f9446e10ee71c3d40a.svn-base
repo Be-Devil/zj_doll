@@ -1,0 +1,39 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao.impl;
+
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinFruitsConfigDao;
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-06-19 10:13
+ **/
+@Repository
+public class PushCoinFruitsConfigDaoImpl implements PushCoinFruitsConfigDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public int insert(PushCoinFruitsConfig pushCoinFruitsConfig) {
+        return jdbcHandler.executeSql("insert into push_coin_fruits_config(config) values(?)",pushCoinFruitsConfig.getConfig());
+    }
+
+    @Override
+    public int delete(int id) {
+        return jdbcHandler.executeSql("delete from push_coin_fruits_config where id=?",id);
+    }
+
+    @Override
+    public int update(PushCoinFruitsConfig pushCoinFruitsConfig) {
+        return jdbcHandler.executeSql("update push_coin_fruits_config set config=? where id=?",pushCoinFruitsConfig.getConfig(),pushCoinFruitsConfig.getId());
+    }
+
+    @Override
+    public PushCoinFruitsConfig selectConfig(int id) {
+        return jdbcHandler.queryOneBySql(PushCoinFruitsConfig.class,"select * from push_coin_fruits_config where id=?",id);
+    }
+}

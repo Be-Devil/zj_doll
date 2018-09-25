@@ -1,0 +1,171 @@
+package com.imlianai.zjdoll.app.modules.support.event.invite20180320.util;
+
+import com.imlianai.zjdoll.domain.invite.InviteRelation;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.ctrip.framework.apollo.util.PropertiesUtil;
+import com.imlianai.zjdoll.app.modules.support.invite.service.InviteService;
+
+import org.apache.commons.lang.StringUtils;
+
+import javax.annotation.Resource;
+import java.util.Date;
+
+/**
+ * 邀请活动工具
+ *
+ * @author wurui
+ * @create 2018-03-20 15:27
+ **/
+public class Event20180320InviteUtil  {
+
+    @Resource
+    private InviteService inviteService;
+
+
+    public static final String EVENT_NOT_BEGIN = "活动还未开始哦亲~";
+    public static final String EVENT_MOTION = "活动进行中~";
+    public static final String EVENT_END = "活动已结束~";
+
+    /**
+     * 邀请次数中间值
+     */
+    public static int INVITE_MEDIAN_VALUE = 30;
+
+
+    public static int ENERGY_VALUE_20 = 20;
+    public static int ENERGY_VALUE_50 = 50;
+    // 1~10人
+    public static int ENERGY_VALUE_100 = 100;
+    // 11~30人
+    public static int ENERGY_VALUE_150 = 150;
+    // >30人
+    public static int ENERGY_VALUE_200 = 200;
+
+
+    private static String FORMAT = "yyyy-MM-dd HH:mm:ss";
+
+    /**
+     * 邀请活动开始时间
+     **/
+    public static final String INVITE_EVENT_STARTDATE = "2018-03-24 00:00:00";
+    /**
+     * 邀请活动结束时间
+     **/
+    public static final String INVITE_EVENT_ENDDATE = "2018-04-12 23:59:59";
+
+    public static String H5_URL = PropertiesUtil.getString("application","e20180220InviteEnergy.url"); // h5地址
+
+    /**
+     * 邀请活动状态
+     *
+     * @return
+     */
+    public static int eventStatus() {
+        Date eventStartDate = DateUtils.string2Date(INVITE_EVENT_STARTDATE, FORMAT);
+        Date eventEndDate = DateUtils.string2Date(INVITE_EVENT_ENDDATE, FORMAT);
+        long currentMill = new Date().getTime();
+        if (eventStartDate.getTime() > currentMill) {
+            //活动未开始
+            return 0;
+        }
+        if (eventStartDate.getTime() <= currentMill && eventEndDate.getTime() >= currentMill) {
+            //活动进行中
+            return 1;
+        }
+        //活动已结束
+        return 2;
+    }
+
+    /**
+     * 获取剩余秒数
+     *
+     * @return
+     */
+    public static long getResidueTime() {
+        long currentMi = new Date().getTime();
+        long endMi = getMillis(INVITE_EVENT_ENDDATE);
+        return (endMi - currentMi) / 1000;
+    }
+
+    private static long getMillis(String dateStr) {
+        if (StringUtils.isBlank(dateStr)) {
+            return 0;
+        }
+        return DateUtils.string2Date(dateStr, FORMAT).getTime();
+    }
+
+
+    /**
+     * 根据邀请人数获取相应的能量值
+     *
+     * @param num
+     * @return
+     */
+    public static int getEnergyValue(int num) {
+        if (num != 0){
+            if (num >= 1 && num <= 10) {
+                return ENERGY_VALUE_100;
+            }else if (num >= 11 && num <= INVITE_MEDIAN_VALUE){
+                return ENERGY_VALUE_150;
+            }else if (num > INVITE_MEDIAN_VALUE){
+                return ENERGY_VALUE_200;
+            }
+        }
+        return 0;
+    }
+//
+//    private int usedTimes(long code){
+//        InviteRelation relation = inviteService.getInviteRelationByCode(code);
+//        if (relation != null){
+//            return relation.getUsedTimes();
+//        }
+//        return 0;
+//    }
+
+//
+//    /**
+//     * 判断邀请次数是否超过30
+//     * @param code
+//     * @return
+//     */
+//    public static boolean  isTopLimit(long code){
+//        Event20180320InviteUtil util = new Event20180320InviteUtil();
+//        return util.usedTimes(code) >= INVITE_MEDIAN_VALUE;
+//    }
+
+
+    /**
+     * 判断邀请次数是否超过30
+     * @param usedTimes
+     * @return
+     */
+    public static boolean  isTopLimit(int usedTimes){
+        return usedTimes > INVITE_MEDIAN_VALUE;
+    }
+
+
+    /**
+     * 邀请上限
+     * @return
+     */
+    public static int getInviteTimeLimit(){
+        return 999;
+    }
+
+
+    /**
+     * 名字格式化....
+     * 产品说姓名超过8位的后面全用...表示
+     * @param name
+     * @return
+     */
+    public static String nameFormat(String name){
+        if (null != name && !"".equals(name)){
+            if (name.length() > 8) return name.substring(0,8) + 1 + "...";
+            else return name;
+        }
+        return "";
+    }
+
+}

@@ -1,0 +1,152 @@
+package com.imlianai.zjdoll.app.modules.core.push.dao;
+
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBox;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxLog;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxPool;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxPoolLog;
+
+import java.util.List;
+
+/**
+ * 推币机宝箱相关dao
+ * @author wurui
+ * @create 2018-05-25 16:12
+ **/
+public interface PushCoinBoxDao {
+
+//    ----------------------------- 推币机宝箱 -----------------------------------//
+
+    /**
+     * 初始化宝箱
+     * @param busId
+     * @param price
+     * @return
+     */
+    int initBox(int busId,int price);
+
+
+    /**
+     * 修改宝箱峰值
+     * @param busId
+     * @param price
+     * @return
+     */
+    int updateTotal(int busId,int price);
+
+
+    /**
+     * 获取推币机宝箱
+     * @param busId
+     * @return
+     */
+    PushCoinBox getBox(int busId);
+
+    /**
+     * 拿到全部宝箱列表
+     * @return
+     */
+    List<PushCoinBox> getBoxList();
+
+    /**
+     * 通过busIds拿到全部宝箱列表
+     * @param busIds
+     * @return
+     */
+    List<PushCoinBox> getBoxListByBusIds(List<Integer> busIds);
+
+    /**
+     * 往宝箱奖池加奖金
+     * @param busId
+     * @param jackpot
+     * @return
+     */
+    int addJackpot(int busId,int jackpot);
+
+
+    /**
+     * 增加宝箱当前币数
+     * @param busId 推币机id
+     * @param coin 入币数
+     * @param lastUid 最后投币者
+     * @return
+     */
+    int addBoxCoin(int busId,int coin,long lastUid);
+
+    /**
+     * 宝箱开奖(清空当前币)
+     * @param busId
+     * @return
+     */
+    int openBox(int busId);
+
+
+
+
+//    ----------------------------- 宝箱开奖记录 -----------------------------------//
+
+    /**
+     * 新增开奖记录
+     * @param boxLog
+     * @return
+     */
+    int addOpenBoxRecord(PushCoinBoxLog boxLog);
+
+    /**
+     * 获取当前用户开过当前宝箱多少次
+     * @param busId
+     * @param boxId
+     * @param uid
+     * @return
+     */
+    int getRecordCount(int busId,int boxId,long uid);
+
+    int updateOpenBoxRecord(int id,int giveId,String giveLog,String remark);
+
+//    ----------------------------- 全局总奖池 -----------------------------------//
+
+    /**
+     * 获取推币机奖池
+     * @param id
+     * @return
+     */
+    PushCoinBoxPool getBoxPool(int id);
+
+    /**
+     * 更新当前奖池
+     * @param id
+     * @param money
+     * @return
+     */
+    int updateBoxPoolCurrent(int id,int money);
+
+    /**
+     * 更新奖池值
+     * @param pushCoinBoxPool
+     * @return
+     */
+    int updateBoxPoolValue(PushCoinBoxPool pushCoinBoxPool);
+
+    int updateBoxPoolIntoValue(PushCoinBoxPool pushCoinBoxPool);
+
+    int updateBoxPoolOutValue(PushCoinBoxPool pushCoinBoxPool);
+
+    /**
+     * 清空奖池
+     * @param id
+     * @param eIntoCoin
+     * @param vIntoCoin
+     * @param eOutCoin
+     * @param vOutCoin
+     * @return
+     */
+    int emptyBoxPool(int id,int eIntoCoin,int vIntoCoin,int eOutCoin,int vOutCoin);
+
+
+
+
+//    ----------------------------- 全局总奖池日志 -----------------------------------//
+
+
+    int addPoolRecord(PushCoinBoxPoolLog record);
+
+}

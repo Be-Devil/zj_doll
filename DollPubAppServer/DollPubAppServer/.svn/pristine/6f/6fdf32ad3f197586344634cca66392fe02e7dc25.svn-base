@@ -1,0 +1,42 @@
+package com.imlianai.dollpub.app.modules.core.hoodle.service.impl;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.hoodle.service.HoodleService;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+/**
+ * 弹珠机服务实现
+ * @author wurui
+ * @create 2018-07-13 22:10
+ **/
+@Service
+public class HoodleServiceImpl implements HoodleService {
+
+    BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Override
+    public void handleResult(DollBus dollBus, String deviceId, List<String> hexs) {
+        if (dollBus != null){
+            if (!StringUtil.isNullOrEmpty(hexs)){
+
+                switch (hexs.get(7)){
+
+                    case "33":
+
+                        logger.info("结果：" + JSON.toJSONString(hexs));
+
+                        break;
+
+                    default:
+                        break;
+                }
+
+            }
+        }
+    }
+}

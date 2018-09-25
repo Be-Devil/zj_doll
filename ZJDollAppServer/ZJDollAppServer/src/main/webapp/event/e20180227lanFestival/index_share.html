@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>欢乐闹元宵  金币8倍送</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="欢乐闹元宵  金币8倍送">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="欢乐闹元宵  金币8倍送">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <style>
+        html,body{margin:0;padding:0;}
+        img{width:100%;display: block;}
+        .maxBox{width:100%;height:auto;position: relative;}
+        .btn{position: absolute;width:2.42rem;height:0.76rem;display: block;background: url("http://lianai-image-sys.qiniudn.com/yx/btn.png") no-repeat center center;
+        -webkit-background-size: 100% 100%;background-size: 100% 100%;left:50%;margin-left:-1.21rem;border:none;}
+        .btn_1{top:9rem;}
+        .btn_2{top:13.2rem;}
+        .btn_3{top:19.75rem;background: url("http://lianai-image-sys.qiniudn.com/yx/btn2.png") no-repeat center center !important;-webkit-background-size: 100% 100% !important;background-size: 100% 100% !important;}
+    </style>
+</head>
+<body>
+   <div class="maxBox">
+       <img src="http://lianai-image-sys.qiniudn.com/yx/bg.jpg" alt="">
+       <button class="btn btn_1"></button>
+       <button class="btn btn_2"></button>
+       <button class="btn btn_3"></button>
+   </div>
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script>
+    (function(win) {
+        var doc = win.document;
+        var docEl = doc.documentElement;
+        var tid;
+        function refreshRem() {
+            var width = docEl.getBoundingClientRect().width;
+            if (width > 768) { // 最大宽度
+                width = 768;
+            }
+            var rem = width / 7.5;
+            docEl.style.fontSize = rem + 'px';
+            docEl.style.fontSize = rem + 'px';
+            docEl.style.fontSize = rem + 'px';
+        }
+        win.addEventListener('resize', function() {
+            clearTimeout(tid);
+            tid = setTimeout(refreshRem, 300);
+        }, false);
+        win.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                clearTimeout(tid);
+                tid = setTimeout(refreshRem, 300);
+            }
+        }, false);
+        refreshRem();
+    
+        $(".btn_1").click(function(){
+        	window.location = "http://www.mengquww.com/download/gw";
+        });
+
+        $(".btn_2").click(function(){
+        	window.location = "http://www.mengquww.com/download/gw";
+        });
+
+        $(".btn_3").click(function(){
+        	window.location = "http://www.mengquww.com/download/gw";
+        });
+
+    })(window);
+</script>

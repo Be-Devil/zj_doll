@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0">
+    <!--兼容iphone6-->
+    <meta name ="viewport" content="width=320,maximum-scale=1.3,user-scalable=no">
+    <!--打开手机浏览器对webAPP全屏样式支持-->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <!--设置手机中状态栏样式，为黑色-->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>红包提现</title>
+    <link rel="stylesheet" href="css/bus.css">
+    <link rel="stylesheet" href="css/index.css">
+    <style>
+        /*320px布局*/
+        html{font-size:100px;}
+        body{font-size:0.14rem/*实际相当于14px*/}
+        /*iphone6*/
+        @media(min-device-width:375px)and(max-device-width:667px)and(-webkit-min-device-pixel-ratio:2){
+            html{font-size:117.1875px;}
+        }
+        /*iphone6plus*/
+        @media(min-device-width:414px)and(max-device-width:736px)and(-webkit-min-device-pixel-ratio:3){
+            html{font-size:129.375px;}
+        }
+    </style>
+    <script src="js/font.js"></script>
+    <script src="js/jquery-1.8.3.min.js"></script>
+    <!--<script src="http://lianai-image-sys.qiniudn.com/web_common/vue.min.js" type="text/javascript"></script>-->
+    <!--<script src="https://unpkg.com/axios/dist/axios.min.js"></script>-->
+    <script src="js/index.js"></script>
+</head>
+<body style="font-size: 12px;">
+
+<div id="app">
+    <section class="portrait">
+        <!--<ul>-->
+            <!--<li>正在绑定的萌趣号</li>-->
+            <!--<li><img src="" alt=""></li>-->
+            <!--<li>id：11311321321</li>-->
+            <!--<li>哈哈哈</li>-->
+        <!--</ul>-->
+    </section>
+    <!--头像结束-->
+    <!--内容-->
+    <section class="account" style="display: block">
+        <div class="account_content">
+            <div class="account_p">
+                <p>绑定账号需完成手机验证：</p>
+            </div>
+            <div class="account_from">
+                <from id="inputForm" method="post" onsubmit="return verification()">
+                    <div class="account_iph">
+                        <div class="account_iph_img">
+                            <img src="http://lianai-image-sys.qiniudn.com/deposit/Group_2@3x.png" alt="">
+                        </div>
+                        <div class="account_ihp_num">
+                            <input id="inp" type="search" pattern="[0-9]*" class="focus-element" maxLength="11" placeholder="请输入手机号" value="">
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="account_num">
+                        <div class="account_num_img">
+                            <img src="http://lianai-image-sys.qiniudn.com/deposit/Group_2@2x.png" alt="">
+                        </div>
+                        <div class="account_num_inp">
+                            <input id="yz" type="search" placeholder="请输入验证码">
+                            <button class="btn" id="btn"  ><p>发送</p></button>
+                        </div>
+                    </div>
+                    <button id="submit" class="confirm get-focus" type="submit">确定</button>
+                </from>
+            </div>
+        </div>
+    </section>
+    <!--内容结束-->
+    <!--完成开始-->
+    <section class="accomplish" style="display: none">
+        <ul>
+            <li><img src="http://lianai-image-sys.qiniudn.com/deposit/check.png" alt=""></li>
+            <li>恭喜已完成萌趣提现账号的绑定，<br>
+                快到萌趣抓娃娃App提现吧！
+            </li>
+        </ul>
+    </section>
+    <!--完成结束-->
+    <!--提示-->
+    <div class="reminder_iph" style="display: none">
+        <p>请输入手机号！</p>
+    </div>
+    <div class="reminder_iph2" style="display: none">
+        <p>请输入正确的手机号!</p>
+    </div>
+    <div class="reminder_iph1" style="display: none">
+        <p>手机号格式不正确，请重新输入!</p>
+    </div>
+    <div class="reminder_iph3" style="display: none">
+        <p id="tip"></p>
+    </div>
+    <div class="reminder_verify" style="display: none">
+        <p id="tip1"></p>
+    </div>
+    <div class="reminder_verify2" style="display: none">
+        <p>请输入手机号和验证码！</p>
+    </div>
+</div>
+
+</body>
+
+</html>

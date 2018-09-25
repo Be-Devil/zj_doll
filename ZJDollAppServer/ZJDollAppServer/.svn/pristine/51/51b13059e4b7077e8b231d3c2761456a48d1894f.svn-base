@@ -1,0 +1,48 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.controller;
+
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LogHead;
+import com.imlianai.rpc.support.manager.aspect.annotations.LoginCheck;
+import com.imlianai.zjdoll.app.controller.RootCmd;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.service.PushCoinVirtualService;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.vo.EntryVirtualRoomReqVO;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * 虚拟推币机
+ * @author wurui
+ * @create 2018-07-04 11:49
+ **/
+@Component("pushCoinVirtual")
+public class PushCoinVirtualCmd extends RootCmd {
+
+
+    @Resource
+    private PushCoinVirtualService pushCoinVirtualService;
+
+
+    @LoginCheck
+    @LogHead("进入虚拟推币机房间接口")
+    @ApiHandle
+    @Path("api/pushCoinVirtual/entryRoom")
+    @ApiOperation(value = "进入虚拟房间",notes = "进入房间",httpMethod = "POST",response = BaseRespVO.class,position = 1)
+    public BaseRespVO entryRoom(EntryVirtualRoomReqVO reqVO){
+        return pushCoinVirtualService.entryVirtualCoinPushRoom(reqVO);
+    }
+
+
+    @LoginCheck
+    @LogHead("离开虚拟推币机房间接口")
+    @ApiHandle
+    @Path("api/pushCoinVirtual/leave")
+    @ApiOperation(value = "离开虚拟房间",notes = "离开房间",httpMethod = "POST",response = BaseRespVO.class,position = 1)
+    public BaseRespVO leave(EntryVirtualRoomReqVO reqVO){
+        return pushCoinVirtualService.laveVirtualCoinPushRoom(reqVO);
+    }
+
+}

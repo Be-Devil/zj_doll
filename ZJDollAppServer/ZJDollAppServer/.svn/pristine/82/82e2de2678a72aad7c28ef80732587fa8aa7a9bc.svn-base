@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>超强新春福利</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="超强新春福利">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="超强新春福利">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <style>
+        html,body{margin:0;padding:0;background: #fdffea;}
+        img{width:100%;display: block;}
+        .maxBOx{width:100%;height:auto;position: relative;}
+        .y_payBtn{position: absolute;bottom:2.3rem;width:100%;height:auto;}
+    </style>
+</head>
+<body>
+    <img src="http://lianai-image-sys.qiniudn.com/mq/y_pay.jpg" alt="">
+</body>
+</html>

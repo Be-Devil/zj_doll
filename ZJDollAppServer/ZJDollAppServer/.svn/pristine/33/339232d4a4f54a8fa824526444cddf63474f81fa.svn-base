@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" type="text/css" href="css/hi.css" />
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			
+			*,
+			*:after,
+			*:before {
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+			}
+			
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				overflow: hidden;
+				font-family: "微软雅黑"
+			}
+			
+			input:focus {
+				outline: none;
+			}
+			
+			html {
+				font-size: 10px
+			}
+			
+			body {
+				background-color: #f1f1f1;
+			}
+			
+			#app {
+				position: relative;
+				width: 100%;
+				height: 100%;
+				overflow-x: hidden;
+				overflow-y: hidden;
+				-webkit-overflow-scrolling: touch;
+			}
+			
+			.header {
+				position: absolute;
+				left: 0;
+				top: 0;
+				z-index: 50;
+				width: 100%;
+				height: 4rem;
+			}
+			
+			.colorful-text {
+				-webkit-background-clip: text, border-box;
+				background-clip: text, border-box;
+				color: transparent;
+				background-image: linear-gradient(to right, #e74c3c 20%, #f4d03f 40%, #2ecc71 60%, #5dade2 80%, #a569bd 100%);
+			}
+			
+			.logo {
+				color: #fff;
+			}
+			
+			.logo,
+			.login,
+			.menu,
+			.yue {
+				text-align: center;
+				line-height: 4rem;
+				font-size: 1.3rem;
+				color: #fff;
+			}
+			
+			.yue span {
+				border-radius: 12px;
+				padding: 2px 6px;
+				background-color: rgba(255, 255, 255, .5)
+			}
+			
+			.logo span {
+				font-size: 1.8rem;
+			}
+			
+			.menu img {
+				width: 2.5rem;
+			}
+			
+			.bg {
+				background-image: -webkit-gradient(linear, 78% 100%, 68% 0%, from(#645af9), to(#708aff));
+				width: 100%;
+				position: absolute;
+				top: 0;
+				left: 0;
+				height: 100%;
+			}
+			
+			.bg-img {
+				position: absolute;
+				left: -20%;
+				top: 0;
+				width: 140%;
+				height: 900px;
+			}
+			
+			.bg-stars {
+				position: absolute;
+				background: url(icon/bgstar.svg) no-repeat 0 0;
+				background-size: 100% 100%;
+				height: 100%;
+				z-index: 40;
+				width: 100%;
+			}
+			
+			.cloud {
+				position: relative;
+				top: 20rem;
+				left: 0%;
+				width: 100%;
+				height: 6rem;
+				overflow: hidden;
+			}
+			
+			.cloud.bottom {
+				position: absolute;
+				top: 45rem;
+				left: 0;
+				transform: rotateX(180deg);
+				/*background-color: #000;*/
+				z-index: 20;
+			}
+			
+			.cloud img {
+				float: left;
+				bottom: 0;
+				height: 100%;
+			}
+			
+			.cloud-wave-1,
+			.cloud-wave-2 {
+				position: absolute;
+				left: 0;
+				bottom: 0;
+				width: 2000%;
+				height: 100%;
+				z-index: 50;
+			}
+			
+			.cloud-wave-1 {
+				animation: wave1 400s linear 0s infinite
+			}
+			
+			.cloud-wave-2 {
+				left: -1900% !important;
+				animation: wave2 400s linear 0s infinite
+			}
+			
+			.cloud-img {
+				width: 5%;
+			}
+			
+			@-webkit-keyframes wave1 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: -1900%
+				}
+			}
+			
+			@-webkit-keyframes wave2 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: 1900%;
+				}
+			}
+			
+			@keyframes wave1 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: -1900%
+				}
+			}
+			
+			@keyframes wave2 {
+				0 {
+					left: 0%;
+				}
+				100% {
+					left: 1900%;
+				}
+			}
+			
+			.content {
+				position: relative;
+				left: 0;
+				top: 20rem;
+				width: 100%;
+				height: 20rem;
+				background-color: #fff
+			}
+			
+			.btn {
+				position: absolute;
+				left: 50%;
+				top: 0;
+				transform: translateX(-50%);
+				width: 60%;
+				text-align: center;
+				margin-top: 1rem;
+				background-color: #F16543;
+				color: #fff;
+				height: 3rem;
+				line-height: 3rem;
+				border-radius: 1.6rem;
+				z-index: 100;
+				font-size: 1.4rem;
+				box-shadow: 0 0 5px 0 rgba(0, 0, 0, .1);
+				background-image: linear-gradient(to right, #e74c3c, #a569bd);
+				background-image: -webkit-linear-gradient(to right, #e74c3c, #a569bd);
+			}
+			
+			.phone {
+				position: absolute;
+				left: 50%;
+				top: 0;
+				transform: translateX(-50%);
+				width: 60%;
+				text-align: center;
+				margin-top: 1rem;
+				background-color: #ffffff;
+				color: #e74c3c;
+				height: 3rem;
+				line-height: 3rem;
+				border: 1px solid #a569bd;
+				border-radius: 1.6rem;
+				z-index: 100;
+				font-size: 1.5rem;
+				box-shadow: 0 0 5px 0 rgba(0, 0, 0, .1);
+			}
+			
+			.btn-1 {
+				top: 3rem;
+			}
+			
+			.btn-2 {
+				top: 3rem;
+			}
+			
+			.ok-btn {
+				top: 9rem;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="app">
+			<div class="bg">
+				<div class="bg-stars"></div>
+				<div class="cloud">
+					<div class="cloud-wave-1" id="cloud1">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud1.png">
+					</div>
+					<div class="cloud-wave-2" id="cloud2">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud2.png">
+					</div>
+				</div>
+				<div class="content">
+					<!--<input class="btn-1 phone" placeholder="ID" type="text" id="id">-->
+					<input class="btn-2 phone" placeholder="密码" type="password" id="password">
+					<div class="btn ok-btn" onclick="send()">登录</div>
+				</div>
+				<div class="cloud bottom">
+					<div class="cloud-wave-1" id="cloud3">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud1.png">
+					</div>
+					<div class="cloud-wave-2" id="cloud4">
+						<img class="cloud-img" src="https://m.xzw.com/static/public/images/cloud2.png">
+					</div>
+				</div>
+			</div>
+
+		</div>
+		<script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+
+		<script>
+			function GetRequest() {
+				var url = location.search; //获取url中"?"符后的字串 
+				var theRequest = {};
+				if(url.indexOf("?") != -1) {
+					var str = url.substr(1);
+					strs = str.split("&");
+					for(var i = 0; i < strs.length; i++) {
+						theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+					}
+				}
+				return theRequest;
+			}
+			var query = GetRequest();
+
+			function send() {
+				//				var id = document.getElementById('id').value;
+				var pwd = document.getElementById('password').value;
+				if(pwd.toString().trim() == '') {
+					huiModal({
+						msg: '您还没输入密码',
+						modal: false
+
+					})
+				} else {
+					axios.post('../api/uAgency/login', {
+						uid: query.uid,
+						loginKey: query.loginKey,
+						pwd: pwd
+					}, {
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded'
+						}
+					}).then(function(res) {
+						if(res.data.state) {
+							location.href = 'daili_detail.html?'+query.uid+'&'+query.loginKey
+						} else {
+							huiModal({
+								msg: res.data.msg,
+								modal: false
+							})
+						}
+
+					}).catch(function(res) {
+						huiModal({
+							msg: res.data.msg,
+							modal: false
+						})
+					});
+
+				}
+
+			}
+
+			function isPoneAvailable(phone) {
+
+				var phoneReg = /(^1[3|4|5|7|8]\d{9}$)|(^09\d{8}$)/;
+				if(!phoneReg.test(phone)) {
+					return false;
+				} else {
+					return true
+				}
+			}
+
+			function cloudFn(id) {
+				var cloud1 = document.getElementById(id),
+					cloud2;
+				for(var i = 0; i < 19; i++) {
+					cloud2 = cloud1.childNodes[1].cloneNode();
+					cloud1.appendChild(cloud2);
+				}
+			}
+			cloudFn('cloud1');
+			cloudFn('cloud2');
+			cloudFn('cloud3');
+			cloudFn('cloud4');
+
+			function huiModal(obj) {
+				return(new newModal(obj))
+			}
+
+			function newModal(obj) {
+				var sf = this;
+				var modal = createDOM('div');
+				var box = createDOM('div');
+				var content = createDOM('div');
+				var tool = createDOM('div');
+				var ok = createDOM('div');
+				var cancel = createDOM('div');
+
+				function createDOM(tag) {
+					return document.createElement(tag)
+				}
+
+				function css(el, obj) {
+					for(var key in obj) {
+						el.style[key] = obj[key]
+					}
+				}
+
+				function getCss(el, attr) {
+					if(el.currentStyle) {
+						return el.currentStyle[attr]
+					} else {
+						return getComputedStyle(el, false)[attr]
+					}
+				}
+
+				function run() {
+					css(modal, {
+						position: 'fixed',
+						top: 0,
+						left: 0,
+						width: window.innerWidth + 'px',
+						height: window.innerHeight + 'px',
+						backgroundColor: 'rgba(0,0,0,0)',
+						zIndex: 2000
+					});
+					css(box, {
+						position: 'absolute',
+						top: '50%',
+						left: '50%',
+						width: 'auto',
+						backgroundColor: '#fff',
+						maxWidth: '100%',
+						minWidth: '300px',
+						padding: '0 30px 20px 30px',
+						transition: 'all .2s ease-out',
+						transform: 'translate(-50%,-50%) scale(.86)',
+						opacity: 0,
+						zIndex: 2050,
+						boxShadow: '1px 1px 35px 0 rgba(0,0,0,.06)'
+					});
+					css(content, {
+						position: 'relative',
+						top: 0,
+						left: 0,
+						fontSize: '15px',
+						padding: '20px 10px'
+					});
+					css(tool, {
+						position: 'relative',
+						top: 0,
+						left: 0,
+						display: 'flex',
+						justifyContent: 'space-around',
+						position: 'relative',
+						zIndex: 2200
+					});
+					css(ok, {
+						padding: '6px 14px',
+						margin: '0 5px',
+						fontSize: '12px',
+						borderRadius: '6px',
+						color: '#fff',
+						cursor: 'pointer',
+						backgroundColor: '#40A3FF',
+						border: '1px solid #40A3FF'
+					});
+					css(cancel, {
+						padding: '6px 14px',
+						margin: '0 5px',
+						fontSize: '12px',
+						borderRadius: '6px',
+						color: '#40A3FF',
+						cursor: 'pointer',
+						border: '1px solid #40A3FF'
+					});
+					ok.innerHTML = obj && obj.ok ? obj.ok : '确定';
+					ok.addEventListener('click', function(evt) {
+						console.log(666)
+						//						var e = evt;
+						if(obj && obj.clickOk && typeof obj.clickOk == 'function' && obj.clickOk.length >= 1) {
+							obj.clickOk.call(this, sf.close)
+						} else if(obj && obj.clickOk && typeof obj.clickOk == 'function') {
+							obj.clickOk();
+							sf.close()
+						} else {
+							sf.close()
+						}
+					});
+					cancel.innerHTML = obj && obj.cancel ? obj.cancel : '取消';
+					cancel.addEventListener('click', function(evt) {
+						//						var e = evt || window.event;
+						//						window.event ? e.cancelBubble = true : e.stopPropagation();
+
+						if(obj && typeof obj.clickCancel == 'function' && obj.clickCancel.length >= 1) {
+							obj.clickCancel.call(this, sf.close)
+						} else if(obj && typeof obj.clickCancel == 'function') {
+							obj.clickCancel()
+							sf.close();
+						} else {
+							sf.close();
+						}
+					});
+					if(typeof obj == 'string') {
+						content.innerHTML = obj
+					} else {
+						content.innerHTML = obj && obj.msg ? obj.msg : ''
+					}
+					if(obj.ok !== false) {
+						tool.appendChild(ok);
+					}
+					if(obj.cancel !== false) {
+						tool.appendChild(cancel);
+					}
+					box.appendChild(content);
+					box.appendChild(tool);
+					if(obj.modal == false) {
+						document.body.appendChild(box)
+					} else {
+						modal.appendChild(box);
+						document.body.appendChild(modal)
+					}
+					setTimeout(function() {
+						if(obj.modal != false) {
+							css(modal, {
+								transition: 'all .2s ease-out',
+								backgroundColor: 'rgba(0,0,0,.6)'
+							});
+						}
+						css(box, {
+							opacity: 1,
+							transform: 'translate(-50%,-50%) scale(1)'
+						});
+					}, 50);
+				}
+				if(obj && typeof obj.init == 'function') {
+					if(obj.init.length >= 1) {
+						obj.init.call(this, run)
+					} else {
+						obj.init();
+						run()
+					}
+				} else {
+					run()
+				}
+				sf.close = function() {
+					css(box, {
+						opacity: 0,
+						transform: 'translate(-50%,-50%) scale(.86)'
+					});
+					setTimeout(function() {
+						if(box) {
+							document.body.removeChild(box);
+						}
+					}, 200);
+					if(obj.modal != false) {
+						css(modal, {
+							backgroundColor: 'rgba(0,0,0,0)'
+						});
+						setTimeout(function() {
+							if(modal) {
+								document.body.removeChild(modal);
+							}
+						}, 200);
+					}
+				}
+				return sf;
+			}
+		</script>
+	</body>
+
+</html>

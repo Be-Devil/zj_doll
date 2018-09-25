@@ -1,0 +1,31 @@
+package com.imlianai.dollpub.app.modules.support.robot.dao;
+
+import com.imlianai.dollpub.domain.user.UserGeneral;
+
+import java.util.List;
+
+public interface DollRobotDao {
+
+	/**
+	 * 获取初始机器人信息
+	 * @return
+	 */
+	public List<UserGeneral> getInitUserData();
+
+	/**
+	 * 记录机器人
+	 * @param uid
+	 * @param gender
+	 */
+	public void addRobotPool(long uid, int gender);
+	
+	/**
+	 * 加载全部机器人
+	 * @return
+	 */
+	public List<Long> getRobotPool();
+
+
+	Long getRobotPoolUid(long uid);
+
+}

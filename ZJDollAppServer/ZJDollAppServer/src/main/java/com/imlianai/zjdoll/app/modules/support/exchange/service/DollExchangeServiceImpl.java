@@ -1,0 +1,256 @@
+package com.imlianai.zjdoll.app.modules.support.exchange.service;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.domain.doll.BaseDollInfo;
+import com.imlianai.zjdoll.domain.doll.DollExchangeRecord;
+import com.imlianai.zjdoll.domain.doll.DollExchangeRes;
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+import com.imlianai.zjdoll.domain.doll.user.UserDoll;
+import com.imlianai.zjdoll.domain.exchange.ShoppingExchangeRecord;
+import com.imlianai.zjdoll.domain.msg.Msg;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.trade.TradeCostType;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.NotEnoughBeanException;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.common.exception.TradeOperationException;
+import com.imlianai.rpc.support.utils.PropertUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.zjdoll.app.modules.core.trade.dao.TradeDAO;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.support.exchange.dao.DollExchangeDao;
+import com.imlianai.zjdoll.app.modules.support.exchange.vo.ExchangeDollInfo;
+import com.imlianai.zjdoll.app.modules.support.exchange.vo.ExchangeGetListRespVO;
+import com.imlianai.zjdoll.app.modules.support.exchange.vo.ExchangeRecord;
+import com.imlianai.zjdoll.app.modules.support.exchange.vo.GetRecycleListRespVO;
+import com.imlianai.zjdoll.app.modules.support.userdoll.service.UserDollService;
+
+@Service
+public class DollExchangeServiceImpl implements DollExchangeSevice {
+	
+	private static final BaseLogger LOG = BaseLogger.getLogger(DollExchangeServiceImpl.class);
+
+	@Resource
+	DollExchangeDao dollExchangeDao;
+	@Resource
+	TradeDAO tradeDAO;
+	@Resource
+	DollInfoService dollInfoService;
+	@Resource
+	UserDollService userDollService;
+	@Resource
+	TradeService tradeService;
+	@Resource
+	DollComposeService dollComposeService;
+	@Resource
+	MsgService msgService;
+
+	@Override
+	public DollExchangeRecord getExchangeRecordByUserDollId(long userDollId) {
+		return dollExchangeDao.getExchangeRecordByUserDollId(userDollId);
+	}
+
+	@Override
+	public int saveExchangeRecord(long id, int currency) {
+		return dollExchangeDao.saveExchangeRecord(id, currency);
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public ExchangeGetListRespVO getList(Long uid) {
+		ExchangeGetListRespVO respVO = new ExchangeGetListRespVO();
+		// 用户钻石
+		TradeAccount tradeAccount = tradeDAO.getAccount(uid);
+		respVO.setJewel(tradeAccount == null ? 0 : tradeAccount.getJewel());
+		// 获取可合成的娃娃列表
+		List<DollInfo> exchangeDolls = dollInfoService.getExchangeDolls();
+		exchangeDolls = (List<DollInfo>) PropertUtil.doSeq(exchangeDolls, "sortIndex");
+		List<ExchangeDollInfo> dollInfos = new ArrayList<ExchangeDollInfo>();
+		if(!StringUtil.isNullOrEmpty(exchangeDolls)) {
+			for(DollInfo dollInfo : exchangeDolls) {
+				int exchangeNum = dollExchangeDao.getShoppingExchangeNum(dollInfo.getDollId());
+				ExchangeDollInfo cDollInfo = new ExchangeDollInfo(dollInfo, dollInfo.getInventory()-exchangeNum);
+				cDollInfo.setExchangedNum(exchangeNum);
+				dollInfos.add(cDollInfo);
+			}
+		}
+		respVO.setExchangeDolls(dollInfos);
+		return respVO;
+	}
+
+	@Override
+	public BaseRespVO jewelExchangeToDoll(Long uid, int dollId) {
+		try {
+			DollInfo dollInfo = dollInfoService.getDollInfo(dollId);
+			if(dollInfo == null) {
+				return new BaseRespVO(-1, false, "娃娃不存在~");
+			}
+			if(dollInfo.getType() != 2) { 
+				return new BaseRespVO(-1, false, "该娃娃不可用钻石兑换~");
+			}
+			if (dollInfo.getValid() == 0){
+				return new BaseRespVO(-1, false, "当前商品已下架~");
+			}
+			int exchangeNum = dollExchangeDao.getShoppingExchangeNum(dollInfo.getDollId());
+			if(dollInfo.getInventory() == 0 || exchangeNum >= dollInfo.getInventory()) {
+				dollInfoService.updateDollValidById(dollInfo.getDollId(), 0);
+				return new BaseRespVO(600, false, "该娃娃库存为0，不可兑换~");
+			}
+			TradeAccount tradeAccount = tradeDAO.getAccount(uid);
+			if(tradeAccount.getJewel() < dollInfo.getJewelNum()) {
+				return new BaseRespVO(-1, false, "钻石不足，兑换失败~");
+			}
+			TradeRecord tradeRecord = new TradeRecord(uid, 0, TradeType.JEWEL_EXCHANGE.type, 0, 
+					dollInfo.getJewelNum(), TradeCostType.COST_JEWEL.type, "娃娃兑换发费钻石" + dollInfo.getJewelNum());
+			boolean isPay = tradeService.consume(tradeRecord);
+			if(isPay) {
+				long udollId = userDollService.saveUserDoll(uid, dollInfo.getDollId(), 0l, "钻石兑换(钻石*" + dollInfo.getJewelNum() + ")", 2); // 保存用户娃娃
+				dollExchangeDao.saveShoppingExchangeRecord(uid, udollId, dollInfo.getJewelNum(), "发费" + dollInfo.getJewelNum() + "钻石兑换娃娃", 2, 0, 0);
+				dollExchangeDao.saveOrUpdateShoppingExchangeNum(dollInfo.getDollId());
+				dollInfoService.updateDollExchangeNum(dollInfo.getDollId());
+				dollInfoService.updateUserDollLastExchangeTime(dollInfo.getDollId());
+				if(exchangeNum + 1 == dollInfo.getInventory()) {
+					dollInfoService.updateDollValidById(dollInfo.getDollId(), 0);
+				}
+			}
+			// 系统通知
+			Msg msg = new Msg(uid, MsgType.NOTICE_SYS.type, "成功使用" + dollInfo.getJewelNum() + "钻石兑换" + dollInfo.getName() + "。");
+			msgService.sendMsg(msg);
+			return new BaseRespVO();
+		} catch (TradeOperationException e) {
+			return new BaseRespVO(-1, false, "交易失败,请重试"); 
+		} catch (NotEnoughBeanException e) {
+			return new BaseRespVO(601, false, "余额不足");
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "系统异常，请重试~");
+		}
+	}
+
+	@Override
+	public BaseRespVO getRecycleList(Long uid) {
+		GetRecycleListRespVO respVO = new GetRecycleListRespVO();
+		List<BaseDollInfo> dollInfoList = new ArrayList<BaseDollInfo>();
+		List<UserDoll> dollList = userDollService.getShippingList(uid);
+		if(!StringUtil.isNullOrEmpty(dollList)) {
+			for(UserDoll userDoll : dollList) {
+				DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+				if(dollInfo == null || dollInfo.getReturnJewel() == 0) continue;
+				BaseDollInfo baseDollInfo = new BaseDollInfo(userDoll.getId(), dollInfo.getName(), dollInfo.getImgSummry(), userDoll.getOptId());
+				baseDollInfo.setGetTime(userDoll.getCreateTime().getTime());
+				baseDollInfo.setJewel(dollInfo.getReturnJewel());
+				dollInfoList.add(baseDollInfo);
+			}
+		}
+		respVO.setRecycleList(dollInfoList);
+		return respVO;
+	}
+
+	@Override
+	public BaseRespVO recycleList(Long uid, List<Long> dollList) {
+		try {
+			if(StringUtil.isNullOrEmpty(dollList)) {
+				return new BaseRespVO(-1, false, "回收的娃娃列表不能为空~");
+			}
+			LOG.info("recycleList:uid-" + uid + ",dollList=" + JSON.toJSONString(dollList));
+			Map<Integer, DollInfo> dollInfoMap = new HashMap<Integer, DollInfo>();
+			Map<Long, UserDoll> userDollMap = new HashMap<Long, UserDoll>();
+			for(Long id : dollList) {
+				UserDoll userDoll = userDollService.getUserDollById(id);
+				if(userDoll == null || userDoll.getUid() != uid.longValue()) {
+					return new BaseRespVO(-1, false, "娃娃不存在~");
+				}
+				if(userDoll.getStatus() == 5) { // 已回收
+					return new BaseRespVO(-1, false, "娃娃已回收，不可重复回收~");
+				}
+				DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+				if(dollInfo == null) {
+					return new BaseRespVO(-1, false, "娃娃已下架，不可回收~");
+				}
+				if(dollInfo.getReturnJewel() == 0) {
+					return new BaseRespVO(-1, false, "该娃娃不可回收~");
+				}
+				userDollMap.put(id, userDoll);
+				dollInfoMap.put(dollInfo.getDollId(), dollInfo);
+			}
+			for(Long id : dollList) {
+				UserDoll userDoll = userDollMap.get(id);
+				DollInfo dollInfo = dollInfoMap.get(userDoll.getDollId());
+				if(userDollService.updateUserDollStatus(id, 5) > 0) {
+					dollComposeService.saveRecycleRecord(id, dollInfo.getReturnJewel());
+					TradeRecord tradeRecord = new TradeRecord(uid, uid,
+							TradeType.RECYCLE_RETURN.type, 0, dollInfo.getReturnJewel(),
+							TradeCostType.COST_JEWEL.type, "回收" + dollInfo.getReturnJewel() + "钻");
+					tradeService.charge(tradeRecord);
+					// 系统通知
+					String textString = dollInfo.getName() + "已被回收并获得" + dollInfo.getReturnJewel() + "钻";
+					MsgNotice msg = new MsgNotice(userDoll.getUid(), MsgType.NOTICE_SYS.type, textString);
+					msg.setJumpDoll(userDoll.getId());
+					msgService.sendMsg(msg);
+				}
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+		}
+		return new BaseRespVO(200, true, "成功获取钻石");
+	}
+
+	@Override
+	public List<ExchangeDollInfo> getRecentExcList() {
+		List<ExchangeDollInfo> edolls = new ArrayList<ExchangeDollInfo>();
+		List<DollInfo> dollInfoList = dollInfoService.getRecentExchangeDollInfos(6);
+		if(!StringUtil.isNullOrEmpty(dollInfoList)) {
+			for(DollInfo dollInfo : dollInfoList) {
+				if (dollInfo.getValid() != 1){
+					continue;
+				}
+				int exchangeNum = dollExchangeDao.getShoppingExchangeNum(dollInfo.getDollId());
+				if(dollInfo.getInventory()-exchangeNum <= 0) continue;
+				ExchangeDollInfo cDollInfo = new ExchangeDollInfo(dollInfo, dollInfo.getInventory()-exchangeNum);
+				edolls.add(cDollInfo);
+				if(edolls.size() == 3) break;
+			}
+		}
+		return edolls;
+	}
+	
+	@Override
+	public DollExchangeRes getDollExchangeRes(int dollId) {
+		int exchangeNum = dollExchangeDao.getShoppingExchangeNum(dollId);
+		DollInfo dollInfo = dollInfoService.getDollInfo(dollId);
+		DollExchangeRes dollExchangeRes = new DollExchangeRes(dollInfo.getDollId(), dollInfo.getName(), dollInfo.getImgExchange(), 
+				dollInfo.getJewelNum(), dollInfo.getInventory()-exchangeNum, exchangeNum);
+		return dollExchangeRes;
+	}
+
+	@Override
+	public List<ExchangeRecord> getExcRecords(Long uid) {
+		List<ExchangeRecord> excRecords = new ArrayList<ExchangeRecord>();
+		List<ShoppingExchangeRecord> records = dollExchangeDao.getExcRecordsByUid(uid);
+		if(!StringUtil.isNullOrEmpty(records)) {
+			for(ShoppingExchangeRecord record : records) {
+				UserDoll userDoll = userDollService.getUserDollById(record.getuDollId());
+				DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+				if(dollInfo == null) continue;
+				excRecords.add(new ExchangeRecord(dollInfo, record.getCreateTime().getTime()));
+			}
+		}
+		return excRecords;
+	}
+}

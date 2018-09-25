@@ -1,0 +1,1281 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>增景RTMP</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="增景RTMP">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="增景RTMP">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no"/>
+    <link rel="stylesheet" type="text/css" href="config/iview.css">
+    <!-- 最新版本的 Bootstrap 核心 CSS 文件 -->
+    <link rel="stylesheet" href="https://cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css"
+          integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <!--<link rel="stylesheet" href="config/layui.css"  media="all">-->
+
+    <style type="text/css">
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: "Microsoft YaHei", YaHei, "微软雅黑", SimHei, "黑体";
+            font-size: 14px
+        }
+
+    </style>
+    <script src="https://cdn.bootcss.com/jquery/3.3.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+    <!-- 最新的 Bootstrap 核心 JavaScript 文件 -->
+    <script src="https://cdn.bootcss.com/bootstrap/3.3.7/js/bootstrap.min.js"
+            integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+            crossorigin="anonymous"></script>
+    <!--<script src="config/layui.all.js" charset="utf-8"></script>-->
+    <script type="text/javascript" src="config/iview.min.js"></script>
+    <script type="text/javascript" src="config/ckplayer.js"></script>
+</head>
+
+<body>
+
+
+<div class="container" style="width: 100%" id="ZJ_PLAYER">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="row clearfix">
+                <div class="col-md-4 column" style="margin-top: 10px">
+                    <Card style="height:930px;">
+                        <p slot="title" style="height: 40px;width: 100%;margin-top: 20px">
+                            <i-input v-model="inputUrl" placeholder="请输入播放地址,目前支持格式有：rtmp,m3u8,flv,mp4,f4v,webm,ogg"
+                                     style="width: 480px;margin-right: 10px"></i-input>
+                            <i-button type="primary" icon="play" @click="play">播放</i-button>
+                        </p>
+                        <div id="video" style="height: 600px;margin-top: 10px"></div>
+                        <!-- 进度条 -->
+                    </Card>
+                </div>
+                <div class="col-md-8 column">
+                    <template>
+                        <Card style="height:930px;width: 100%;margin-top: 10px;">
+                            <div slot="title" style="height: 490px;width: 100%;margin-top: 10px">
+                                <div style="margin-bottom: 30px;margin-top: -12px" v-if="pool.isShow">
+                                    <span>奖池峰值：</span><span v-text="pool.total" style="color: red"></span>&nbsp;
+                                    <span>， 当前投币：</span><span v-text="pool.current" style="color: #ff0008"></span>&nbsp;
+                                    <span>， 总入/总出/总赚(实体币)：</span><span style="color: #ff0008">{{ pool.eTotalIntoCoin }} / {{ pool.eTotalOutCoin }} / {{ pool.eTotalIntoCoin - pool.eTotalOutCoin }}</span>&nbsp;
+                                    <span>， 总入/总出/总赚(虚拟币)：</span><span style="color: #ff0008">{{ pool.vTotalIntoCoin }} / {{ pool.vTotalOutCoin }} / {{ pool.vTotalIntoCoin - pool.vTotalOutCoin }}</span>&nbsp;
+                                    <span>， 奖池分配方式/比例：</span><span style="color: #ff0008">{{ pool.allocType }}</span> / <span style="color:#ff0008;">{{ pool.rate }}%</span>&nbsp;&nbsp;
+                                    <div style="margin-top: 10px;margin-bottom: -20px">
+                                        <i-button type="success" icon="ios-color-wand-outline" style="width: 100px" @click="getPointGiveRecordList()">玩家点送</i-button>
+                                    </div>
+                                </div>
+
+                                <i-table height="380" border :content="self" :columns="columns"
+                                         :data="historyData"></i-table>
+                                <Page :total="dataCount" :page-size="pageSize" show-total class="paging"
+                                      @on-change="changePage" style="margin-top: 10px;float: right"></Page>
+                            </div>
+
+                            <div style="margin-bottom: 10px;color: #494c4c;">
+                                <span style="color:green;padding-top: 5px">上机状态列表</span>
+                            </div>
+                            <i-table height="310" border :content="self" :columns="operatorColumns"
+                                     :data="operatorHistoryData"></i-table>
+                            <Page :total="operatorDataCount" :page-size="operatorPageSize" show-total class="paging"
+                                  @on-change="operatorChangePage" style="margin-top: 10px;float: right"></Page>
+                        </Card>
+
+                        <!-- 模态框 -->
+                        <Modal
+
+                                v-model="modalShow"
+                                class-name="vertical-center-modal"
+                                :mask-closable="false"
+                                :closable="false"
+                                width="1300">
+
+                            <div slot="header" style="color:#f60;text-align:center;width:1300px;height:120px">
+
+                                <div style="text-align: center;font-size: 20px">
+                                    <Icon type="ios-color-wand"></Icon>
+                                    <Icon type="ios-color-wand"></Icon>
+                                    <Icon type="ios-color-wand"></Icon>
+                                    <span>宝箱点送</span>
+                                    <Icon type="ios-color-wand"></Icon>
+                                    <Icon type="ios-color-wand"></Icon>
+                                    <Icon type="ios-color-wand"></Icon>
+                                </div>
+
+                                <hr style="filter: alpha(opacity=100,finishopacity=0,style=3);" width="97%"
+                                    color=#987cb9 size=3">
+
+                                <div style="margin-left: 10px">
+
+                                    <div style="float: left;margin-left: 10px;width: 300px">
+                                        <i-input size="small" type="number" v-model="pointParam.exCoin">
+                                            <span slot="prepend">赠送:</span>
+                                            <span slot="append">游戏币</span>
+                                        </i-input>
+                                        <i-input size="small" type="number" v-model="pointParam.exCoupon"
+                                                 style="margin-top: 5px;">
+                                            <span slot="prepend">赠送:</span>
+                                            <span slot="append">时光卷</span>
+                                        </i-input>
+                                    </div>
+
+                                    <div style="float: left;margin-left: 10px;width: 300px">
+                                        <i-input size="small" type="number" v-model="pointParam.exJewel">
+                                            <span slot="prepend">赠送:</span>
+                                            <span slot="append">钻石</span>
+                                        </i-input>
+
+                                        <i-input size="small" type="number" v-model="pointParam.exScore"
+                                                 style="margin-top: 5px">
+                                            <span slot="prepend">赠送:</span>
+                                            <span slot="append">积分</span>
+                                        </i-input>
+                                    </div>
+
+
+                                    <div style="float: left;margin-left: 10px;margin-top: 27px;padding: 7px 57px 0 8px;border-radius: 3px" class="ivu-input-group-prepend">
+                                        <label style="margin-top: 0;font-size: 1px;margin-bottom: 7px">赠送娃娃:</label>
+                                    </div>
+
+                                    <div style="float: left;;margin-top: -6px;height: 30px ;">
+
+                                        <div style="margin-bottom: 5px;margin-left: -65px;width: 150px" >
+                                            <i-input id="uid" size="small" type="number" v-model="pointParam.uid"
+                                                     style="float: left;width: 168px"   disable >
+                                                <span slot="prepend" style="color: red">UID</span>
+                                            </i-input>
+                                            <i-input id="busId" size="small" type="number" v-model="pointParam.busId"
+                                                     style="float: right;width: 329px;position: absolute;margin-top: 70px;margin-left: 184px">
+                                                <span slot="prepend" style="color: red">机器ID</span>
+                                                <i-select  slot="append" style="width: 170px" v-show="!isFree"   vfilterable  @on-change="chickBusIdHandle" clearable>
+                                                    <i-option v-for="(item,key) in busList" :value="item.busId" not-found-text="暂无机器">
+                                                        <span>{{ item.nickName }}</span>
+                                                        <span style="float:right;color:#ccc">ID:{{ item.busId }}</span>
+                                                    </i-option>
+                                                </i-select>
+                                            </i-input>
+                                        </div>
+
+                                        <i-select slot="append" style="width: 450px;margin-top: 8px" v-model="pointParam.exDoll"
+                                                  filterable multiple not-found-text="暂无娃娃" size="small">
+                                            <i-option v-for="(item,key) in selectDoll" :value="key">
+                                                <span>{{ item }}</span>
+                                                <span style="float:right;color:#ccc">ID:{{ key }}</span>
+                                            </i-option>
+                                        </i-select>
+
+                                    </div>
+
+
+                                    <div style="float: left;margin-left: 15px;margin-top: 10px;height: 50px">
+                                        <i-button type="error" icon="flash" style="" @click="addPointRecord">赠送</i-button>
+                                    </div>
+
+                                </div>
+
+                            </div>
+
+                            <div style="text-align:center;height:520px;">
+
+                                <div style="margin-bottom: 5px;color: #494c4c;" v-if="chickUserInfo.isShow">
+                                    <span style="color:green;padding-top: 5px;margin-bottom:5px;font-size: 10px">用户点送记录【当前用户：{{ chickUserInfo.uid }}({{ chickUserInfo.name }})，账户余额：游戏币：{{ chickUserInfo.coin }}，钻石：{{ chickUserInfo.jewel }}，积分：{{ chickUserInfo.score }}，时光卷：{{ chickUserInfo.coupon }}   】</span>
+                                </div>
+
+                                <i-table height="450" border :content="self" :columns="pointColumns"
+                                         :data="pointHistoryData"></i-table>
+                                <Page :total="pointDataCount" :page-size="pointPageSize" show-total class="paging"
+                                      @on-change="pointChangePage" style="margin-top: 10px;float: right"></Page>
+
+                            </div>
+
+                            <div slot="footer" style="height: 40px">
+                                <i-button type="info" size="large" @click="closeHandle" style="float: right">关闭
+                                </i-button>
+                            </div>
+
+
+                        </Modal>
+
+
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</body>
+
+</html>
+
+<script>
+    var vm = new Vue({
+        el: '#ZJ_PLAYER',
+        data: {
+            self: this,
+            zjDollPubUrl: "http://localhost:9002",
+            inputUrl: "",
+            isStart: true,
+            player: {},
+            videoObject: {
+                container: '#video', //容器的ID
+                variable: 'player',
+                autoplay: true, //是否自动播放
+                loaded: 'loadedHandler', //当播放器加载后执行的函数
+                flashplayer: false,
+                video: "",
+            },
+
+            //以下是机器列表相关
+            busList: [],
+            ajaxHistoryData: [],
+            historyData: [],
+            dataCount: 0,// 初始化信息总条数
+            pageSize: 5,// 每页显示多少条
+            columns: [
+                {title: '机器ID', key: 'busId', align: 'center', width: 75,},
+                {title: '设备名', key: 'nickName', align: 'center', width: 100,},
+                {
+                    title: '单价',
+                    key: 'price',
+                    align: 'center',
+                    width: 100,
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [h('span', params.row.price + "币/1次")], "")
+                    }
+                },
+                {
+                    title: '奖池/比率',
+                    key: 'jackpot',
+                    align: 'center',
+                    width: 100,
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [h('span', params.row.type === 0 ? "" : params.row.jackpot + "/" + params.row.rate)], "")
+                    }
+
+                },
+                {
+                    title: '总投币/当前投币',
+                    key: 'jackpot',
+                    align: 'center',
+                    width: 150,
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [h('span', params.row.type === 0 ? "" : params.row.total + "/" + params.row.current)], "")
+                    }
+
+                },
+                {
+                    title: '正面流',
+                    key: 'stream1',
+                    align: 'center',
+                    width: 150,
+                    render: function (h, params) {
+                        return h('div', [
+                            h('Button', {
+                                props: {type: 'primary', size: 'small'},
+                                style: {marginRight: '8px'},
+                                on: {
+                                    click: function () {
+                                        vm.changeVideo(params.row.stream1)
+                                    }
+                                }
+                            }, '播放正面流'),
+                        ]);
+                    }
+                },
+                {
+                    title: '侧面流',
+                    key: 'stream2',
+                    width: 150,
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div', [
+                            h('Button', {
+                                props: {type: 'primary', size: 'small'},
+                                style: {marginRight: '8px'},
+                                on: {
+                                    click: function () {
+                                        vm.changeVideo(params.row.stream2)
+                                    }
+                                }
+                            }, '播放侧面流'),
+                        ]);
+                    }
+                },
+                {
+                    title: '是否上架',
+                    key: 'valid',
+                    align: 'center',
+                    render: function (h, params) {
+                        if (params.row.valid === 0) {
+                            return h('div', {style: {}}, [h('span', {style: {color: 'red'}}, params.row.valid === 0 ? "下架" : "上架")], params.row.valid)
+                        } else {
+                            return h('div', {style: {}}, [h('span', params.row.valid === 0 ? "下架" : "上架")], params.row.valid)
+                        }
+                    }
+                },
+                {
+                    title: '当前机器状态',
+                    key: 'status',
+                    align: 'center',
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [h('span', params.row.status === 0 ? "空闲" : params.row.status === 1 ? "游戏中" : "故障")], params.row.valid)
+                    }
+                },
+                {
+                    title: '机器类型',
+                    key: 'type',
+                    align: 'center',
+                    render: function (h, params) {
+                        if (params.row.type === 0) {
+                            return h('div', {style: {}}, [h('span', {style: {color: ''}}, params.row.type === 0 ? "娃娃机" : params.row.type === 1 ? "推币机" : "骰子机")], params.row.valid)
+                        } else {
+                            return h('div', {style: {}}, [h('span', {style: {color: 'blue'}}, params.row.type === 0 ? "娃娃机" : params.row.type === 1 ? "推币机" : "骰子机")], params.row.valid)
+                        }
+
+                    }
+                },
+            ],
+
+
+            //以下是用户状态相关
+            operatorList: [],
+            operatorAjaxHistoryData: [],
+            operatorHistoryData: [],
+            operatorDataCount: 0,// 初始化信息总条数
+            operatorPageSize: 3,// 每页显示多少条
+            operatorColumns: [
+                {
+                    title: '机器',
+                    key: 'busId',
+                    align: 'center',
+                    width: 180,
+                    render: function (h, params) {
+                        //娃娃机
+                        if (params.row.type === 0) {
+                            return h('div', {style: {"text-align": "center"}}, [
+                                    h('span', "ID：" + params.row.busId + "(" + params.row.nickName + ")"), h('br'),
+                                    h('span', "单价：" + params.row.price + "币/1次"), h('br')
+                                ],
+                            )
+                        } else if (params.row.type === 1) {
+                            return h('div', {style: {"text-align": "center"}}, [
+                                    h('span', "机器ID：" + params.row.busId + " (" + params.row.nickName + ") "), h('br'),
+                                    h('span', "单价：" + params.row.price + "币/1次"), h('br'),
+                                    h('span', "出奖：1币/" + params.row.rate + "钻"), h('br')
+                                ],
+                            )
+                        } else {
+                            return h('div', {style: {}}, params.row.busId)
+                        }
+                    }
+                },
+                {
+                    title: '机器类型',
+                    key: 'type',
+                    align: 'center',
+                    width: 85,
+                    render: function (h, params) {
+                        if (params.row.type === 0) {
+                            return h('div', {style: {}}, [h('span', {style: {color: ''}}, "娃娃机")], params.row.type)
+                        } else if (params.row.type === 1) {
+                            return h('div', {style: {}}, [h('span', {style: {color: 'blue'}}, "推币机")], params.row.type)
+                        } else {
+                            return h('div', {style: {}}, [h('span', {style: {color: 'blue'}}, params.row.type === 0 ? "娃娃机" : params.row.type === 1 ? "推币机" : "骰子机")], params.row.type)
+                        }
+                    }
+                },
+                {
+                    title: '当前用户操作',
+                    key: 'optId',
+                    align: 'center',
+                    width: 220,
+                    render: function (h, params) {
+                        if (params.row.type === 1) {
+                            return h('div', {style: {"text-align": "center"}}, [
+
+                                    h('span', "操作ID["), h('span', {style: {"color": "red"}}, params.row.optId), h('span', "] 状态 : "),
+                                    h('span', {style: {"color": "red"}}, params.row.state === 0 ? '游戏中' : '已结束'), h('br'),
+
+                                    h('span', "实体入币 : " + params.row.intoCoin + " , 虚拟入币 : " + params.row.vIntoCoin), h('br'),
+                                    h('span', "实体出币 : " + params.row.outCoin + " , 虚拟出币 : " + params.row.vOutCoin), h('br')
+                                ],
+                            )
+                        }
+                    }
+                },
+                {
+                    title: '用户',
+                    key: 'uid',
+                    align: 'center',
+                    width: 170,
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [h('span', params.row.uid + "(" + params.row.u_name + ")")])
+                    }
+                },
+                {
+                    title: '用户账户',
+                    key: 'u_coin',
+                    align: 'center',
+                    width: 120,
+                    height: 100,
+                    render: function (h, params) {
+                        return h('div', {style: {"text-align": "center"}},
+                            [h('span', "游戏币:" + params.row.u_coin),
+                                [h('br')],
+                                [h('span', "钻石:" + params.row.u_jewel)],
+                                [h('br')],
+                                // [h('span',"碎片:"+ params.row.u_score)]
+                            ],
+                        )
+                    }
+                },
+                {
+                    title: '出奖钻石',
+                    key: 'jewel',
+                    align: 'center',
+                    width: 130,
+                    render: function (h, params) {
+                        return h('div', {style: {}},
+                            [
+                                h('span', "已获得："), h('span', {
+                                style: {
+                                    color: "red",
+                                    fontSize: "15px"
+                                }
+                            }, params.row.jewel), h("span", " 钻")
+                            ],
+                        )
+                    }
+                },
+
+                {
+                    title: '操作',
+                    align: 'center',
+                    render: function (h, params) {
+                        var _this = vm;
+                        //娃娃机
+                        if (params.row.type === 0) {
+                            return h('div', [
+                                h('Button', {
+                                    props: {type: 'primary', size: 'small'},
+                                    style: {marginRight: '8px', marginTop: '5px'},
+                                    on: {
+                                        click: function () {
+                                            _this.changeVideo(params.row.s1);
+                                        }
+                                    }
+                                }, '播放正面流'),
+                                [h('br')],
+                                h('Button', {
+                                    props: {type: 'error', size: 'small'},
+                                    style: {marginRight: '8px', marginTop: '5px', marginBottom: '5px'},
+                                    on: {
+                                        click: function () {
+                                            _this.changeVideo(params.row.s2);
+                                        }
+                                    }
+                                }, '播放侧面流'),
+                            ]);
+
+                        } else if (params.row.type === 1) { //推币机
+                            return h('div', [
+                                h('Button', {
+                                    props: {type: 'primary', size: 'small'},
+                                    style: {marginRight: '8px', marginTop: '5px'},
+                                    on: {
+                                        click: function () {
+                                            _this.changeVideo(params.row.s1);
+                                        }
+                                    }
+                                }, '播放视频'),
+                                [h('br')],
+                                h('Button', {
+                                    props: {type: 'error', size: 'small'},
+                                    style: {marginRight: '8px', marginTop: '5px', marginBottom: '5px'},
+                                    on: {
+                                        click: function () {
+                                            vm.getPointGiveRecordList(params.row);
+                                        }
+                                    }
+                                }, '宝箱点送'),
+                            ]);
+                        }
+                    }
+                },
+                {
+                    title: '开始/结束',
+                    key: 'startTime',
+                    align: 'center',
+                    width: 200,
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [
+                            h('span', "开始：" + params.row.startTime), h("br"),
+                            h('span', "结束：" + params.row.endTime)
+
+                        ], "")
+                    }
+                }
+            ],
+
+
+            //以下是点送相关
+            pointList: [],
+            pointAjaxHistoryData: [],
+            pointHistoryData: [],
+            pointDataCount: 0,// 初始化信息总条数
+            pointPageSize: 7,// 每页显示多少条
+            pointColumns: [
+                {
+                    title: '创建时间',
+                    key: 'createTimeStr',
+                    align: 'center',
+                    width: 180,
+                    render: function (h, params) {
+                        return h('div', {style: {}}, [
+                            h('span',params.row.createTimeStr)
+                        ], "")
+                    }
+                },
+                {
+                    title: '用户',
+                    key: 'uid',
+                    align: 'center',
+                    width: 120,
+                    height: 100,
+                    render: function (h, params) {
+                        return h('div', {style: {"text-align": "center"}},
+                            [h('span', "ID:" + params.row.uid),
+                                [h('br')],
+                                [h('span', "昵称:" + params.row.name)],
+                            ],
+                        )
+                    }
+                },
+                {
+                    title: '状态',
+                    key: 'status',
+                    align: 'center',
+                    width: 200,
+                    render: function (h, params) {
+
+                        if(params.row.status === 0){
+                            return h('div', {style: {"text-align": "center"}}, [
+                                    h('span', "机器ID:"), h('span', {style: {"color": "blue"}}, params.row.busId), h('span', " ("),h('span', {style: {"color": ""}}, params.row.nickName), h('span', ")"),h('br'),
+                                    h('span', "宝箱ID:"), h('span', {style: {"color": "blue"}}, params.row.boxId), h('span', "，操作ID["), h('span', {style: {"color": "red"}}, params.row.optId), h('span', "]"),h('br'),
+                                    h('span', "状态 : "), h('span', {style: {"color": "blue"}}, '未赠送')
+                                ],
+                            )
+                        }else {
+                            return h('div', {style: {"text-align": "center"}}, [
+                                    h('span', "机器ID:"), h('span', {style: {"color": "blue"}}, params.row.busId), h('span', " ("),h('span', {style: {"color": ""}}, params.row.nickName), h('span', ")"),h('br'),
+                                    h('span', "宝箱ID:"), h('span', {style: {"color": "blue"}}, params.row.boxId), h('span', "，操作ID["), h('span', {style: {"color": "red"}}, params.row.optId), h('span', "]"),h('br'),
+                                    h('span', "状态 : "), h('span', {style: {"color": "red"}}, '已赠送')
+                                ],
+                            )
+                        }
+                    }
+                },
+                {
+                    title: '额外赠送钻石',
+                    key: 'exJewel',
+                    align: 'center',
+                    width: 130,
+                    render: function (h, params) {
+                        return h('div', {style: {}},
+                            [
+                                h('span', ""), h('span', {
+                                style: {
+                                    color: "red",
+                                    fontSize: "15px"
+                                }
+                            }, params.row.exJewel), h("span", " 个钻石")
+                            ],
+                        )
+                    }
+                },
+                {
+                    title: '额外赠送游戏币',
+                    key: 'exCoin',
+                    align: 'center',
+                    width: 130,
+                    render: function (h, params) {
+                        return h('div', {style: {}},
+                            [
+                                h('span', ""), h('span', {
+                                style: {
+                                    color: "red",
+                                    fontSize: "15px"
+                                }
+                            }, params.row.exCoin), h("span", " 个游戏币")
+                            ],
+                        )
+                    }
+                },
+                {
+                    title: '额外赠送积分',
+                    key: 'exScore',
+                    align: 'center',
+                    width: 130,
+                    render: function (h, params) {
+                        return h('div', {style: {}},
+                            [
+                                h('span', ""), h('span', {
+                                style: {
+                                    color: "red",
+                                    fontSize: "15px"
+                                }
+                            }, params.row.exScore), h("span", " 点积分")
+                            ],
+                        )
+                    }
+                },
+                {
+                    title: '额外赠送时光卷',
+                    key: 'exCoupon',
+                    align: 'center',
+                    width: 130,
+                    render: function (h, params) {
+                        return h('div', {style: {}},
+                            [
+                                h('span', ""), h('span', {
+                                style: {
+                                    color: "red",
+                                    fontSize: "15px"
+                                }
+                            }, params.row.exCoupon), h("span", " 张时光卷")
+                            ],
+                        )
+                    }
+                },
+                {
+                    title: '额外赠送娃娃',
+                    key: 'dollMap',
+                    align: 'center',
+                    render: function (h, params) {
+                        var element = [];
+                        for(var key in params.row.dollMap ){
+                            element.push(h('span', {style: {color:"blue" }},params.row.dollMap[key] + "[" + key +"]"));
+                            element.push(h('br', ""))
+                        }
+                        return h('div', {style: {}},element);;
+                    }
+                },
+                {
+                    title: '操作',
+                    align: 'center',
+                    width: 100,
+                    render: function (h, params) {
+                        var _this = vm;
+
+                        if (params.row.status === 0){
+                            return h('div', [
+                                h('Button', {
+                                    props: {type: 'info', size: 'small'},
+                                    style: {marginRight: '8px', marginTop: '5px'},
+                                    on: {
+                                        click: function () {
+                                            if(params.row.status === 0){
+                                                _this.$Modal.confirm({
+                                                    title: '确定要删除这条记录吗？',
+                                                    content: '<span style="font-size: 15px;color: #ff6b3d"></span>',
+                                                    onOk: () => {
+                                                        vm.deletePointRecord(params.row.id);
+                                                    },
+                                                    onCancel: () => {
+                                                        _this.$Message.info("取消删除", 1);
+                                                    }
+                                                });
+
+                                            }else {
+                                                _this.$Message.error("已赠送的记录不能被删除!!!", 3);
+                                            }
+                                        }
+                                    }
+                                }, '删除点送'),
+                            ]);
+
+                        }else {
+                            return h('span',{style: {color: "green", fontSize: "8px"}}, "已赠送")
+                        }
+
+                    }
+                }
+            ],
+
+
+            //模态框
+            modalShow: false,//显示点送模态框
+            isFree:false, //是否指定点送
+            disable:"disabled",
+            isWhere: false,//个人状态列表循环
+            isWhereList:false,//上级列表状态循环
+            operatorRecordTime: {},//操作记录定时器
+            busId:"",
+
+            //自动截取参数
+            param: {
+                busId: "",
+                optId: "",
+                uid: ""
+            },
+
+            //保存选择的用户
+            chickUserInfo: {
+                isShow:false,
+                uid: "",
+                name: "",
+                coin: "",
+                jewel: "",
+                score: "",
+                coupon: ""
+            },
+
+            //点送参数
+            pointParam: {
+                busId: "",
+                uid: "",
+                exCoin: "",
+                exJewel: "",
+                exScore: "",
+                exCoupon: "",
+                exDoll: []
+            },
+
+            //奖池参数
+            pool:{
+                isShow:false,
+                total:0,
+                current:0,
+                eTotalIntoCoin:0,
+                eTotalOutCoin:0,
+                vTotalIntoCoin:0,
+                vTotalOutCoin:0,
+                rate:0,
+                allocType:"",
+            },
+
+            //娃娃选择列表
+            selectDoll: {},
+
+            //点送记录列表
+            pointRecordList: []
+
+        },
+        methods: {
+            //动态获取uid和loginKey
+            request(paramName) {
+                var url = location.href;
+                var paraString = url.substring(url.indexOf("?") + 1, url.length).split(
+                    "&");
+                var params = {};
+                for (i = 0; j = paraString[i]; i++) {
+                    params[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(
+                        j.indexOf("=") + 1, j.length);
+                }
+                var returnValue = params[paramName.toLowerCase()];
+                if (typeof(returnValue) == "undefined") {
+                    return "";
+                } else {
+                    return returnValue;
+                }
+            },
+            getBusList() {
+                var _this = this;
+                $.post("../api/doll/getDollBusList", function (data) {
+                    var result = JSON.parse(data);
+                    if (result.state) {
+                        _this.busList = result.data.busList;
+                        if (_this.busList && _this.busList.length > 0) {
+                            _this.handleListApproveHistory();
+                            _this.getOperatorRecord();
+
+                            setTimeout(function () {
+                                _this.handleEntryPlayer();
+                            }, 500);
+
+                        }
+                    } else {
+                        console.info(result.msg)
+                    }
+                });
+            },
+            getOperatorRecord() {
+                var _this = this;
+                if (_this.param
+                    && _this.param.busId !== ""
+                    && _this.param.optId !== ""
+                    && _this.param.uid !== ""
+                    && _this.param.busId !== "undefined"
+                    && _this.param.optId !== "undefined"
+                    && _this.param.uid !== "undefined")
+
+                {
+                    console.log("ref=>getOperatorRecord");
+                    $.post("../api/pushCoin/getOperatorRecord", JSON.stringify(_this.param), function (data) {
+                        var result = JSON.parse(data);
+                        if (result.state) {
+                            _this.operatorList = [];
+                            _this.operatorList.push(result.data.opt);
+                            _this.handlePoolValue(result.data.pool);
+                            if (_this.operatorList && _this.operatorList.length > 0) {
+                                _this.operatorHandleListApproveHistory();
+                                _this.isWhere = true;
+                                _this.operatorRecordTime = setTimeout(function () {
+                                    //轮询
+                                    if (_this.isWhere) {
+                                        _this.getOperatorRecord();
+                                    }
+                                }, 3000);
+                            }
+                        } else {
+                            console.info(result.msg);
+                            clearTimeout(_this.operatorRecordTime);
+                            _this.isWhere = false;
+                        }
+                    });
+                } else {
+                    _this.isWhere = false;
+
+                    console.log("ref=>getOperatorRecordList");
+                    $.post("../api/pushCoin/getOperatorRecordList", JSON.stringify({busId:0,optId:0,uid:0}), function (data) {
+                        var result = JSON.parse(data);
+                        if (result.state) {
+
+                            _this.operatorList = result.data.optList;
+                            _this.handlePoolValue(result.data.pool);
+                            if (_this.operatorList && _this.operatorList.length > 0) {
+                                _this.operatorHandleListApproveHistory();
+                                _this.isWhereList = true;
+                                _this.operatorRecordTime = setTimeout(function () {
+                                    //轮询
+                                    if (_this.isWhereList) {
+                                        _this.getOperatorRecord();
+                                    }
+                                }, 3000);
+                            }
+                        } else {
+                            console.info(result.msg);
+                            clearTimeout(_this.operatorRecordTime);
+                            _this.isWhereList = false;
+                        }
+                    });
+                }
+            },
+
+
+            // -------------------------------机器列表相关分页操作----------------------------------
+            handleListApproveHistory() {
+                // 保存取到的所有数据
+                var _this = this;
+                _this.ajaxHistoryData = _this.busList;
+                _this.dataCount = _this.busList.length;
+                // 初始化显示，小于每页显示条数，全显，大于每页显示条数，取前每页条数显示
+                if (_this.busList.length < _this.pageSize) {
+                    _this.historyData = _this.ajaxHistoryData;
+                } else {
+                    _this.historyData = _this.ajaxHistoryData.slice(0, _this.pageSize);
+                }
+            },
+            changePage(index) {
+                var _this = this;
+                var _start = (index - 1) * _this.pageSize;
+                var _end = index * _this.pageSize;
+                _this.historyData = _this.ajaxHistoryData.slice(_start, _end);
+            },
+
+            // ------------------------------------------------------------------------------------
+
+
+            // -------------------------------用户上机列表相关分页操作-------------------------------
+            operatorHandleListApproveHistory() {
+                // 保存取到的所有数据
+                var _this = this;
+                _this.operatorAjaxHistoryData = _this.operatorList;
+                _this.operatorDataCount = _this.operatorList.length;
+                // 初始化显示，小于每页显示条数，全显，大于每页显示条数，取前每页条数显示
+                if (_this.operatorList.length < _this.operatorPageSize) {
+                    _this.operatorHistoryData = _this.operatorAjaxHistoryData;
+                } else {
+                    _this.operatorHistoryData = _this.operatorAjaxHistoryData.slice(0, _this.operatorPageSize);
+                }
+            },
+            operatorChangePage(index) {
+                var _this = this;
+                var _start = (index - 1) * _this.operatorPageSize;
+                var _end = index * _this.operatorPageSize;
+                _this.operatorHistoryData = _this.operatorAjaxHistoryData.slice(_start, _end);
+            },
+
+            // ------------------------------------------------------------------------------------
+
+
+            // -------------------------------点送列表相关分页操作-------------------------------
+            pointHandleListApproveHistory() {
+                // 保存取到的所有数据
+                var _this = this;
+                _this.pointAjaxHistoryData = _this.pointRecordList;
+                _this.pointDataCount = _this.pointRecordList.length;
+                // 初始化显示，小于每页显示条数，全显，大于每页显示条数，取前每页条数显示
+                if (_this.pointRecordList.length < _this.pointPageSize) {
+                    _this.pointHistoryData = _this.pointAjaxHistoryData;
+                } else {
+                    _this.pointHistoryData = _this.pointAjaxHistoryData.slice(0, _this.pointPageSize);
+                }
+            },
+            pointChangePage(index) {
+                var _this = this;
+                var _start = (index - 1) * _this.pointPageSize;
+                var _end = index * _this.pointPageSize;
+                _this.pointHistoryData = _this.pointAjaxHistoryData.slice(_start, _end);
+            },
+
+            // ------------------------------------------------------------------------------------
+
+
+            //处理刚进入页面时
+            handleEntryPlayer() {
+                var _this = this;
+                if (_this.isStart) {
+                    _this.isStart = false;
+                    console.info("进入平台机器管理页");
+                    _this.inputUrl = "";
+
+                    if (_this.operatorList && _this.operatorList.length > 0) {
+                        _this.inputUrl = _this.operatorList[0].s1;
+                        console.info("播放opt录像")
+                    } else {
+                        if (_this.busList && _this.busList.length > 0) {
+                            _this.inputUrl = _this.busList[0].stream1;
+                            console.info("默认播放列表第一项")
+                        }
+                    }
+                    if (_this.inputUrl !== "") {
+                        _this.videoObject.video = _this.inputUrl;
+                        this.player = new ckplayer(_this.videoObject);
+                        if (_this.player && _this.player !== {}) {
+                            console.info("初始化播放器")
+                        }
+                    }
+                }
+            },
+
+            // -------------------------------奖池相关操作-------------------------------
+
+            handlePoolValue(pool){
+                var _this = this;
+                console.info(JSON.stringify(pool.total))
+                if (pool){
+                    _this.pool.isShow = true;
+                    _this.pool.total = pool.total;
+                    _this.pool.current = pool.current;
+                    _this.pool.eTotalIntoCoin = pool.eTotalIntoCoin;
+                    _this.pool.eTotalOutCoin = pool.eTotalOutCoin;
+                    _this.pool.vTotalIntoCoin = pool.vTotalIntoCoin;
+                    _this.pool.vTotalOutCoin = pool.vTotalOutCoin;
+                    _this.pool.rate = pool.rate;
+                    if (pool.allocType === 0){
+                        _this.pool.allocType = "权重分配"
+                    }else if(pool.allocType === 1){
+                        _this.pool.allocType = "平均分配"
+                    }else {
+                        _this.pool.allocType = "未知类型"
+                    }
+                }else {
+                    _this.pool.isShow = false;
+                    _this.pool.total = 0;
+                    _this.pool.current = 0;
+                    _this.pool.eTotalIntoCoin = 0;
+                    _this.pool.eTotalOutCoin = 0;
+                    _this.pool.vTotalIntoCoin = 0;
+                    _this.pool.vTotalOutCoin = 0;
+                    _this.pool.rate = 0;
+                    _this.pool.allocType = "";
+                }
+            },
+
+            // -------------------------------点送相关操作-------------------------------
+
+            //获取点送记录列表
+            getPointGiveRecordList(row) {
+                var _this = this;
+                var param = {uid: 0};
+                if (row && row.uid !== 0) {
+                    console.info("uid=>" + row.uid);
+                    param = {uid: row.uid};
+                }
+                $.post("../api/pushCoin/getPointGiveRecordList", JSON.stringify(param), function (data) {
+                    var result = JSON.parse(data);
+                    if (result.state) {
+                        console.info(result);
+
+                        if (row && row.uid !== 0) {
+                            //点送参数
+                            _this.pointParam.busId = row.busId;
+                            _this.pointParam.uid = row.uid;
+
+                            //选择用户参数
+                            _this.chickUserInfo.uid = row.uid;
+                            _this.chickUserInfo.coin = row.u_coin;
+                            _this.chickUserInfo.jewel = row.u_jewel;
+                            _this.chickUserInfo.name = row.u_name;
+                            _this.chickUserInfo.coupon = row.u_coupon;
+                            _this.chickUserInfo.score = row.u_score;
+
+                            _this.chickUserInfo.isShow = true;
+                            _this.isFree = true;
+                        }else {
+                            _this.chickUserInfo.isShow = false;
+                            _this.isFree = false;
+                            console.info("不指定点送")
+                        }
+
+                        //初始化娃娃信息
+                        _this.selectDoll = result.dollInfoMaps;
+
+                        //初始化点送记录列表
+                        _this.pointRecordList = result.list;
+
+                        _this.pointHandleListApproveHistory();
+
+                        if(_this.isFree){
+                            var uidInput = $("#uid").find("input");
+                            uidInput.attr("disabled","disabled");
+
+                            var busIdInput = $("#busId").find("input");
+                            busIdInput.attr("disabled","disabled");
+
+                        }else {
+                            var uidInput = $("#uid").find("input");
+                            uidInput.removeAttr("disabled");
+
+                            var busIdInput = $("#busId").find("input");
+                            busIdInput.removeAttr("disabled");
+
+                        }
+
+                        //显示模态框
+                        _this.showModal();
+
+                    } else {
+                        _this.$Message.error("初始化记录失败!!!", 3);
+                    }
+                });
+
+            },
+
+            //新增点送记录
+            addPointRecord() {
+                var _this = this;
+                //console.info(JSON.stringify(_this.pointParam))
+                if (_this.pointParam) {
+
+                    var bus = "机器ID：" + _this.pointParam.busId;
+                    var exCoin = "赠送游戏币：" + _this.pointParam.exCoin;
+                    var exJewel = "赠送钻石：" + _this.pointParam.exJewel;
+                    var exScore = "赠送积分：" + _this.pointParam.exScore;
+                    var exCoupon = "赠送时光卷：" + _this.pointParam.exCoupon;
+                    var exDoll = "赠送娃娃ID：" + JSON.stringify(_this.pointParam.exDoll);
+
+                    if (_this.pointParam.uid === ""){
+                        _this.$Message.error("UID不能为空!!!", 3);
+                        return
+                    }
+
+                    if (_this.pointParam.busId === ""){
+                        _this.$Message.error("请选择一台机器!!!", 3);
+                        return
+                    }
+
+                    _this.$Modal.confirm({
+                        title: '确认点送给UID为：【' + _this.pointParam.uid + "】 的用户吗？",
+                        content:
+                        '<span style="font-size: 15px;color: #ff6b3d">' + bus + '</span><br>' +
+                        '<span style="font-size: 15px;color: #ff6b3d">' + exCoin + '</span><br>' +
+                        '<span style="font-size: 15px;color: #ff6b3d">' + exJewel + '</span><br>' +
+                        '<span style="font-size: 15px;color: #ff6b3d">' + exScore + '</span><br>' +
+                        '<span style="font-size: 15px;color: #ff6b3d">' + exCoupon + '</span><br>' +
+                        '<span style="font-size: 15px;color: #ff6b3d">' + exDoll + '</span><br>',
+
+                        onOk: () => {
+                            try {
+                                $.post("../api/pushCoin/addPointGiveRecord", JSON.stringify(_this.pointParam), function (data) {
+                                    var result = JSON.parse(data);
+                                    if (result.state) {
+                                        var param = {uid: 0};
+                                        $.post("../api/pushCoin/getPointGiveRecordList", JSON.stringify(param), function (data) {
+                                            var result = JSON.parse(data);
+                                            if (result.state) {
+                                                console.info(result);
+
+                                                //初始化娃娃信息
+                                                _this.selectDoll = result.dollInfoMaps;
+
+                                                //初始化点送记录列表
+                                                _this.pointRecordList = result.list;
+
+                                                _this.pointHandleListApproveHistory();
+
+                                            } else {
+                                                _this.$Message.error("初始化记录失败!!!", 3);
+                                                _this.closeGiveWindowHandle();
+                                            }
+
+                                            setTimeout(function () {
+                                                _this.$Message.success("新增点送记录成功", 3);
+                                                _this.closeGiveWindowHandle();
+
+                                            }, 1000);
+
+                                        });
+                                    } else {
+                                        _this.$Message.error("新增点送记录失败!", 1);
+                                        _this.closeGiveWindowHandle();
+                                    }
+                                });
+                            } catch (err) {
+                                _this.$Message.error("新增点送记录异常!", 1);
+                                _this.closeGiveWindowHandle();
+                            }
+                        },
+                        onCancel: () => {
+                            _this.$Message.info("取消点送", 1);
+                        }
+                    });
+                }
+            },
+
+            //删除点送
+            deletePointRecord(id){
+                var _this = this;
+                try {
+                    $.post("../api/pushCoin/deletePointGiveRecord", JSON.stringify({id: id}), function (data) {
+                        var result = JSON.parse(data);
+                        if (result.state) {
+                            var param = {uid: 0};
+                            $.post("../api/pushCoin/getPointGiveRecordList", JSON.stringify(param), function (data) {
+                                var result = JSON.parse(data);
+                                if (result.state) {
+                                    console.info(result);
+
+                                    //初始化娃娃信息
+                                    _this.selectDoll = result.dollInfoMaps;
+
+                                    //初始化点送记录列表
+                                    _this.pointRecordList = result.list;
+
+                                    _this.pointHandleListApproveHistory();
+
+                                } else {
+                                    _this.$Message.error("初始化列表失败!!!", 3);
+                                    _this.closeGiveWindowHandle();
+                                }
+
+                                setTimeout(function () {
+                                    _this.$Message.success("刷新列表成功", 3);
+                                    _this.closeGiveWindowHandle();
+
+                                }, 1000);
+
+                            });
+                        } else {
+                            _this.$Message.error("删除点送记录失败!", 1);
+                        }
+                    });
+                } catch (err) {
+                    _this.$Message.error("删除点送记录失败!", 1);
+                }
+
+            },
+
+            //模态框关闭事件
+            closeHandle() {
+                var _this = this;
+                _this.modalShow = false;
+                _this.closeGiveWindowHandle()
+
+            },
+
+            //显示模态框
+            showModal() {
+                var _this = this;
+                _this.modalShow = true;
+            },
+
+            //关闭窗口时触发
+            closeGiveWindowHandle() {
+                var _this = this;
+                _this.pointParam.exCoin = "";
+                _this.pointParam.exJewel = "";
+                _this.pointParam.exScore = "";
+                _this.pointParam.exCoupon = "";
+                _this.pointParam.exDoll = [];
+
+                if (!_this.modalShow) {
+                    _this.pointParam.uid = "";
+                    _this.pointParam.busId = "";
+
+                    _this.chickUserInfo.uid = "";
+                    _this.chickUserInfo.coin = "";
+                    _this.chickUserInfo.jewel = "";
+                    _this.chickUserInfo.name = "";
+                    _this.chickUserInfo.coupon = "";
+                    _this.chickUserInfo.score = "";
+
+                }
+            },
+
+            chickBusIdHandle(value){
+                var _this = this;
+                _this.pointParam.busId = "";
+                _this.pointParam.busId = value;
+            },
+
+
+
+            // -------------------------------播放器相关-------------------------------
+
+            //播放按钮事件
+            play() {
+                var _this = this;
+                if (_this.inputUrl && _this.inputUrl !== "") {
+                    _this.changeVideo(_this.inputUrl)
+                } else {
+                    alert("请输入有效的播放地址!");
+                }
+            },
+
+            //播放逻辑
+            changeVideo(videoUrl) {
+                console.info("开始播放:" + videoUrl)
+                var _this = this;
+                if (_this.player == null) {
+                    return;
+                }
+                _this.inputUrl = videoUrl;
+                _this.videoObject.video = videoUrl;
+                _this.player = null;
+                _this.player = new ckplayer();
+                _this.player.embed(_this.videoObject);
+            },
+
+
+        },
+        mounted() {
+            var _this = this;
+            _this.param.busId = _this.request("busId");
+            _this.param.optId = _this.request("optId");
+            _this.param.uid = _this.request("uid");
+            console.info("param=>" + JSON.stringify(_this.param));
+            _this.getBusList()
+        }
+    });
+
+</script>

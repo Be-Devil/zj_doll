@@ -1,0 +1,129 @@
+package com.imlianai.dollpub.app.modules.core.trade.catalog.service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.dollpub.app.modules.core.trade.catalog.dao.ChargeCatalogDao;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.dollpub.domain.doll.DollInfo;
+import com.imlianai.dollpub.domain.trade.ChargeCatalog;
+import com.imlianai.dollpub.domain.trade.ChargeCatalog.ChargeCatalogType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+@Service
+public class ChargeCatalogServiceImpl implements ChargeCatalogService {
+	// 苹果大号起始编号
+	public static final int APP_STORE_INIT_CODE = 1100;
+	@Resource
+	private ChargeCatalogDao chargeCatalogDao;
+
+	@Resource
+	private TradeChargeService tradeChargeService;
+	
+	@Resource
+	private DollInfoService dollInfoService;
+	private final BaseLogger logger = BaseLogger
+			.getLogger(ChargeCatalogServiceImpl.class);
+
+	@Override
+	public List<ChargeCatalog> getCatalogs(int type, int isFirst,int customerId) {
+		return chargeCatalogDao.getCatalogs(type, isFirst,customerId);
+	}
+
+	@Override
+	public List<ChargeCatalog> getFirstPayCatalogs(int type, long uid,int customerId) {
+		List<ChargeCatalog> reslist =new ArrayList<ChargeCatalog>();
+		List<ChargeCatalog> list = getCatalogs(type, 1, customerId);
+		if (!StringUtil.isNullOrEmpty(list)) {
+			for (ChargeCatalog chargeCatalog : list) {
+				if(tradeChargeService.hasChargeSpecialAmt(uid, chargeCatalog.getCode())==0){
+					reslist.add(chargeCatalog);
+				}
+			}
+		}
+		return reslist;
+	}
+
+	@Override
+	public ChargeCatalog getCatalog(int code) {
+		ChargeCatalog chargeCatalog = chargeCatalogDao.getCatalog(code);
+		logger.info("getCatalog code:" + code + " chargeCatalog:"
+				+ JSON.toJSONString(chargeCatalog));
+		return chargeCatalog;
+	}
+
+	@Override
+	public List<ChargeCatalog> handleIosCatalogs(String channel,
+			List<ChargeCatalog> list) {
+		int initCode = chargeCatalogDao.getChargeCodeByChannel(channel);// 初始枚举值
+		logger.info("CmdGetChargeCatalog channel:" + channel + " initCode:"
+				+ initCode);
+		if (initCode != 0 && list != null) {
+			List<ChargeCatalog> reslist = new ArrayList<ChargeCatalog>();
+			for (ChargeCatalog chargeCatalog : list) {
+				if (chargeCatalog.getCode() == 1100
+						|| chargeCatalog.getCode() == 1122) {
+					continue;
+				}
+				int currentCode = initCode + chargeCatalog.getCode()
+						- APP_STORE_INIT_CODE;
+				logger.info("CmdGetChargeCatalog channel:" + channel
+						+ " initCode:" + initCode + " chargeCatalog.getCode():"
+						+ chargeCatalog.getCode() + " currentCode:"
+						+ currentCode);
+				if (currentCode > 0) {
+					chargeCatalog.setCode(currentCode);
+				}
+				reslist.add(chargeCatalog);
+			}
+			return reslist;
+		}
+		return list;
+	}
+
+	@Override
+	public List<ChargeCatalog> getQuickCatalogs(int type,int customerId) {
+		return chargeCatalogDao.getCatalogs(type, 1,0, customerId);
+	}
+
+	@Override
+	public List<ChargeCatalog> getSpecialPromotion(int type, long uid,
+			int customerId) {
+		List<ChargeCatalog> res=new ArrayList<ChargeCatalog>();
+		List<ChargeCatalog> list= getCatalogs(type, 0, customerId);
+		if (!StringUtil.isNullOrEmpty(list)) {
+			for (ChargeCatalog chargeCatalog : list) {
+				if (type==ChargeCatalogType.FOREVER_CHARGE.type) {
+					if(tradeChargeService.hasChargeSpecialAmt(uid, chargeCatalog.getCode())==0){
+						if (chargeCatalog.getDollId()>0) {
+							DollInfo info=dollInfoService.getDollInfo(chargeCatalog.getDollId());
+							if (info!=null) {
+								chargeCatalog.setIcon(info.getImgCover());
+							}
+						}
+						res.add(chargeCatalog);
+					}
+				}else if (type==ChargeCatalogType.DAILY_CHARGE.type){
+					if(tradeChargeService.hasChargeToday(uid, chargeCatalog.getCode())==0){
+						if (chargeCatalog.getDollId()>0) {
+							DollInfo info=dollInfoService.getDollInfo(chargeCatalog.getDollId());
+							if (info!=null) {
+								chargeCatalog.setIcon(info.getImgCover());
+							}
+						}
+						res.add(chargeCatalog);
+					}
+				}
+			}
+		}
+		return res;
+	}
+
+}

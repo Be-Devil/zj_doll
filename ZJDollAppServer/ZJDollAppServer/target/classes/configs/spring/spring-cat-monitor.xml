@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+		
+	<!--propertiesHolder使cat-monitor项目中的任何类都可以根据 项目环境的不同而获得不同的properties属性值  -->
+	<bean id="propertiesHolder" class="com.dianping.cat.PropertiesHolder">
+	   <property name="ignoreUnresolvablePlaceholders" value="true"/>
+	   <property name="ignoreResourceNotFound" value="true"/>
+	   <property name="locations">
+	       <list>
+	          <value>classpath:configs/properties/conf_env_dev.properties</value>
+	       </list>
+	   </property>
+	</bean>
+
+	<!--zipkin的PropertiesHolder-->
+	<bean id="zipkinPropertiesHolder" class="com.imlianai.zipkin.context.PropertiesHolder">
+		<property name="ignoreUnresolvablePlaceholders" value="true"/>
+		<property name="ignoreResourceNotFound" value="true"/>
+		<property name="locations">
+			<list>
+				<value>classpath:configs/properties/conf_env_dev.properties</value>
+			</list>
+		</property>
+	</bean>
+	
+	<bean id="initCatBean" class="net.dubboclub.catmonitor.CatInitListener" init-method="initCat"></bean>
+		
+	<!-- CAT注解埋点的切面 -->
+	<bean id="catAnnotationSupport" class="com.imlianai.cat.aspect.CatAnnotationSupportAspect">
+	</bean>
+	
+	<!-- 这里暂且复用ReadApp项目定义好的切面-->
+	<bean id="catMonitorAspct" class="com.imlianai.cat.aspect.impl.ReadCatMonitorAspect">
+	</bean>
+	<!-- CAT监控rpc_support项目的切面 -->
+	<bean id="catRpcSupportMonitorAspct" class="com.imlianai.cat.aspect.impl.RpcSupportCatMonitorAspect">
+	</bean>
+	
+	<!-- 定义CAT监控 的切面 order="0"设置cat切面为最外层切面 -->
+	<aop:config>
+		<aop:aspect id="catAspect" ref="catMonitorAspct" order="0">
+			<aop:pointcut id="catPointcut" expression="(execution(* com.imlianai.zjdoll.app.modules.core.doll.*.*(..)))
+			or (execution(* com.imlianai.zjdoll.app.modules.core.user..*.*(..))) 
+			or (execution(* com.imlianai.zjdoll.app.modules.core.trade..*.*(..)))
+			or (execution(* com.imlianai.zjdoll.app.controller..*.*(..)))
+			" 
+			 />
+			<aop:around method="catLog" pointcut-ref="catPointcut"/>
+		</aop:aspect>
+	</aop:config> 
+	<!-- 定义CAT监控rpc_support的切面 order="1"-->
+	<aop:config>
+		<aop:aspect id="catRpcSupportAspect" ref="catRpcSupportMonitorAspct" order="1">
+			<aop:pointcut id="catPointcut1" expression="(execution(* com.imlianai.rpc.support.common..*.*(..)))
+			or (execution(* com.imlianai.rpc.support.utils..*.*(..)))
+			or (execution(* com.imlianai.rpc.support.manager.cache.*.*(..)))
+			or (execution(* com.imlianai.rpc.support.manager.dbhandler..*.*(..)))
+			or (execution(* com.imlianai.rpc.support.manager.mongo.*.*(..)))
+			or (execution(* com.imlianai.rpc.support.manager.aspect.SimpleAspect.*(..)))
+			or (execution(* com.imlianai.rpc.support.manager.aspect.SupportAspect.*(..)))
+			" 
+			 />
+			<aop:around method="catLog" pointcut-ref="catPointcut1"/>
+		</aop:aspect>
+	</aop:config>
+</beans>

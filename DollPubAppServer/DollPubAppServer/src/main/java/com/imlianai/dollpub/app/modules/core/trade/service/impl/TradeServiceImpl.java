@@ -1,0 +1,118 @@
+package com.imlianai.dollpub.app.modules.core.trade.service.impl;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.imlianai.dollpub.app.modules.core.trade.dao.TradeDAO;
+import com.imlianai.dollpub.app.modules.core.trade.record.TradeRecordService;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.domain.trade.TradeAccount;
+import com.imlianai.dollpub.domain.trade.TradeCostType;
+import com.imlianai.dollpub.domain.trade.TradeRecord;
+import com.imlianai.dollpub.domain.trade.TradeType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.exception.NotEnoughBeanException;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.common.exception.TradeOperationException;
+
+@Service
+public class TradeServiceImpl implements TradeService {
+
+	private static final BaseLogger logger = BaseLogger
+			.getLogger(TradeServiceImpl.class);
+
+	@Resource
+	private TradeDAO tradeDAO;
+	@Resource
+	private TradeRecordService tradeRecordService;
+
+	@Override
+	public int initAccount(long uid) {
+		return tradeDAO.initAccount(uid);
+	}
+
+	@Override
+	public TradeAccount getAccount(long uid) {
+		TradeAccount account = tradeDAO.getAccount(uid);
+		if (account == null) {
+			initAccount(uid);
+			return tradeDAO.getAccount(uid);
+		}
+		return account;
+	}
+
+	@Override
+	@Transactional(rollbackFor = { TradeOperationException.class,
+			NotEnoughBeanException.class, Exception.class })
+	public boolean consume(TradeRecord record) throws TradeOperationException,
+			NotEnoughBeanException {
+		if (record.getCost() < 0) {
+			throw new TradeOperationException("交易金额异常");
+		}
+		try {
+			int flag = 0;
+			if (record.getCostType() == TradeCostType.COST_COIN.type) {
+				flag = tradeDAO.updateCoin(record.getUid(), -record.getCost());
+			} else if(record.getCostType() == TradeCostType.COST_JEWEL.type) {
+				flag = tradeDAO.updateJewel(record.getUid(), -record.getCost());
+			} else if(record.getCostType() == TradeCostType.COST_SCORE.type) {
+				flag = tradeDAO.updateScore(record.getUid(), -record.getCost());
+			} else {
+				throw new TradeOperationException("交易类型异常");
+			}
+			if (flag > 0) {
+				if (record.getType() != TradeType.NO_RECORD.type) {
+					tradeRecordService.addRecord(record);
+				}
+				return true;
+			} else {
+				throw new NotEnoughBeanException("余额不足");
+			}
+		} catch (TradeOperationException e) {
+			PrintException.printException(logger, e);
+			throw e;
+		} catch (Exception e) {
+			logger.info(e);
+			throw new TradeOperationException(e);
+		}
+	}
+
+	@Override
+	@Transactional(rollbackFor = { TradeOperationException.class,
+			NotEnoughBeanException.class, Exception.class })
+	public boolean charge(TradeRecord record) throws TradeOperationException {
+		if (record.getCost() < 0) {
+			throw new TradeOperationException("交易金额异常");
+		}
+		record.setRecordType(1);
+		try {
+			int flag = 0;
+			if (record.getCostType() == TradeCostType.COST_COIN.type) {
+				flag = tradeDAO.updateCoin(record.getUid(), record.getCost());
+			} else if(record.getCostType() == TradeCostType.COST_JEWEL.type) {
+				flag = tradeDAO.updateJewel(record.getUid(), record.getCost());
+			} else if(record.getCostType() == TradeCostType.COST_SCORE.type) {
+				flag = tradeDAO.updateScore(record.getUid(), record.getCost());
+			} else {
+				throw new TradeOperationException("交易类型异常");
+			}
+			if (flag > 0) {
+				if (record.getType() != TradeType.NO_RECORD.type) {
+					tradeRecordService.addRecord(record);
+				}
+				return true;
+			} else {
+				throw new NotEnoughBeanException("余额不足");
+			}
+		} catch (TradeOperationException e) {
+			PrintException.printException(logger, e);
+			throw e;
+		} catch (Exception e) {
+			PrintException.printException(logger, e);
+			throw new TradeOperationException(e);
+		}
+	}
+
+}

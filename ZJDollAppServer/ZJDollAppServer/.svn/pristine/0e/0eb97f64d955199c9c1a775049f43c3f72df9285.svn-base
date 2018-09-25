@@ -1,0 +1,702 @@
+package com.imlianai.zjdoll.app.configs;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
+import java.net.URLEncoder;
+import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
+import java.util.Set;
+import java.util.zip.CRC32;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.StringUtils;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.entity.HttpEntity;
+import com.imlianai.rpc.support.utils.HttpUtil;
+import com.ctrip.framework.apollo.util.PropertiesUtil;
+import com.imlianai.rpc.support.utils.RequestUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+//import com.imlianai.read.domain.msg.MsgAction;
+
+public class AppUtils {
+
+	private static String isProduct="-1";
+
+	public static final BaseLogger logger = BaseLogger
+			.getLogger(AppUtils.class);
+
+	/**
+	 * 读取对应的url内容并返回
+	 * 
+	 * @param strUrl
+	 * @return
+	 */
+	public static String useForGet(String strUrl, String encoding)
+			throws Exception {
+		java.net.URL url = new java.net.URL(strUrl);
+		java.io.BufferedReader br = new java.io.BufferedReader(
+				new java.io.InputStreamReader(url.openStream(), encoding));
+		String s = "";
+		StringBuffer sb = new StringBuffer("");
+		while ((s = br.readLine()) != null)
+			sb.append(s + "\r\n");
+		br.close();
+		return sb.toString();
+	}
+
+	public static String getHashCodePath(String code) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < code.length(); i++) {
+			if (i < code.length() - 1)
+				sb.append(code.charAt(i)).append("/");
+			else
+				sb.append(code.charAt(i));
+		}
+		return sb.toString();
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Map<String, String> getParam(HttpServletRequest request) {
+		Map<String, String> params = new HashMap<String, String>();
+		Enumeration<String> emu = request.getParameterNames();
+		while (emu.hasMoreElements()) {
+			String tmp = emu.nextElement();
+			String[] vals = request.getParameterValues(tmp);
+			params.put(tmp, vals[0]);
+		}
+		return params;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Map<String, String> getParam(HttpServletRequest request,
+			String charSet) throws UnsupportedEncodingException {
+		Map<String, String> params = new HashMap<String, String>();
+		Enumeration<String> emu = request.getParameterNames();
+		while (emu.hasMoreElements()) {
+			String tmp = emu.nextElement();
+			String value = request.getParameter(tmp);
+			if (StringUtils.isNotBlank(value)) {
+				params.put(tmp, new String(value.getBytes(), charSet));
+			}
+		}
+		return params;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> getParamStrObject(
+			HttpServletRequest request) {
+		Map<String, Object> params = new HashMap<String, Object>();
+		Enumeration<String> emu = request.getParameterNames();
+		while (emu.hasMoreElements()) {
+			String tmp = emu.nextElement();
+			String[] vals = request.getParameterValues(tmp);
+			params.put(tmp, vals[0]);
+		}
+		return params;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static Map<Object, Object> getParamObject(HttpServletRequest request) {
+		Map<Object, Object> params = new HashMap<Object, Object>();
+		Enumeration<String> emu = request.getParameterNames();
+		while (emu.hasMoreElements()) {
+			String tmp = emu.nextElement();
+			String[] vals = request.getParameterValues(tmp);
+			params.put(tmp, vals[0]);
+		}
+		return params;
+	}
+
+	public static Map<Object, Object> getParaMapWithCookies(
+			HttpServletRequest request) {
+		Map<Object, Object> paraMap = new HashMap<Object, Object>();
+		Cookie[] cookies = request.getCookies();
+		if (!StringUtil.isNullOrEmpty(cookies)) {
+			if (StringUtil.isNullOrEmpty(paraMap)) {
+				paraMap = new HashMap<Object, Object>();
+			}
+			for (Cookie cook : cookies) {
+				paraMap.put(cook.getName(), cook.getValue());
+			}
+		}
+		Map<Object, Object> requestMap = RequestUtil.getParaMap(request);
+		if (!StringUtil.isNullOrEmpty(requestMap)) {
+			for (Object key : requestMap.keySet()) {
+				if (key != null && requestMap.get(key) != null) {
+					paraMap.put(key, requestMap.get(key));
+				}
+			}
+		}
+		return paraMap;
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T getParam(HttpServletRequest request, String name,
+			Class<T> clazz) {
+		String value = request.getParameter(name);
+		if (value == null)
+			return null;
+		if (clazz == String.class)
+			return (T) value;
+		else if (clazz == Integer.class)
+			return (T) Integer.valueOf(value);
+		else if (clazz == Long.class)
+			return (T) Long.valueOf(value);
+		throw new RuntimeException("not supported class:" + clazz.getName());
+
+	}
+
+	@SuppressWarnings("unchecked")
+	public static <T> T getParamIfErrorNull(HttpServletRequest request,
+			String name, Class<T> clazz) {
+		String value = request.getParameter(name);
+		if (value == null)
+			return null;
+		try {
+			if (clazz == String.class)
+				return (T) value;
+			else if (clazz == Integer.class)
+				return (T) Integer.valueOf(value);
+			else if (clazz == Long.class)
+				return (T) Long.valueOf(value);
+			else if (clazz == Boolean.class) {
+				return (T) Boolean.valueOf(value);
+			} else if (clazz == Float.class) {
+				return (T) Float.valueOf(value);
+			}
+		} catch (NumberFormatException e) {
+			logger.error("parse '" + value + "' fail,the param name is'" + name
+					+ "'");
+			return null;
+
+		}
+		logger.error("not supported class:" + clazz.getName());
+		return null;
+
+	}
+
+	public static String randomStr(String material, int length) {
+		Random random = new Random();
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < length; i++) {
+			int number = random.nextInt(material.length());
+			sb.append(material.charAt(number));
+		}
+		return sb.toString();
+
+	}
+
+	public static String getMatch(String left, String right, String content) {
+		if ((null == left) || (null == right) || (null == content)) {
+			return null;
+		}
+		int lpos = 0;
+		if (0 != left.length()) {
+			lpos = content.indexOf(left);
+			if (-1 == lpos) {
+				return null;
+			}
+		}
+		int rpos = content.length();
+		if (0 != right.length()) {
+			rpos = content.indexOf(right, lpos + left.length());
+			if (-1 == rpos) {
+				return null;
+			}
+		}
+		return content.substring(lpos + left.length(), rpos);
+	}
+
+	public static boolean isValidMail(String str) {
+		String mailPattern = "^([a-z0-9A-Z]+[-|_|\\.]?)*[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}$";
+
+		return str.matches(mailPattern);
+	}
+
+	public static String strShorter(String org, int leng) {
+		if (StringUtils.isBlank(org)) {
+			return "";
+		}
+		if (org.length() < leng)
+			return org;
+		return StringUtils.substring(org, 0, leng) + "...";
+	}
+
+	public static Map<String, String> getCookies(List<String> cookiesName,
+			HttpServletRequest request) {
+		Map<String, String> cookiesKV = new HashMap<String, String>();
+		Cookie[] cooks = request.getCookies();
+		if (null == cooks || cooks.length == 0)
+			return cookiesKV;
+
+		for (Cookie co : cooks) {
+			if (cookiesName.contains(co.getName())) {
+				cookiesKV.put(co.getName(), co.getValue());
+			}
+		}
+		return cookiesKV;
+	}
+
+	/**
+	 * 获取一定数量的不同随机数
+	 **/
+	public static Set<Integer> getRandomNum(int max, int num) {
+		Set<Integer> tmp = new HashSet<Integer>();
+
+		int cnt = 0;
+		while (tmp.size() < num && cnt++ < 100) {
+			int ran = ((Double) (Math.random() * max)).intValue();
+			tmp.add(ran);
+		}
+
+		return tmp;
+	}
+
+	private static String hexString = "0123456789abcdef";
+
+	public static String encode(byte[] bytes) {
+		StringBuilder sb = new StringBuilder(bytes.length * 2);
+		// 将字节数组中每个字节拆解成2位16进制整数
+		for (int i = 0; i < bytes.length; i++) {
+			sb.append(hexString.charAt((bytes[i] & 0xf0) >> 4));
+			sb.append(hexString.charAt((bytes[i] & 0x0f) >> 0));
+		}
+		return sb.toString();
+	}
+
+	/**
+	 * 获取用户真实ip
+	 * 
+	 * @param request
+	 * @return
+	 */
+	public static String getRealIpAddr(HttpServletRequest request) {
+		String ip = request.getHeader("x-forwarded-for");
+		if ((ip == null) || (ip.length() == 0)
+				|| ("unknown".equalsIgnoreCase(ip))) {
+			ip = request.getHeader("Proxy-Client-IP");
+		}
+		if ((ip == null) || (ip.length() == 0)
+				|| ("unknown".equalsIgnoreCase(ip))) {
+			ip = request.getHeader("WL-Proxy-Client-IP");
+		}
+		if ((ip == null) || (ip.length() == 0)
+				|| ("unknown".equalsIgnoreCase(ip))) {
+			ip = request.getRemoteAddr();
+		}
+		if ((ip != null) && (ip.length() > 32)) {
+			ip = ip.substring(0, 32);
+		}
+		if (ip == null) {
+			ip = "";
+		}
+		return ip;
+	}
+
+	/**
+	 * 根据uid获取图片地址key
+	 * 
+	 * @param uid
+	 * @return
+	 */
+	public static String getQiniuKeyUid(long uid) {
+		String code = uid + "";
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < code.length(); i++)
+			sb.append(code.charAt(i)).append("/");
+		return sb.toString();
+	}
+
+	/**
+	 * 生成文件名
+	 * 
+	 * @return
+	 */
+	public static String proNewName() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddHHmmss");
+		int random_int = ((Double) (10000 * Math.random())).intValue();
+		String newName = sdf.format(new Date()) + random_int;
+		return newName + "";
+	}
+
+	/**
+	 * 合并字符串
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public static String concatStrIgnoreNull(Object... obj) {
+		if (obj == null)
+			return null;
+		StringBuffer strbuffer = new StringBuffer("");
+		for (Object o : obj) {
+			if (o != null && StringUtils.isNotBlank(o.toString())) {
+				strbuffer.append(o.toString());
+			}
+		}
+		return strbuffer.toString();
+	}
+
+	/**
+	 * 升级策略
+	 * 
+	 * @param uid
+	 * @return
+	 */
+	public static boolean getCurrentMinUp(long uid) {
+		Calendar cal = Calendar.getInstance();
+		int min = cal.get(Calendar.MINUTE);
+		int rmin = min % 60;
+		String v = String.valueOf(rmin);
+		Integer res = null;
+		String uidstr = String.valueOf(uid);
+		int uidIndex = Integer.valueOf(uidstr.substring(0, 1));
+		if (rmin == 0)
+			return false;
+		if (v.length() == 1)
+			return Integer.valueOf(v) == uidIndex;
+		else if ((res = Integer.valueOf(v.substring(1))) != 0)
+			return res == uidIndex;
+		return false;
+	}
+
+	/**
+	 * 获取请求全部参数
+	 * 
+	 * @param request
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public static Map<String, Object> getRequestParams(
+			HttpServletRequest request) {
+		Enumeration<String> names = request.getParameterNames();
+		Map<String, Object> result = new HashMap<String, Object>();
+		while (names.hasMoreElements()) {
+			String name = names.nextElement();
+			String value = request.getParameter("value");
+			result.put(name, value);
+		}
+		return result;
+	}
+
+	/**
+	 * 连接Str
+	 * 
+	 * @param symbol
+	 * @param objs
+	 * @return
+	 */
+	public static String concatStr(String symbol, Object... objs) {
+		if (objs != null && StringUtils.isNotBlank(symbol)) {
+			StringBuffer sb = new StringBuffer();
+			for (Object obj : objs) {
+				sb.append(obj);
+				sb.append(symbol);
+			}
+			return StringUtils.substringBeforeLast(sb.toString(), symbol);
+		}
+		return null;
+	}
+
+	/**
+	 * 获取日期
+	 * 
+	 * @param date
+	 * @return
+	 */
+	public static String getDateStr(Date date) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		return sdf.format(date);
+	}
+
+	/**
+	 * 获取域名
+	 * 
+	 * @return
+	 */
+	public static String getDomainName() {
+		return isTestEnv()
+				? "http://t.xiehou360.com/ReadWebServer"
+				: "https://www.mishuoapp.com";
+	}
+	/**
+	 * 获取域名
+	 * 
+	 * @return
+	 */
+	public static String getDomainName(HttpServletRequest request) {
+		return request.getScheme() + "://" + request.getServerName();
+	}
+
+	/**
+	 * 获取当前请求地址
+	 * 
+	 * @param request
+	 * @return
+	 */
+	public static String getLocation(HttpServletRequest request) {
+		String path = request.getContextPath();
+		return request.getScheme() + "://" + request.getServerName() + path;
+	}
+
+	/**
+	 * 构建请求参数
+	 * 
+	 * @param params
+	 * @param charset
+	 * @return
+	 * @throws IOException
+	 */
+	public static String buildQuery(Map<String, String> params) {
+		if (params == null || params.isEmpty()) {
+			return null;
+		}
+		StringBuilder query = new StringBuilder();
+		Set<Entry<String, String>> entries = params.entrySet();
+		boolean hasParam = false;
+		for (Entry<String, String> entry : entries) {
+			String name = entry.getKey();
+			String value = entry.getValue();
+			// 忽略参数名或参数值为空的参数
+			if (StringUtils.isNotBlank(name) && StringUtils.isNotBlank(value)) {
+				if (hasParam) {
+					query.append("&");
+				} else {
+					hasParam = true;
+				}
+				query.append(name).append("=").append(value);
+			}
+		}
+		return query.toString();
+	}
+
+	/**
+	 * 获取服务器器名称
+	 * 
+	 * @return
+	 */
+	public static String getServerName() {
+		try {
+			InetAddress addr = InetAddress.getLocalHost();
+			String hostName = addr.getHostName();
+			return hostName;
+		} catch (UnknownHostException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	/**
+	 * 获取服务器器名称
+	 * 
+	 * @return
+	 */
+	public static boolean isApp1() {
+		return StringUtils.indexOf(AppUtils.getServerName(), "app1") > -1;
+	}
+	/**
+	 * 获取CRC32
+	 */
+	public static String getCRC32(String data) {
+		CRC32 crc = new CRC32();
+		crc.update(data.getBytes());
+		long value = crc.getValue();
+		return StringUtils.upperCase(Long.toHexString(value));
+	}
+
+	/**
+	 * XSS过滤
+	 * 
+	 * @return
+	 */
+	public static String getNoXSS(String srt) {
+		if (StringUtils.isBlank(srt))
+			return srt;
+		return srt.replaceAll("<", "＞").replaceAll(">", "＜");
+	}
+
+	/**
+	 * 是否是测试环境
+	 * 
+	 * @return
+	 */
+	
+	public static boolean isTestEnv() {
+		String serverName = getServerName();
+		// logger.info("serverName=>" + serverName);
+		int index = StringUtils.indexOf(serverName, "172-16-88-108");
+		if (index > -1) {
+			return true;
+		}else{
+			if (isProduct.equals("-1")){
+				isProduct= PropertiesUtil.getString("application","env.isProduct");
+			}
+			if (!isProduct.equals("1")) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	/**
+	 * 根据ip获取城市信息
+	 * 
+	 * @param ip
+	 * @return
+	 */
+	public static JSONObject getCityInfoByIP(String ip) {
+		HttpEntity he = null;
+		try {
+			String url = "http://api.map.baidu.com/location/ip?ak=%1$s&ip=%2$s";
+			url = String.format(url, "7uYbjeZc3RfQGh7ezUtD3a8kEgfUQevu", ip);
+			he = HttpUtil.Get(url);
+			JSONObject result = null;
+			if (he.getCode() == 200) {
+				result = new JSONObject();
+				String html = he.getHtml();
+				JSONObject json = JSON.parseObject(html);
+				if (null != json && json.containsKey("content")
+						&& (json = json.getJSONObject("content")) != null) {
+					json = json.getJSONObject("address_detail");
+					result.put("city", json.getString("city"));
+					result.put("city_code", json.getInteger("city_code"));
+					return result;
+				}
+			}
+		} catch (Exception e) {
+			String hestr = he == null ? null : JSON.toJSONString(he);
+			String error = "getCityInfoByIP error ip[%s] he:[%s]";
+			logger.error(String.format(error, ip, hestr), e);
+			logger.info(String.format(error, ip, hestr));
+		}
+		return null;
+	}
+	public static void main(String[] args) {
+		for (int i = 0; i < 10000; i++) {
+			System.out.println(getCityInfoByIP("113.67.226.241"));
+		}
+
+	}
+
+//	/**
+//	 * 获取跳转地址
+//	 * 
+//	 * @param action
+//	 * @param id
+//	 * @param subId
+//	 * @return
+//	 */
+//	public static String getTarget(MsgAction action, Object id, Object subId) {
+//		String url = "MSJUMP://%1$s?target=%2$s&subTarget=%3$s";
+//		return String.format(url, action.action, id, subId);
+//	}
+//
+//	/**
+//	 * 获取跳转地址
+//	 * 
+//	 * @param action
+//	 * @param id
+//	 * @param subId
+//	 * @return
+//	 */
+//	public static String getMsgTarget(MsgAction action, Object id, Object subId) {
+//		StringBuffer url = new StringBuffer("MSJUMP://");
+//		url.append(action.action).append("?target=");
+//		if (id != null) {
+//			url.append(id);
+//			if (subId != null) {
+//				url.append("&subTarget=").append(subId);
+//			}
+//		}
+//		return url.toString();
+//	}
+	/**
+	 * 移除标点符号
+	 * 
+	 * @param target
+	 * @return
+	 */
+	public static String removeSymbol(String target) {
+		return target.replaceAll("[\\p{P}+~$`^=|<>～｀＄＾＋＝｜＜＞￥×]", "");
+	}
+
+	/**
+	 * 对字符串进行编码
+	 * 
+	 * @param str
+	 * @return
+	 */
+	public static String URLEncoder(String str) {
+		try {
+			return URLEncoder.encode(str, "utf-8");
+		} catch (UnsupportedEncodingException e) {
+			logger.info(e);
+			logger.error(e, e);
+			return str;
+		}
+	}
+
+	/**
+	 * 是否存在uid
+	 * 
+	 * @param vo
+	 * @return
+	 */
+	public static boolean hasUid(BaseReqVO vo) {
+		return vo.getUid() != null && vo.getUid() > 0;
+	}
+
+	/**
+	 * 是否登录
+	 * 
+	 * @param vo
+	 * @return
+	 */
+	public static boolean checkLogin(BaseReqVO vo) {
+		return vo.getUid() != null && vo.getUid() > 0
+				&& StringUtils.isNotBlank(vo.getLoginKey());
+	}
+	/**
+	 * 获取指定n的日期
+	 * 
+	 * @param n
+	 * @return
+	 */
+	public static String nDate(int n) {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+		Calendar cal = Calendar.getInstance();
+		cal.add(Calendar.DAY_OF_MONTH, n);
+		return sdf.format(cal.getTime());
+	}
+
+	/**
+	 * 对象转MAP
+	 * 
+	 * @param obj
+	 * @return
+	 */
+	public static Map<?, ?> obj2Map(Object obj) {
+		if (obj instanceof Map<?, ?>) {
+			return (Map<?, ?>) obj;
+		} else {
+			String strJson = JSON.toJSONString(obj);
+			return JSON.parseObject(strJson, Map.class);
+		}
+	}
+}

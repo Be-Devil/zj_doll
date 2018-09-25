@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>分享</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="分享">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="分享">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="stylesheet" href="style.css" type="text/css"/>
+</head>
+<body style="font-size: 12px;">
+    <section class="maxBox">
+        <img src="http://lianai-image-sys.qiniudn.com/wa/code-bg.png" alt="" class="s_bg">
+        <div class="codeBox">
+            <div class="codeBoxIn">
+                <span class="codeHead"><img src="http://sglive.imlianai.com/head/1/0/9/3/0/6/6/201703171802313383!s640" alt=""></span><!-- 头像 -->
+                <p class="codeName">可爱的小姐姐姐姐</p><!-- 昵称 -->
+                <div class="type_1" style="display:none">
+                    <p class="codeTXt">我的邀请码</p>
+                    <p class="code">123456789</p>
+                    <div class="copy">复制邀请</div>
+                </div>
+                <div class="type_2">邀请你一起免费抓娃娃~又萌又有趣~</div>
+            </div>
+            <div class="rules">下载即可<em>免费玩3次</em>，输入邀请码<em>再免费玩3次</em>，分享给好友最高活600比！</div>
+        </div>
+        <div class="footer s_footer"><img src="http://lianai-image-sys.qiniudn.com/wa/footer.png" alt=""></div>
+    </section>
+</body>
+</html>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+<script>
+   (function(win) {
+        var doc = win.document;
+        var docEl = doc.documentElement;
+        var tid;
+        function refreshRem() {
+            var width = docEl.getBoundingClientRect().width;
+            if (width > 768) { // 最大宽度
+                width = 768;
+            }
+            var rem = width / 7.5;
+            docEl.style.fontSize = rem + 'px';
+            docEl.style.fontSize = rem + 'px';
+            docEl.style.fontSize = rem + 'px';
+        }
+        win.addEventListener('resize', function() {
+            clearTimeout(tid);
+            tid = setTimeout(refreshRem, 300);
+        }, false);
+        win.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                clearTimeout(tid);
+                tid = setTimeout(refreshRem, 300);
+            }
+        }, false);
+        refreshRem();
+    
+    })(window);
+</script>

@@ -1,0 +1,193 @@
+package com.imlianai.dollpub.app.modules.support.xxrecharge.service;
+
+import java.io.IOException;
+import java.util.Date;
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.configs.AppUtils;
+import com.imlianai.dollpub.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.dollpub.app.modules.core.trade.util.common.HttpConnection;
+import com.imlianai.dollpub.app.modules.core.trade.util.common.MD5Util;
+import com.imlianai.dollpub.app.modules.support.userdoll.service.UserDollService;
+import com.imlianai.dollpub.app.modules.support.xxrecharge.constants.XxingRechargeConstants;
+import com.imlianai.dollpub.app.modules.support.xxrecharge.dao.XxingRechargeDao;
+import com.imlianai.dollpub.app.modules.support.xxrecharge.vo.QueryReqVO;
+import com.imlianai.dollpub.app.modules.support.xxrecharge.vo.QueryRespVO;
+import com.imlianai.dollpub.app.modules.support.xxrecharge.vo.TradeChargeReqVO;
+import com.imlianai.dollpub.app.modules.support.xxrecharge.vo.TradeChargeRespVO;
+import com.imlianai.dollpub.domain.doll.DollInfo;
+import com.imlianai.dollpub.domain.doll.user.UserDoll;
+import com.imlianai.dollpub.domain.xxtrade.XinxingTradeCharge;
+import com.imlianai.dollpub.domain.xxtrade.enm.TelChargeType;
+import com.imlianai.dollpub.domain.xxtrade.enm.TelDataType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.common.json.Jackson;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+@Service
+public class XxingRechargeServiceImpl implements XxingRechargeService {
+	
+	private static final BaseLogger LOG = BaseLogger.getLogger(XxingRechargeServiceImpl.class);
+	
+	@Resource
+	XxingRechargeDao xxingRechargeDao;
+	@Resource
+	UserDollService userDollService;
+	@Resource
+	DollInfoService dollInfoService;
+
+	@Override
+	public BaseRespVO handleRecharge(Long uid, int type, int productCode, long phone, long uDollId) {
+		try {
+			UserDoll userDoll = userDollService.getUserDollById(uDollId);
+			if(userDoll == null) {
+				return new BaseRespVO(-1, false, "用户娃娃不存在~");
+			}
+			DollInfo dollInfo = dollInfoService.getDollInfo(userDoll.getDollId());
+			if(dollInfo.getGoodsType() != 1) {
+				return new BaseRespVO(-1, false, "不是虚拟物品，不可操作~");
+			}
+			double num = 0;
+			String desc = "";
+			TelDataType telDataType = TelDataType.getTelDataTypeByCode(productCode);
+			if(telDataType == null) {
+				TelChargeType telChargeType = TelChargeType.getTelChargeTypeByCode(productCode);
+				if(telChargeType == null) {
+					return new BaseRespVO(-1, false, "没有对应可充值类型的产品~");
+				} else {
+					num = telChargeType.getNum();
+					desc = telChargeType.getDesc();
+				}
+			} else {
+				num = telDataType.getNum();
+				desc = telDataType.getDesc();
+			}
+			XinxingTradeCharge tradeCharge = new XinxingTradeCharge();
+			tradeCharge.setUid(uid);
+			tradeCharge.setPhone(phone);
+			tradeCharge.setType(type);
+			tradeCharge.setStatus(0);
+			tradeCharge.setNum(num);
+			tradeCharge.setProductCode(productCode);
+			tradeCharge.setRemark(desc);
+			tradeCharge.setuDollId(uDollId);
+			String orderNo = "";
+			long timestamp = 0;
+			for(int i = 1; i <= 3; i++) { // 订单号重复时重试次数
+				timestamp = new Date().getTime();
+				if(AppUtils.isTestEnv()) {
+					orderNo = "test" + timestamp;
+				} else {
+					orderNo = timestamp + "";
+				}
+				tradeCharge.setOrderNo(orderNo);
+				int result = xxingRechargeDao.saveXinxingTradeCharge(tradeCharge);
+				if(result > 0) break;
+				if(i == 3) {
+					return new BaseRespVO(-1, false, "生成订单失败，请重试~");
+				}
+			}
+			TradeChargeReqVO reqVO = getTradeChargeReqVO(productCode, phone, orderNo, timestamp); // 生成充值对象
+			String reqStr = JSON.toJSONString(reqVO);
+			try {
+				String result = HttpConnection.doPost(XxingRechargeConstants.CHARGE_URL, reqStr); // 充值
+				int createDate = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+				xxingRechargeDao.saveXinxingTradeChargeLog(tradeCharge.getOrderNo(), uid, reqStr, result, createDate);
+				if(!StringUtil.isNullOrEmpty(result)) {
+					TradeChargeRespVO respVO = Jackson.jsonToObj(result, TradeChargeRespVO.class);
+					int status = 0;
+					if(respVO.getRspCode() == 0) { // 订单提交成功
+						status = 2;
+					} else {
+						status = 1;
+					}
+					xxingRechargeDao.updateTradeChargeSubmitStatus(tradeCharge.getOrderNo(), status);
+					if(status == 1) {
+						return new BaseRespVO(-1, false, "订单提交失败，【" + respVO.getRspMsg() + "】");
+					} 
+					return new BaseRespVO();
+				} else {
+					return new BaseRespVO(-1, false, "充值返回信息异常~");
+				}
+			} catch (Exception e) {
+				PrintException.printException(LOG, e);
+				return new BaseRespVO(-1, false, "充值失败，请重试~");
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "系统异常，请重试~");
+		}
+	}
+	
+	private TradeChargeReqVO getTradeChargeReqVO(int productCode, long phone, String orderNo, long timestamp) {
+		String origin = "accountVal" + phone + "clientId" + XxingRechargeConstants.clientId + "merchant" + XxingRechargeConstants.merchant + 
+				"outTradeNo" + orderNo + "product" + productCode + "ts" + timestamp + "version" + XxingRechargeConstants.VERSION + XxingRechargeConstants.API_KEY;
+		String sign = MD5Util.MD5Encode(origin, "utf-8");
+		LOG.info("******origin:" + origin + "******sign:" + sign);
+		
+		TradeChargeReqVO reqVO = new TradeChargeReqVO();
+		reqVO.setAccountVal(phone+"");
+		reqVO.setProduct(productCode);
+		reqVO.setOutTradeNo(orderNo);
+		reqVO.setTs(timestamp);
+		reqVO.setSign(sign);
+		return reqVO;
+	}
+	
+	@Override
+	public int saveCallBackInfo(String orderNo, String callBackValue) {
+		return xxingRechargeDao.saveCallBackInfo(orderNo, callBackValue);
+	}
+
+	@Override
+	public int updateTradeChargeStatus(String orderNo, int status, String failReason) {
+		return xxingRechargeDao.updateTradeChargeStatus(orderNo, status, failReason);
+	}
+
+	@Override
+	public void xinxingRechargeQuery() {
+		try {
+			List<XinxingTradeCharge> list = xxingRechargeDao.queryRechargingOrderNo(); // 前5分钟充值状态为充值中的订单
+			if(!StringUtil.isNullOrEmpty(list)) {
+				for(XinxingTradeCharge xinxingTradeCharge : list) {
+					QueryReqVO reqVO = getQueryReqVO(xinxingTradeCharge);
+					String reqStr = JSON.toJSONString(reqVO);
+					try {
+						String result = HttpConnection.doPost(XxingRechargeConstants.QUERY_URL, reqStr);
+						if(!StringUtil.isNullOrEmpty(result)) {
+							QueryRespVO respVO = Jackson.jsonToObj(result, QueryRespVO.class);
+							if(respVO != null && respVO.getRspCode() == 0
+									&& (respVO.getStatus() == 4 || respVO.getStatus() == 5)) {
+								xxingRechargeDao.updateTradeChargeStatus(xinxingTradeCharge.getOrderNo(), respVO.getStatus(), respVO.getRspMsg());
+							}
+						}
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+		}
+	}
+
+	private QueryReqVO getQueryReqVO(XinxingTradeCharge xinxingTradeCharge) {
+		long ts = new Date().getTime();
+		String origin = "clientId" + XxingRechargeConstants.clientId + "merchant" + XxingRechargeConstants.merchant + 
+				"outTradeNo" + xinxingTradeCharge.getOrderNo() + "ts" + ts + "version" + XxingRechargeConstants.VERSION + XxingRechargeConstants.API_KEY;
+		String sign = MD5Util.MD5Encode(origin, "utf-8");
+		QueryReqVO reqVO = new QueryReqVO();
+		reqVO.setOutTradeNo(xinxingTradeCharge.getOrderNo());
+		reqVO.setTs(ts);
+		reqVO.setSign(sign);
+		return reqVO;
+	}
+}

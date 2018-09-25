@@ -1,0 +1,11 @@
+package com.imlianai.dollpub.app.modules.core.dice.service;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 11:54
+ **/
+public interface DiceService {
+
+    void sendShakeReturn(int busId);
+
+}

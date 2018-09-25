@@ -1,0 +1,138 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.cmd;
+
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinUnity3DService;
+import com.imlianai.dollpub.app.modules.core.coinfactory.util.PushCoinVirtualUtil;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.EntryVirtualRoomReqVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.OperateRespVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.OperateVirtualReqVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.VirtualCallBackReqVO;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.app.modules.core.user.customer.service.CustomerService;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LogHead;
+import com.imlianai.rpc.support.manager.aspect.annotations.SignCheck;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.stereotype.Component;
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+
+/**
+ * @author wurui
+ * @create 2018-05-19 16:47
+ **/
+@Component("pushCoinVirtual")
+public class PushCoinUnityCmd extends RootCmd{
+
+    private BaseLogger logger  = BaseLogger.getLogger(getClass());
+
+    @Resource
+    private CustomerService customerService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private PushCoinUnity3DService pushCoinUnity3DService;
+
+
+    @SignCheck
+    @LogHead("进入虚拟推币机房间接口")
+    @ApiHandle
+    @Path("api/pushCoinVirtual/entryRoom")
+    @ApiOperation(value = "进入虚拟房间",notes = "进入房间",httpMethod = "POST",response = BaseRespVO.class,position = 1)
+    public BaseRespVO entryRoom(EntryVirtualRoomReqVO reqVO){
+        return pushCoinUnity3DService.entryVirtualCoinPushRoom(reqVO);
+    }
+
+
+
+    @SignCheck
+    @ApiHandle
+    @LogHead("虚拟推币机上机接口")
+    @Path("api/pushCoinVirtual/apply")
+    @ApiOperation(value = "上机",notes = "上机成功后返回操作ID",httpMethod = "POST",response = OperateRespVO.class,position = 2)
+    public BaseRespVO apply(OperateVirtualReqVO vo){
+        Customer customer = customerService.getCustomer(vo.getAppId());
+        if (customer == null) {
+            return new BaseRespVO(-1, false, "上机失败,商户不存在");
+        }
+        return pushCoinUnity3DService.apply(vo.getUid(),vo.getBusId(),customer);
+    }
+
+
+
+    @SignCheck
+    @ApiHandle
+    @LogHead("虚拟推币机投币接口")
+    @Path("api/pushCoinVirtual/push")
+    @ApiOperation(value = "投币",notes = "投币相当于上机，投币之后超过30秒未继续投币则自动结束上机",httpMethod = "POST",response = OperateRespVO.class,position = 3)
+    public BaseRespVO push(OperateVirtualReqVO vo){
+        Customer customer = customerService.getCustomer(vo.getAppId());
+        if (customer == null) {
+            return new BaseRespVO(-1, false, "商户不存在");
+        }
+        return pushCoinUnity3DService.putCoin(vo.getUid(),vo.getBusId(),customer);
+    }
+
+
+    @SignCheck
+    @ApiHandle
+    @LogHead("虚拟推币机摆动接口")
+    @Path("api/pushCoinVirtual/operate")
+    @ApiOperation(value = "摆动",notes = "摆动",httpMethod = "POST",response = BaseRespVO.class,position = 4)
+    public BaseRespVO operate(OperateVirtualReqVO vo){
+        Customer customer = customerService.getCustomer(vo.getAppId());
+        if (customer == null) {
+            return new BaseRespVO(-1, false, "商户不存在");
+        }
+        return pushCoinUnity3DService.operate(vo.getUid(),vo.getBusId(),customer);
+    }
+
+
+    @SignCheck
+    @ApiHandle
+    @LogHead("虚拟推币机下机接口")
+    @Path("api/pushCoinVirtual/finish")
+    @ApiOperation(value = "主动下机",notes = "主动下机",httpMethod = "POST",response = BaseRespVO.class,position = 5)
+    public BaseRespVO finish(OperateVirtualReqVO vo){
+        Customer customer = customerService.getCustomer(vo.getAppId());
+        if (customer != null){
+            return pushCoinUnity3DService.finish(vo.getUid(),vo.getBusId(),customer);
+        }
+        return new BaseRespVO(0,false,"当前商户不存在");
+    }
+
+    @SignCheck
+    @ApiHandle
+    @LogHead("离开虚拟推币机房间接口")
+    @Path("api/pushCoinVirtual/leave")
+    @ApiOperation(value = "离开虚拟房间",notes = "离开房间",httpMethod = "POST",response = BaseRespVO.class,position = 6)
+    public BaseRespVO leave(EntryVirtualRoomReqVO reqVO) {
+        return pushCoinUnity3DService.laveVirtualCoinPushRoom(reqVO);
+    }
+
+
+    @SignCheck
+    @ApiHandle
+    @LogHead("虚拟推币机回调接口")
+    @Path("api/pushCoinVirtual/callback")
+    public BaseRespVO callback(VirtualCallBackReqVO vo){
+        Customer customer = customerService.getCustomer(vo.getAppId());
+        if (customer != null){
+            DollBus dollBus = dollBusService.getDollBus(vo.getBusId());
+            if (dollBus != null){
+                return pushCoinUnity3DService.handleCallback(vo.getP1(),vo.getP2(),vo.getP3(),vo.getP4(),vo.getP5(),dollBus,vo.getUid(),customer);
+            }
+
+        }
+        return new BaseRespVO(0,false,"当前商户不存在");
+    }
+
+
+}

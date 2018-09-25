@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+
+<head lang=en>
+    <meta charset=utf-8>
+    <meta http-equiv=X-UA-Compatible content="IE=edge">
+    <title>战绩分享</title>
+    <meta name=viewport content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name=description content=战绩分享>
+    <meta name=apple-mobile-web-app-capable content=yes>
+    <meta name=apple-mobile-web-app-title content=战绩分享>
+    <meta name=apple-mobile-web-app-status-bar-style content=black>
+    <meta http-equiv=Cache-Control content=no-siteapp>
+    <meta http-equiv=Cache-Control content=no-transform>
+    <meta name=format-detection content="telephone=no">
+    <link rel=stylesheet href=./style.css type=text/css>
+    <link href=./static/css/app.ccd236835bc95b0924b25ccb9dc0f54f.css rel=stylesheet>
+</head>
+
+<body style="font-size: 12px">
+    <div id=app></div>
+    <script type=text/javascript src=./static/js/manifest.5f3ac1b84b962044275b.js></script>
+    <script type=text/javascript src=./static/js/vendor.0b7784265c08ed6e1b26.js></script>
+    <script type=text/javascript src=./static/js/app.b1f74014d09d560aaa1b.js></script>
+</body>
+<script>
+(function(win) {
+    var doc = win.document;
+    var docEl = doc.documentElement;
+    var tid;
+
+    function refreshRem() {
+        var width = docEl.getBoundingClientRect().width;
+        if (width > 768) { // 最大宽度
+            width = 768;
+        }
+        var rem = width / 7.5;
+        docEl.style.fontSize = rem + 'px';
+        docEl.style.fontSize = rem + 'px';
+        docEl.style.fontSize = rem + 'px';
+    }
+    win.addEventListener('resize', function() {
+        clearTimeout(tid);
+        tid = setTimeout(refreshRem, 300);
+    }, false);
+    win.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            clearTimeout(tid);
+            tid = setTimeout(refreshRem, 300);
+        }
+    }, false);
+    refreshRem();
+})(window);
+</script>
+
+</html>

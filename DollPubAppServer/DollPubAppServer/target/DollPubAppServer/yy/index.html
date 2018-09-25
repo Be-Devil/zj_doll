@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>YY直播登录</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="YY直播登录">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="YY直播登录">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no"/>
+    <script src="https://cdn.bootcss.com/jquery/3.3.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+
+    <script src="js/udb.sdk.rsa.js"></script>
+    <script src="js/sec_hiidoStatistics.js"></script>
+    <script src="js/security.min.js"></script>
+
+    <!--<script src="https://unpkg.com/axios/dist/axios.min.js"></script>-->
+    <!--<script src="https://cdn.bootcss.com/qs/6.5.2/qs.js"></script>-->
+    <script src="http://cdn.static.runoob.com/libs/angular.js/1.4.6/angular.min.js"></script>
+</head>
+
+<body>
+
+<div id="app"></div>
+
+</body>
+
+</html>
+
+<script>
+
+    function addSecurity() {
+        var sec = document.createElement("script");
+        sec.src = 'js/security.min.js?temp='+(~~(new Date()/(1000*60*60)))+'&pageType=101';
+        var s = document.getElementsByTagName("script")[0];
+
+        s.parentNode.insertBefore(sec, s);
+    }
+
+    $(function () {
+
+
+        addSecurity()
+
+
+            $.ajax({
+                type: "POST",
+                dataType: 'jsonp',
+                timeout: 10000, // 超时时间 10 秒
+                headers: {
+                    'Access-Control-Allow-Origin':"*",
+                    "Content-Type":"application/x-www-form-urlencoded;charset=utf-8",
+                },
+                url: "http://www.yy.com/login/getSdkAuth",
+                data: {embed:true},
+                success: function(data) {
+                    var url  = JSON.stringify(data)
+
+                    var token = url.substring(url.indexOf("oauth_token=")+12,url.indexOf("&denyCallbackURL"));
+
+                    console.info("oauth_token===" + token)
+
+                    var post={
+                        username: "2294059927",
+                        //password: passwd,
+                        pwdencrypt: UDB.SDK.rsa.RSAUtils.encryptedString("jianming123"),
+                        oauth_token: token,
+                        isRemMe: 1,
+                        hiido:1
+                    }
+
+                    $.post("/api/yyLogin/doLogin",JSON.stringify(post),function(resultJSONObject){
+                        if(resultJSONObject.success){
+                            console.info(resultJSONObject)
+                        }else{
+                            console.info(resultJSONObject)
+                        }
+                    });
+
+                },
+                error: function(err) {
+                    console.info(JSON.stringify(err))
+                },
+                complete: function(XMLHttpRequest, status) { //请求完成后最终执行参数　
+                }
+            })
+
+
+
+
+
+    });
+
+    // var vm = new Vue({
+    //     el: '#app',
+    //     data: {
+    //
+    //         Loginurl:"https://lgn.yy.com/lgn/oauth/x2/s/login_asyn.do",
+    //
+    //         post:{
+    //             username: "2294059927",
+    //             //password: passwd,
+    //             pwdencrypt: "",
+    //             oauth_token: "",
+    //             denyCallbackURL: "http://www.yy.com/login/udbCallback?cancel=1",
+    //             UIStyle: "xelogin",
+    //             appid: "5719",
+    //             cssid: "5719",
+    //             mxc: "",
+    //             vk: "",
+    //             isRemMe: 1,
+    //             mmc: "",
+    //             vv: "",
+    //             hiido:1
+    //         }
+    //
+    //     },
+    //     methods: {
+    //
+    //         handelLogin(){
+    //             //成功登录
+    //             if (window['UDBHiidoStatistics'] != null) {
+    //                 var hiidoData = {
+    //                     rptype: 0,
+    //                     des: '成功登录',
+    //                     appid: "5719",
+    //                     isTwo:0,
+    //                     passport:"",
+    //                     uid:"",
+    //                     bak1:0
+    //                 }
+    //
+    //                 UDBHiidoStatistics.sendLogin(hiidoData, function() {
+    //                     location.href = res.obj.callbackURL;
+    //                 });
+    //             } else {
+    //                 location.href = res.obj.callbackURL;
+    //             }
+    //         },
+    //
+    //     },
+    //     mounted() {
+    //         // var _this =  this;
+    //         // $.post(_this.Loginurl,JSON.stringify(_this.post),function(data) {
+    //         //     var result = JSON.parse(data);
+    //         //     console.info(result)
+    //         // });
+    //
+    //
+    //     }
+    // });
+
+</script>

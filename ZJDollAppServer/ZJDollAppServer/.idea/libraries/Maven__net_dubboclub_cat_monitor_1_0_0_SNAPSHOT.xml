@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: net.dubboclub:cat-monitor:1.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/dubboclub/cat-monitor/1.0.0-SNAPSHOT/cat-monitor-1.0.0-20180507.092752-18.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/net/dubboclub/cat-monitor/1.0.0-SNAPSHOT/cat-monitor-1.0.0-20180507.092752-18-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/net/dubboclub/cat-monitor/1.0.0-SNAPSHOT/cat-monitor-1.0.0-20180507.092752-18-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

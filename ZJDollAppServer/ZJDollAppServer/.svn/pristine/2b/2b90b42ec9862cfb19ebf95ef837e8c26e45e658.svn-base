@@ -1,0 +1,157 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.controller;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LogHead;
+import com.imlianai.rpc.support.manager.aspect.annotations.LoginCheck;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.controller.RootCmd;
+import com.imlianai.zjdoll.app.modules.core.push.consts.PushCoinConsts;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.service.PushCoinVirtualService;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.vo.*;
+import com.imlianai.zjdoll.app.modules.core.push.vo.CallbackReqVO;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.vo.VirtualFruitsVerifyReqVO;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * 虚拟推币机
+ *
+ * @author wurui
+ * @create 2018-07-04 11:49
+ **/
+@Component("pushCoinVirtual")
+public class PushCoinVirtualCmd extends RootCmd {
+
+
+    @Resource
+    private PushCoinVirtualService pushCoinVirtualService;
+
+
+    @LoginCheck
+    @LogHead("进入虚拟推币机房间接口")
+    @ApiHandle
+    @Path("api/pushCoinVirtual/entryRoom")
+    @ApiOperation(value = "进入虚拟房间", notes = "进入房间", httpMethod = "POST", response = BaseRespVO.class, position = 1)
+    public BaseRespVO entryRoom(EntryVirtualRoomReqVO reqVO) {
+        return pushCoinVirtualService.entryVirtualCoinPushRoom(reqVO);
+    }
+
+
+    @LoginCheck
+    @LogHead("离开虚拟推币机房间接口")
+    @ApiHandle
+    @Path("api/pushCoinVirtual/leave")
+    @ApiOperation(value = "离开虚拟房间", notes = "离开房间", httpMethod = "POST", response = BaseRespVO.class, position = 2)
+    public BaseRespVO leave(EntryVirtualRoomReqVO reqVO) {
+        return pushCoinVirtualService.laveVirtualCoinPushRoom(reqVO);
+    }
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机上机接口")
+    @Path("api/pushCoinVirtual/apply")
+    @ApiOperation(value = "上机", notes = "上机成功后返回操作ID", httpMethod = "POST", response = OperateVirtualReqVO.class, position = 3)
+    public BaseRespVO apply(OperateVirtualReqVO vo) {
+        return pushCoinVirtualService.apply(vo);
+    }
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机投币接口")
+    @Path("api/pushCoinVirtual/push")
+    @ApiOperation(value = "投币", notes = "投币成功后返回操作ID", httpMethod = "POST", response = OperateVirtualReqVO.class, position = 4)
+    public BaseRespVO push(OperateVirtualReqVO vo) {
+        return pushCoinVirtualService.push(vo);
+    }
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机摆动接口")
+    @Path("api/pushCoinVirtual/operate")
+    @ApiOperation(value = "摆动", notes = "摆动", httpMethod = "POST", response = BaseRespVO.class, position = 5)
+    public BaseRespVO operate(OperateVirtualReqVO vo) {
+        return pushCoinVirtualService.operate(vo);
+    }
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机下机接口")
+    @Path("api/pushCoinVirtual/finish")
+    @ApiOperation(value = "下机", notes = "下机", httpMethod = "POST", response = BaseRespVO.class, position = 6)
+    public BaseRespVO finish(OperateVirtualReqVO vo) {
+        return pushCoinVirtualService.finish(vo);
+    }
+
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机水果机查奖接口")
+    @Path("api/pushCoinVirtual/query")
+    @ApiOperation(value = "水果机查奖", notes = "水果机查奖", httpMethod = "POST", response = VirtualFruitsQueryRespVO.class, position = 7)
+    public BaseRespVO query(VirtualFruitsQueryReqVO vo) {
+        return pushCoinVirtualService.query(vo);
+    }
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机确认中奖接口")
+    @Path("api/pushCoinVirtual/affirm")
+    @ApiOperation(value = "确认中奖", notes = "确认中奖", httpMethod = "POST", response = VirtualFruitsQueryRespVO.class, position = 8)
+    public BaseRespVO affirm(VirtualFruitsAffirmReqVO vo) {
+        return pushCoinVirtualService.affirm(vo);
+    }
+
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机验证中奖结果接口")
+    @Path("api/pushCoinVirtual/verify")
+    @ApiOperation(value = "验证中奖结果", notes = "验证中奖结果", httpMethod = "POST", response = VirtualFruitsQueryRespVO.class, position = 9)
+    public BaseRespVO verify(VirtualFruitsVerifyReqVO vo) {
+        return pushCoinVirtualService.verify(vo);
+    }
+
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机刷新时间接口")
+    @Path("api/pushCoinVirtual/refresh")
+    @ApiOperation(value = "刷新时间", notes = "刷新时间", httpMethod = "POST", response = VirtualFruitsQueryRespVO.class, position = 10)
+    public BaseRespVO refresh(OperateVirtualReqVO vo) {
+        return pushCoinVirtualService.refresh(vo);
+    }
+
+    @LoginCheck
+    @ApiHandle
+    @LogHead("虚拟推币机拉霸机投币摇奖接口")
+    @Path("api/pushCoinVirtual/slots")
+    @ApiOperation(value = "拉霸机投币摇奖", notes = "拉霸机投币摇奖", httpMethod = "POST", response = VirtualFruitsQueryRespVO.class, position = 11)
+    public BaseRespVO slots(VirtualFruitsSlotsReqVO reqVO){
+        return pushCoinVirtualService.slots(reqVO);
+    }
+
+
+
+    @ApiHandle
+    @LogHead("虚拟推币机出奖回调")
+    @Path("api/pushCoinVirtual/CoinToJewel")
+    public BaseRespVO CoinToJewel(CallbackReqVO vo) {
+        if (!StringUtil.isNullOrEmpty(vo)) {
+            logger.info("virtual CoinToJewel=>" + JSON.toJSONString(vo));
+            if (null != vo.getAuto() && vo.getAuto().equals(PushCoinConsts.SERVICE_AUTO_VIRTUAL)) {
+                if (pushCoinVirtualService.CoinToJewel(vo.getUid(), vo.getBusId(), vo.getOptId(), vo.getOutCoin(), vo.getWin(), vo.getIsFinal()) == 1) {
+                    return new BaseRespVO(200, true, "数据请求成功");
+                } else {
+                    return new BaseRespVO(100, true, "数据请求成功");
+                }
+            }
+        }
+        return new BaseRespVO(0, false, "非法操作");
+    }
+
+}

@@ -1,0 +1,15 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+
+/**
+ * @author wurui
+ * @create 2018-06-19 10:11
+ **/
+public interface PushCoinFruitsConfigDao {
+    int insert(PushCoinFruitsConfig pushCoinFruitsConfig);
+    int delete(int id);
+    int update(PushCoinFruitsConfig pushCoinFruitsConfig);
+    PushCoinFruitsConfig selectConfig(int id);
+
+}

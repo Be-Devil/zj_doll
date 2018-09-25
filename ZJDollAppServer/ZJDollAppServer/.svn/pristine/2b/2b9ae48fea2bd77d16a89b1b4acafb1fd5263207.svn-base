@@ -1,0 +1,11 @@
+package com.imlianai.zjdoll.app.modules.core.push.consts;
+
+/**
+ * @author wurui
+ * @create 2018-05-23 14:21
+ **/
+public class PushCoinConsts {
+
+    public static final String SERVICE_AUTO = "dollPub_service_app_88";
+
+}

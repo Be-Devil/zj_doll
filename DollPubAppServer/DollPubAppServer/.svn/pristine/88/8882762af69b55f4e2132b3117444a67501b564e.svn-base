@@ -1,0 +1,41 @@
+package com.imlianai.dollpub.app.modules.support.shopkeeper.dao;
+
+import com.imlianai.dollpub.domain.shopkeeper.ShopkeeperWithdrawRecord;
+
+import java.util.List;
+
+/**
+ * 店主提现记录dao
+ * @author wurui
+ * @create 2018-04-26 19:43
+ **/
+public interface ShopkeeperWithdrawRecordDao {
+    int addRecord(ShopkeeperWithdrawRecord record);
+    int updateStatus(int id, int status, String remark);
+    List<ShopkeeperWithdrawRecord> getRecord(long uid);
+    List<ShopkeeperWithdrawRecord> getMonthRecord(long uid);
+    List<ShopkeeperWithdrawRecord> getDayRecord(long uid, String date);
+    
+    /**
+     * 获取待发放的记录
+     * @param size
+     * @return
+     */
+	ShopkeeperWithdrawRecord getRecordToPay(int size);
+	
+	/**
+	 * 更新支付状态
+	 * @param id
+	 * @param payState
+	 * @return
+	 */
+	public int updatePayState(int id,int payState);
+	
+	/**
+	 * 更新备注
+	 * @param id
+	 * @param remark
+	 * @return
+	 */
+	public int updateRemark(long id,String remark);
+}

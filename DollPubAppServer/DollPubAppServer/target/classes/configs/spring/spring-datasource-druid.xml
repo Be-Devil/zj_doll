@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.0.xsd
+        http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd">
+        
+	<bean id="dataSourceApp" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">  
+        <property name="url" value="jdbc:mysql://${doll_app_master.url}?useUnicode=true&amp;characterEncoding=UTF-8&amp;rewriteBatchedStatements=true&amp;zeroDateTimeBehavior=convertToNull&amp;useAffectedRows=true" />  
+        <property name="username" value="${doll_app_master.username}" />  
+        <property name="password" value="${doll_app_master.password}" />  
+        <property name="maxWait" value="${doll_app_master.maxwait}" /> 
+        <property name="initialSize" value="${doll_app_master.initsize}" />
+        <property name="minIdle" value="${doll_app_master.minidle}" />  
+        <property name="maxActive" value="${doll_app_master.maxactive}" />
+        <property name="timeBetweenEvictionRunsMillis" value="3000" /> 
+        <property name="minEvictableIdleTimeMillis" value="300000" />  
+        <property name="validationQuery" value="SELECT 'x' FROM DUAL" />
+        <property name="testWhileIdle" value="true" /> 
+        <property name="testOnBorrow" value="false" />  
+        <property name="testOnReturn" value="false" />  
+        
+        <!-- 开启Druid的监控统计功能 -->  
+        <property name="filters" value="stat" /> 
+		<property name="removeAbandoned" value="true" /> <!-- 打开removeAbandoned功能 -->
+	    <property name="removeAbandonedTimeout" value="900" /> <!-- 1800秒，也就是30分钟 -->
+	    <property name="logAbandoned" value="true" /> <!-- 关闭abanded连接时输出错误日志 -->               
+    </bean>		
+	
+	<bean id="dataSourceAppSlave" class="com.alibaba.druid.pool.DruidDataSource" init-method="init" destroy-method="close">  
+        <property name="url" value="jdbc:mysql://${doll_app_slave.url}?useUnicode=true&amp;characterEncoding=UTF-8&amp;rewriteBatchedStatements=true&amp;zeroDateTimeBehavior=convertToNull" />  
+        <property name="username" value="${doll_app_slave.username}" />  
+        <property name="password" value="${doll_app_slave.password}" />  
+        <property name="maxWait" value="${doll_app_slave.maxwait}" /> 
+        <property name="initialSize" value="${doll_app_slave.initsize}" />
+        <property name="minIdle" value="${doll_app_slave.minidle}" />  
+        <property name="maxActive" value="${doll_app_slave.maxactive}" />
+        <property name="timeBetweenEvictionRunsMillis" value="3000" /> 
+        <property name="minEvictableIdleTimeMillis" value="300000" />  
+        <property name="validationQuery" value="SELECT 'x' FROM DUAL" />
+        <property name="testWhileIdle" value="true" /> 
+        <property name="testOnBorrow" value="false" />  
+        <property name="testOnReturn" value="false" />  
+        
+        <!-- 开启Druid的监控统计功能 -->  
+        <property name="filters" value="stat" />        
+    </bean>	
+	
+	
+	<bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="dataSourceApp"></property>
+	</bean>
+	<tx:annotation-driven transaction-manager="transactionManager"/>	
+</beans>

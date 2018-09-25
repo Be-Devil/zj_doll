@@ -1,0 +1,247 @@
+package com.imlianai.dollpub.app.modules.publics.oauth.wechat.callback;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.springframework.stereotype.Component;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserSrcService;
+import com.imlianai.dollpub.app.modules.core.user.vo.UserWechatRegRespVO;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.service.WechatService;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinShareOauthUtil;
+import com.imlianai.dollpub.app.modules.publics.oauth.wechat.utils.WebWeixinTokenHandler;
+import com.imlianai.dollpub.app.modules.publics.security.SecurityManager;
+import com.imlianai.dollpub.app.modules.support.invite.h5.service.InviteH5Service;
+import com.imlianai.dollpub.app.modules.support.shopkeeper.service.ShopkeeperService;
+import com.imlianai.dollpub.domain.oauth.WechatAppSetting;
+import com.imlianai.dollpub.domain.user.UserBase;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+/**
+ * 微信网页用户授权
+ * 
+ * @author tensloveq
+ * 
+ */
+@Component
+public class WechatInviteOauthController {
+
+	protected Logger logger = Logger.getLogger(this.getClass());
+
+	@Resource
+	private UserService userService;
+
+	@Resource
+	private WechatService wechatService;
+	@Resource
+	private SecurityManager securityManager;
+	@Resource
+	private ShopkeeperService shopkeeperService;
+
+	private final boolean isDebug = true;
+
+	private final String auth_domain = "http://www.realgamecloud.com";//
+	// 获取用户信息的授权域名
+	// private final String auth_domain =
+	// "http://t.xiehou360.com/DollPubAppServer";
+
+	private final String oauth_url = "/api/inviteOauth/"; // 授权路径
+	// 授权入口
+	private final String commonEntanceUrl = "wxAuth";
+	// 获取用户openId
+	private final String getOpenIdUrl = "getOpenId";
+	// 获取用户信息
+	private final String getUserInfo = "getUserInfo";
+	// 保存用户信息
+	private final String saveUserInfo = "saveUserInfo";
+	// 仅获取code
+	private final String codeOnly = "codeOnly";
+
+	@Resource
+	private InviteH5Service inviteH5Service;
+
+	private String defaultTarget = "doll";
+	@Resource
+	private UserSrcService userSrcService;
+
+	/**
+	 * 授权入口
+	 * 
+	 * @param request
+	 * @param response
+	 * @throws IOException
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void handleFirstStep(HttpServletRequest request,
+			HttpServletResponse response, String customerId, String agentId,
+			String inviteUid) throws IOException {
+		String dir_url = null;
+		String queryParam = "";
+		Map map = request.getParameterMap();
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		logger.info("handleFirstStep 进入授权页 ---appid:" + appid + " map:"
+				+ JSON.toJSONString(map));
+		// 开始第一步-判断是否是微信
+		String platform = request.getHeader("User-Agent");
+		if (StringUtils.indexOfIgnoreCase(platform, "micromessenger") < 0) {// 如果不是微信agent跳转官网
+			String urlString = getRedictUrlByCode(defaultTarget);
+			response.sendRedirect(urlString);
+		} else {
+			String authOpenID = null;
+			if (StringUtils.isNotBlank(authOpenID)) {
+				// 从cookie找出是否有记录下来的openID
+			} else {// 未授权，则走微信授权
+				queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+						request.getParameterMap(), new String[] { "code" });
+				dir_url = auth_domain + oauth_url + codeOnly + "/"
+						+ inviteUid + "?"
+						+ queryParam;
+				WebWeixinShareOauthUtil.redirect4GetCodeUnauth(response, appid,
+						dir_url, true);
+			}
+		}
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void saveUserInfo(HttpServletRequest request,
+			HttpServletResponse response, String customerIdStr, String agentId,
+			String inviteUid) throws IOException {
+		String appid = request.getParameter("appid");
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		String code = request.getParameter("code");
+		Map map = request.getParameterMap();
+		logger.info("saveUserInfo.do---- map:" + JSON.toJSONString(map));
+		String queryParam = WebWeixinShareOauthUtil.getQueryParameter(map,
+				new String[] { "code" });
+		String dir_url = "";
+		dir_url = auth_domain + oauth_url + codeOnly + "/" + customerIdStr
+				+ "/" + agentId + "/" + inviteUid + "?" + "code=" + code + "&"
+				+ queryParam;
+		logger.info("saveUserInfo.do-----dir_url:" + dir_url);
+		response.sendRedirect(dir_url);
+	}
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public void codeOnly(HttpServletRequest request,
+			HttpServletResponse response, String customerIdStr, String agentId,
+			String inviteUidStr) throws IOException {
+		Map map = request.getParameterMap();
+		logger.info("codeOnly.do---- map:" + JSON.toJSONString(map));
+		String appid = request.getParameter("appid");
+		int customerId = 0;
+		try {
+			customerId = Integer.parseInt(customerIdStr);
+		} catch (Exception e) {
+		}
+		if (StringUtil.isNullOrEmpty(appid)) {
+			appid = WebWeixinTokenHandler.getDefaultAppid();
+		}
+		String code = request.getParameter("code");
+		// 初始化用户
+		int agentIdInt = 1;
+		try {
+			agentIdInt = Integer.parseInt(agentId);
+		} catch (Exception e) {
+			PrintException.printException(logger, e);
+		}
+		WechatAppSetting wechatAppSetting = wechatService
+				.getWechatAppSetting(appid);
+		String appSecret = wechatAppSetting.getAppsecret();
+		UserWechatRegRespVO vo = userService.initUserWechat(appid, appSecret,
+				code, customerId==91?84:customerId, agentIdInt);
+		if (vo.isState()) {
+			UserBase user = userService.getUserBase(vo.getUid());
+			if (user != null) {
+				long inviteUid = 0;
+				try {
+					if (agentIdInt==91&&customerId==91) {
+						inviteUid=userSrcService.getCustomerAuthUser(inviteUidStr, customerId);
+					}else{
+						inviteUid = Long.parseLong(inviteUidStr);
+					}
+					if (vo.isReg()) {// 用户注册
+						inviteH5Service.addInvite(user.getUid(), inviteUid);
+						shopkeeperService.initShopkeeper(user.getUid(), inviteUid);
+					}
+				} catch (Exception e) {
+				}
+				String loginKey = securityManager.getLoginSecurityCodeNew(vo
+						.getUid());
+				String queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+						request.getParameterMap(), new String[] { "code" });
+				String dir_url = getRedictUrlByCode(defaultTarget) + queryParam
+						+ "&uid=" + vo.getUid() + "&loginKey=" + loginKey
+						+ "&customerId=" + (customerId==91?84:customerId) + "&agentId=" + agentId
+						+ "&fin=1";
+				Map<String, String> cookieMap = new HashMap<String, String>();
+				cookieMap.put("uid", vo.getUid() + "");
+				cookieMap.put("loginKey", loginKey);
+				cookieMap.put("customerId",( customerId==91?84:customerId) + "");
+				cookieMap.put("agentId", agentId + "");
+				WebWeixinShareOauthUtil.setCookies(response, cookieMap,
+						3600 * 24 * 3, "/");
+				logger.info("orag:" + dir_url);
+				dir_url = getRedictUrlByCode(defaultTarget) + queryParam
+						+ "&uid=0&loginKey=123"
+						+ "&customerId=" + (customerId==91?84:customerId) + "&agentId=" + agentId
+						+ "&fin=1";
+				response.sendRedirect(dir_url);
+				return;
+			}
+		} else {
+			String queryParam = WebWeixinShareOauthUtil.getQueryParameter(
+					request.getParameterMap(), new String[] { "code" });
+			String dir_url = getRedictUrlByCode(defaultTarget) + queryParam + "&msg="
+					+ vo.getMsg();
+			response.sendRedirect(dir_url);
+		}
+
+	}
+
+	/**
+	 * 根据code获取目标跳转地址
+	 * 
+	 * @param code
+	 */
+	private String getRedictUrlByCode(String eventParam) {
+		String url = "";
+		if (eventParam != null) {
+			if (StringUtils.equals("doll", eventParam)) {// 投票
+				url = "http://www.realgamecloud.com/webfile/?";
+			} else if (StringUtils.equals("pay2b", eventParam)) {// 投票
+				url = "http://web.mengquww.com/charge.html?";
+			} else if (StringUtils.equals("pay4met", eventParam)) {// 亲密付测试
+				url = "http://t.xiehou360.com/DollAppServer/api/oauth/codeOnly/pay4met/?";
+			} else if (StringUtils.equals("pay4me", eventParam)) {// 亲密付
+				url = "http://www.mengquww.com/api/oauth/codeOnly/pay4me/?";
+			} else if (StringUtils.equals("inviteRedpackett", eventParam)) {// 邀请红包测试
+				url = "http://t.xiehou360.com/DollAppServer/event/inviteredpacket/index.html?";
+			} else if (StringUtils.equals("inviteRedpacket", eventParam)) {// 邀请红包
+				url = "http://www.mengquww.com/event/inviteredpacket/index.html?";
+			} else if (StringUtils.equals("dollCode", eventParam)) {// 投票
+				url = "http://t.xiehou360.com/DollPubAppServer/api/oauth/codeOnly/{customerId}/{target}";
+			} else {
+				url = auth_domain + "?";
+			}
+		} else {
+			url = auth_domain;
+		}
+		return url;
+	}
+
+}

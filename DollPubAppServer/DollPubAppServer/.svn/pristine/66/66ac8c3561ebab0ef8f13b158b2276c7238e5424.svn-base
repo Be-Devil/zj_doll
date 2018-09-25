@@ -1,0 +1,29 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.virtual.base.VirtualPushCoinRoom;
+
+/**
+ * @author wurui
+ * @create 2018-07-02 14:45
+ **/
+public interface PushCoinVirtualRoomDao {
+
+    /**
+     * 增加观看记录
+     *
+     * @return
+     */
+    int addWatchRecord(VirtualPushCoinRoom virtualPushCoinRoom);
+
+
+    /**
+     * 获取我所在的娃娃机
+     * @param uid
+     * @return
+     */
+     VirtualPushCoinRoom getWatchBus(int customerId,long uid);
+
+
+     int laveVirtualRoom(int customerId,long uid);
+
+}

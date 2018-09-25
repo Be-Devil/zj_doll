@@ -1,0 +1,97 @@
+package com.imlianai.zjdoll.app.modules.core.doll.info;
+
+import java.util.List;
+import java.util.Map;
+
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+
+public interface DollInfoService {
+
+	/**
+	 * 获取娃娃信息
+	 * @param dollId
+	 * @return
+	 */
+	public DollInfo getDollInfo(int dollId);
+	
+	/**
+	 * 初始化娃娃信息
+	 * @return
+	 */
+	public void initDollInfos();
+	
+	/**
+	 * 获取娃娃信息
+	 * @param dollIds
+	 * @return
+	 */
+	public Map<Integer, DollInfo> getDollInfos(List<Integer> dollIds);
+	
+	/**
+	 * 更新商品id
+	 * @param dollId
+	 * @param goodsId
+	 */
+	public void updateDollGoodsId(int dollId,String goodsId);
+	
+	/**
+	 * 获取可碎片合成的娃娃列表
+	 * @return
+	 */
+	public List<DollInfo> getComposeDolls();
+	
+	/**
+	 * 获取可钻石兑换的娃娃列表
+	 * @return
+	 */
+	public List<DollInfo> getExchangeDolls();
+	
+	/**
+	 * 获取娃娃机中的娃娃信息
+	 * @param busId
+	 * @return
+	 */
+	public DollInfo getDollInfoByBusId(int busId);
+
+	/**
+	 * 修改娃娃上下架
+	 * @param dollId
+	 * @param valid 
+	 * @return
+	 */
+	public int updateDollValidById(int dollId, int valid);
+
+	/**
+	 * 修改娃娃最后兑换时间
+	 * @param dollId
+	 * @return
+	 */
+	public int updateUserDollLastExchangeTime(int dollId);
+
+	/**
+	 * 获取最近被兑换过的娃娃列表
+	 * @param size
+	 * @return
+	 */
+	public List<DollInfo> getRecentExchangeDollInfos(int size);
+
+	/**
+	 * 获取最近被合成过的娃娃列表
+	 * @param size
+	 * @return
+	 */
+	public List<DollInfo> getRecentComposeDollInfos(int size);
+
+	/**
+	 * 修改娃娃最后合成时间
+	 * @param dollId
+	 * @return
+	 */
+	public int updateUserDollLastComposeTime(int dollId);
+
+	/**
+	 * 修改娃娃的已兑换数量
+	 * @param dollId
+	 */
+	public int updateDollExchangeNum(int dollId);
+}

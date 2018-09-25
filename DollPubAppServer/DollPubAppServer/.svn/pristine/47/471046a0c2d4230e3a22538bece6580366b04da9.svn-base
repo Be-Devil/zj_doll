@@ -1,0 +1,55 @@
+package com.imlianai.dollpub.app.modules.core.dice.dao;
+
+import com.imlianai.dollpub.domain.dice.Dice;
+import com.imlianai.dollpub.domain.dice.DiceStatus;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 14:48
+ **/
+@Repository
+public class DiceDaoImpl implements DiceDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public int addDiceRecord(Dice dice) {
+        return jdbcHandler.executeSql("insert into dice_record(deviceId,busId,createTime) VALUES(?,?,now())",dice.getDeviceId(),dice.getBusId());
+    }
+
+    @Override
+    public int updateDiceResult(long optId,int result,String remark) {
+        return jdbcHandler.executeSql("update dice_record set result=?,status=1,remark=?,updateTime=now() WHERE optId=?",result,remark,optId);
+    }
+
+    @Override
+    public Dice getDiceByOptId(long optId) {
+        return jdbcHandler.queryOneBySql(Dice.class,"select * from dice_record where optId=?",optId);
+    }
+
+    @Override
+    public List<Dice> getDiceList() {
+        return jdbcHandler.queryBySql(Dice.class,"select * from dice_record");
+    }
+
+    @Override
+    public int addDiceStatus(DiceStatus diceStatus) {
+        return jdbcHandler.executeSql("insert into dice_status(busId,deviceId,optId,uid,createTime) VALUES(?,?,?,?,now())",diceStatus.getBusId(),diceStatus.getDeviceId(),diceStatus.getOptId(),diceStatus.getUid());
+    }
+
+    @Override
+    public DiceStatus getDiceStatusByBusId(int busId) {
+        return jdbcHandler.queryOneBySql(DiceStatus.class,"select * from dice_status where busId=?",busId);
+    }
+
+    @Override
+    public int deleteDiceStatus(int busId) {
+        return jdbcHandler.executeSql("delete from dice_status where busId=?",busId);
+    }
+}

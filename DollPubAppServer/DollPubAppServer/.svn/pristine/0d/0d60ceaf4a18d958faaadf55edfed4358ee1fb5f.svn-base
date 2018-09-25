@@ -1,0 +1,247 @@
+package com.imlianai.dollpub.app.modules.support.withdraw.dao;
+
+import java.util.List;
+
+import com.imlianai.dollpub.domain.withdraw.WithdrawDetailRecord;
+import com.imlianai.dollpub.domain.withdraw.WithdrawUserAccount;
+import com.imlianai.dollpub.domain.withdraw.WithdrawUserPhone;
+import com.imlianai.dollpub.domain.withdraw.WithdrawWechatBoundMiddleware;
+import com.imlianai.dollpub.domain.withdraw.WithdrawWechatCommunicationLog;
+import com.imlianai.dollpub.domain.withdraw.WithdrawWechatInnerMiddleware;
+
+public interface WithdrawDao {
+
+	/**
+	 * 获取用户提现信息
+	 * @param uid
+	 * @return
+	 */
+	WithdrawUserAccount getWithdrawUserAccountByUid(Long uid);
+
+	/**
+	 * 获取提现次数
+	 * @param uid 
+	 * @param type 
+	 * @return
+	 */
+	int getWithdrawTimes(Long uid, int type);
+
+	/**
+	 * 获取当天的提现次数
+	 * @param uid
+	 * @param type
+	 * @param dateCode
+	 * @return
+	 */
+	int getCurrDateWithdrawTimes(Long uid, int type, int dateCode);
+
+	/**
+	 * 获取微信授权信息
+	 * @param uid
+	 * @return
+	 */
+	WithdrawWechatBoundMiddleware getWithdrawWechatBoundMiddlewareByUid(Long uid);
+
+	/**
+	 * 获取微信授权信息
+	 * @param unionId
+	 * @return
+	 */
+	WithdrawWechatBoundMiddleware getWithdrawWechatBoundMiddlewareByUnionId(String unionId);
+
+	/**
+	 * 保存微信授权信息
+	 * @param uid
+	 * @param openId
+	 * @param unionId
+	 * @return
+	 */
+	int saveWithdrawWechatBoundMiddleware(Long uid, String openId, String unionId);
+
+	/**
+	 * 获取关注微信公众号信息
+	 * @param unionId
+	 * @return
+	 */
+	WithdrawWechatInnerMiddleware getWithdrawWechatInnerMiddlewareByUnionid(String unionId);
+
+	/**
+	 * 
+	 * @param uid
+	 * @param openId
+	 * @return
+	 */
+	int addWithdrawUserAccount(Long uid, String openId);
+
+	/**
+	 * 更新账户关注微信信息
+	 * @param uid
+	 * @return
+	 */
+	int updateWithdrawAccountFollow(Long uid);
+
+	/**
+	 * 获取暖暖公众号内部绑定的openId
+	 * @param unionId
+	 * @return
+	 */
+	String getWechatInnerBoundOpenId(String unionId);
+
+	/**
+	 * 新增微信绑定公众号记录
+	 * @param openId
+	 * @param unionId
+	 * @return
+	 */
+	int addWechatInnerMiddleware(String openId, String unionId);
+
+	/**
+	 * 获取萌趣绑定的uid
+	 * @param openId
+	 * @return
+	 */
+	Long getBoundUid(String openId);
+
+	/**
+	 * 获取绑定的uid
+	 * @param unionId
+	 * @return
+	 */
+	Long getAppWechatBoundUidByUnionId(String unionId);
+
+	/**
+	 * 保存提现记录
+	 * @param uid
+	 * @param openId
+	 * @param amt
+	 * @param dateCode
+	 * @param remark
+	 * @return
+	 */
+	int saveWithdrawRecord(Long uid, String openId, int amt, int dateCode, String remark);
+
+	/**
+	 * 更新用户提现金额
+	 * @param uid
+	 * @param withdrawAmt
+	 * @return
+	 */
+	int updateWithdrawAccountTotalAmt(Long uid, int withdrawAmt);
+
+	/**
+	 * 获取提现记录
+	 * @param auditFlag
+	 * @return
+	 */
+	WithdrawDetailRecord withdrawDetailRecord(int auditFlag);
+
+	/**
+	 * 是否在一分钟内有提现记录
+	 * @param uid
+	 * @return
+	 */
+	int hasWithdrawInAMinute(Long uid);
+
+	/**
+	 * 是否在一分钟内有提现记录
+	 * @param openId
+	 * @return
+	 */
+	int hasWithdrawInAMinute(String openId);
+
+	/**
+	 * 更新成已发放订单
+	 * @param id
+	 * @return
+	 */
+	int updateWithdrawRecordsAsPay(Long id);
+
+	/**
+	 * 插入回调记录
+	 * @param recordId 提现记录ID
+	 * @param billId 微信订单ID
+	 * @param uid
+	 * @param openId
+	 * @param amt
+	 * @param request
+	 * @return
+	 */
+	public int addWechatCallbackLog(long recordId, String billId, long uid, String openId, double amt, String request);
+
+	/**
+	 * 更新提现失败原因
+	 * @param id
+	 * @param msg
+	 */
+	public void updateReason(long id, String msg);
+
+	/**
+	 * 重置订单恢复到待审核状态
+	 * @param recordId
+	 * @return
+	 */
+	public int resetWithdrawRecords(long recordId);
+
+	/**
+	 * 更新回调记录
+	 * @param recordId 提现记录ID
+	 * @param wechatPaymentId
+	 * @param respone
+	 * @param successflag
+	 * @return
+	 */
+	public int updateWechatCallbackLog(long recordId,String wechatPaymentId ,String respone,int successflag);
+
+	/**
+	 * 更新微信支付订单信息
+	 * @param id
+	 * @param wechatPaymentId
+	 * @param successFlag
+	 * @return
+	 */
+	public int updateWithdrawRecordsWithWechatInfo(long id,String wechatPaymentId,int successFlag);
+
+	/**
+	 * 获取需要校验的订单
+	 * @return
+	 */
+	List<WithdrawWechatCommunicationLog> getMobileWithdrawWechatCommunicationRecordList();
+
+	/**
+	 * 插入查询回调记录
+	 * @param recordId
+	 * @param billId
+	 * @param uid
+	 * @param openId
+	 * @param amt
+	 * @param request
+	 * @param respone
+	 * @param time
+	 * @return
+	 */
+	int addWechatCallbackLog(Long recordId, String billId, Long uid, String openId, double amt, String request,
+			String respone, String time);
+
+	/**
+	 * 在4天后检查更新订单付款状态结果
+	 * @param recordId
+	 * @param payFlag
+	 * @return
+	 */
+	int updateWithdrawRecordsWithWechatInfoPayState(Long recordId, int payFlag);
+
+	/**
+	 * 获取提现用户手机绑定信息
+	 * @param number
+	 * @return
+	 */
+	WithdrawUserPhone getWithdrawUserPhoneByNumber(long number);
+
+	/**
+	 * 修改or更新发送验证码信息
+	 * @param phoneInit
+	 * @return
+	 */
+	int initPhone(WithdrawUserPhone phoneInit);
+
+}

@@ -1,0 +1,22 @@
+package com.imlianai.dollpub.app.modules.core.dice.service;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.dollpub.app.modules.core.dice.consts.DiceConsts;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import org.springframework.stereotype.Service;
+
+/**
+ * @author wurui
+ * @create 2018-06-01 11:55
+ **/
+@Service
+public class DiceServiceImpl implements DiceService {
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @Override
+    public void sendShakeReturn(int busId) {
+        iMachineConnectRemoteService.handleDirective(busId, DiceConsts.SHAKE_RETURN,"");
+    }
+}

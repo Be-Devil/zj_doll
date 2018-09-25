@@ -1,0 +1,603 @@
+html,body{
+    background: #f3f3f3;
+}
+.maxBox,.navTop{
+    width:100%;
+    height:auto;
+    position: relative;
+}
+.navTop{
+    height:3.12rem;
+    background: #fff203;
+    text-align: center;
+    overflow: hidden;
+    letter-spacing: 1px;
+}
+.navTop>p{
+    margin-top:0.28rem;
+    font-size: 0.34rem;
+    font-weight: bold;
+}
+.navTop img{
+    width:0.48rem;
+    position: absolute;
+    left:0.33rem;
+    top:0.23rem;
+}
+.tabList{
+    width:3.68rem;
+    height:0.6rem;
+    margin:0.44rem auto 0.16rem ;
+}
+.tabList>li{
+    width:1.76rem;
+    height:100%;
+    float: left;
+    line-height: 0.48rem;
+    color:#333;
+    font-size: 0.3rem;
+    text-align: center;
+    font-weight: bold;
+}
+.tabList>li:last-of-type{
+    float: right;
+}
+.tabList>li.listHot{
+    background:url("http://lianai-image-sys.qiniudn.com/mall/tab_bg.png") no-repeat center center ;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    color:#fff204;
+}
+.tabList>li.listHot>a{
+    color: #f3f3f3;
+}
+.listBox{
+    width:100%;
+    height:auto;
+    margin:-1.8rem auto 0 auto;
+    position: relative;
+}
+.patchNum,.jewelNum{
+    width:100%;
+    height:2.72rem;
+    background: url("http://lianai-image-sys.qiniudn.com/mall/sp.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    overflow: hidden;
+}
+.patchNumTop,.jewelNumTop{
+    width:90%;
+    height:0.64rem;
+    margin:0.52rem auto 0.5rem;
+}
+.patchNumTop>span{
+    width:50%;
+    float: left;
+    height:100%;
+    font-size: 0.52rem;
+    display:table-cell;
+    vertical-align: middle;
+    font-weight: bold;
+}
+.patchNumTop>span>img,.patchNum>p>img,.p_need>img{
+    width:0.8rem;
+    height:0.64rem;
+    display:inline;
+    vertical-align: top;
+}
+.patchL{
+    text-align: right;
+    padding-right:0.3rem;
+    box-sizing: border-box;
+    color:#44bcf1;
+}
+.patchR{
+    text-align: left;
+    padding-left:0.3rem;
+    box-sizing: border-box;
+    color:#f59a00;
+}
+.patchNum>p,.p_need,.jewelNum>p,.gainTle{
+    display:table-cell;
+    vertical-align: middle;
+    padding:0 0.46rem;
+    box-sizing: border-box;
+    font-size: 0.22rem;
+    color:#999;
+    letter-spacing: 1px;
+}
+.patchNum>p>img,.p_need>img{
+    width:0.32rem;
+    height:0.26rem;
+    display: inline;
+}
+.patchList{
+    width:95%;
+    margin:0 auto 0.15rem;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    border-radius: 8px;
+    box-sizing: border-box;
+    position: relative;
+    height:2.16rem;
+    padding:0.16rem 0.3rem 0.16rem 0.16rem;
+}
+.compose{
+    position: absolute;
+    top:48%;
+    right:0.28rem;
+    font-size: 0.26rem;
+    color:#f04747;
+    width:auto;
+    display: inline-block;
+}
+.compose>img{
+    width:0.2rem;
+    display: inline;
+}
+.patchList_pic{
+    width:1.84rem;
+    height:1.84rem;
+    float: left;
+    margin-right:0.25rem;
+}
+.patchList_pic>img{
+    width:100%;
+    height:100%;
+    border-radius: 4px;
+}
+.patchList_data{
+    float: left;
+    width: 68%;
+}
+
+.p_name{
+    font-size: 0.3rem;
+    color:#333;
+    letter-spacing: 1px;
+    overflow: hidden;text-overflow: ellipsis;white-space: nowrap;
+}
+.p_num{
+    width:1.4rem;
+    height:0.4rem;
+    background: url("http://lianai-image-sys.qiniudn.com/mall/p_num.png") no-repeat center center ;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    margin:0.2rem 0;
+    font-size: 0.23rem;
+    color:#fff;
+    line-height: 0.4rem;
+    padding-left:0.12rem;
+    box-sizing: border-box;
+    position: relative;
+}
+.p_num>em{
+    width:0.64rem;
+    height:100%;
+    display: block;
+    position: absolute;top:0;
+    right:0.05rem;
+    text-align: center;
+    color:#da0302;
+}
+.p_need{
+    font-size: 0.23rem;
+    line-height: 0.24rem;padding:0;
+}
+.p_need>img{
+    vertical-align: bottom;
+}
+.p_need>b{
+    color:#44bcf1;
+    margin-left:0.02rem;
+}
+.jewelNumTop{
+    text-align: center;
+    font-size: 0.52rem;
+    height:0.72rem;
+    font-weight: bold;
+    color:#dd45ff;
+}
+.jewelNumTop>a>span{
+    line-height: 0.8rem;
+    vertical-align: middle;
+}
+.jewelNumTop>a>span>img{
+    width:0.72rem;
+    height:0.72rem;
+    display: inline;
+    vertical-align: top;
+}
+.jewelNumTop>a>span>img.add{
+    width: 0.5rem!important;
+    height: 0.5rem!important;
+    display: inline;
+    padding-top: 0.1rem;
+    padding-left: 0.2rem;
+    vertical-align: top;
+}
+.j_need>b{
+    color:#dd45ff;
+}
+.j_need>img,.appyStatu>img{
+    width:0.28rem;
+    height:0.28rem;
+    margin-top: 0.15rem;
+}
+
+.com_top{
+    height:0.88rem;
+}
+.com_top>p{
+    margin:0;
+    line-height: 0.95rem;
+}
+.comList{
+    height:1.44rem;
+    padding:0.24rem 0.32rem;
+    margin:0.2rem auto;
+}
+.comList_pic{
+    width:0.96rem;
+    height:0.96rem;
+}
+.c_name{
+    margin-top:0.13rem;
+}
+.c_need{
+    margin-top:0.18rem;
+    display: block;
+}
+.com_pic{
+    width:95%;
+    height: auto;
+    background: #fff;
+    margin:0 auto;
+    border-radius: 0.18rem;
+    text-align: center;
+}
+.com_pic>h6{
+    text-align: center;
+    font-size: 0.3rem;
+    letter-spacing: 1px;
+    display: inline-block;
+    width:auto;
+    background: url("http://lianai-image-sys.qiniudn.com/mall/pic_underline.png") no-repeat  center bottom;
+    -webkit-background-size: 100%;
+    background-size: 100%;
+    padding:0.14rem 0.36rem;
+    margin:0.26rem 0.3rem;
+}
+.com_pic>img{
+    width:95%;
+    margin:0 auto;
+}
+.com_btn{
+    width:100%;
+    height:1.20rem;
+    border-top:1px solid #ffffff;
+    background: #fff;
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%);
+    bottom: 0;
+    z-index: 3;
+}
+.com_btn>button{
+    width:2.4rem;
+    height:0.64rem;
+    background: url("http://lianai-image-sys.qiniudn.com/mall/com_btn.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    display: block;
+    margin:0.21rem auto;
+    color:#fff;
+    font-size: 0.3rem;
+    letter-spacing: 2px;
+    position: fixed;
+    left: 50%;
+    transform: translate(-50%);
+    bottom: 0;
+    z-index: 3;
+}
+.gainTle{
+    margin:0.35rem 0 0.4rem;
+    display: block;
+    font-size: 0.26rem;
+    line-height: 0.35rem;
+}
+.recordAll{
+    width: 100%;
+    height: auto;
+    overflow: hidden;
+    background: #fff;
+}
+.recordAll>div:last-of-type{
+    border:none;
+}
+.recordList{
+    width: 96%;
+    height: 1.46rem;
+    border-bottom: 1px solid #d8d8d8;
+    margin-left: 0.32rem;
+}
+.moppetImg{
+    width: 1.12rem;
+    height: 1.12rem;
+    float: left;
+    margin-top: .2rem;
+}
+.moppetDetail{
+    width: 4.2rem;
+    height: 1.46rem;
+    float: left;
+    margin-left: 0.2rem;
+}
+.moppetName{
+    width: 99%;
+    height: 0.4rem;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    font-size: 0.26rem;
+    color: #222;
+    margin: 0.4rem 0 0;
+}
+.apapNumber{
+    width: 100%;
+    height: 0.28rem;
+    font-size: 0.22rem;
+    margin: 0.1rem 0 0;
+}
+.appyStatu{
+    width: 1.36rem;
+    height: 1.46rem;
+    float: left;
+    font-size: 0.2rem;
+    line-height: 1.46rem;
+    position: relative;
+    padding-left:0.35rem;
+    box-sizing: border-box;
+}
+.appyStatu>em{
+    line-height: 1.53rem;
+}
+.appyList{
+    margin-left:0.97rem;
+    position: relative;
+}
+/*.appyList:last-child{*/
+    /*margin-bottom: 1rem;*/
+/*}*/
+.appybtn{
+    width:0.97rem;
+    height:100%;
+    position: absolute;
+    top:0;
+    left:-0.97rem;
+}
+.appybtn>input{
+    /*margin:0.56rem auto;*/
+    width: 8rem;
+    height: 1.44rem;
+    display: block;
+    float: none;
+    opacity: 0;
+    position: relative;
+    z-index: 3;
+}
+.cityBtnPic,.appybtn>span,.submit_btn>span{
+    width:0.32rem;
+    height:0.32rem;
+    display: block;
+    position: absolute;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/city_n.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    top: 0.55rem;
+    left: 0.33rem;
+    z-index: 0;
+}
+span.cityBtnHot{
+    background: url("http://lianai-image-sys.qiniudn.com/wa/city.png") no-repeat center center ;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+}
+.appyStatu>img{
+    margin:-0.14rem 0  0 0 ;
+    position: absolute;
+    top:50%;
+    left:0%;
+}
+.appyFooter{
+    width:100%;
+    height:0.96rem;
+    background: #fff;
+    position: fixed;
+    bottom:0;
+    left:0;
+    box-sizing: border-box;
+    border-top:1px solid #d8d8d8;
+    line-height: 0.88rem;
+    font-size: 0.26rem;
+    padding-left: 0.82rem;
+    z-index: 10;
+}
+.submit_btn{
+    width:1.5rem;
+    float: left;
+}
+.submit_btn>input{
+    zoom: 134%;
+    position: absolute;
+    top: 0.25rem;
+    left: 0.4rem;
+    opacity: 0;
+    z-index: 4;
+}
+.submit_btn>span{
+    top:0.25rem;
+    left:0.4rem;
+}
+.total{
+    width:3rem;
+    float: left;
+    text-align: right;
+    line-height: 0.96rem !important;
+    position: relative;
+}
+.total>em{
+    display: inline-block;
+    height:0.28rem;
+    margin-left:0.1rem;
+}
+.total>span{
+    width: auto;
+    display: inline-block;
+}
+.total>span>img{
+    display:inline;
+    width:0.28rem;
+    vertical-align: middle;
+}
+.sub{
+    width:2rem;
+    height:0.96rem;
+    float: right;
+    background: url("http://lianai-image-sys.qiniudn.com/wa/sub.png") no-repeat center center;
+    -webkit-background-size: 100% 100%;
+    background-size: 100% 100%;
+    color:#fff;
+}
+.empty{
+    width:100%;
+    height:auto;
+    text-align: center;
+    padding:3rem 0;
+    box-sizing: border-box;
+}
+.empty>img{
+    width:1.56rem;
+    margin:0 auto;
+}
+.prompt{
+    position: fixed;
+    min-width:3.72rem;
+    max-width: 5.34rem;
+    height:auto;
+    background: #404040;
+    color:#fff;
+    padding:0.2rem 0.34rem;
+    box-sizing: border-box;
+    border-radius:0.35rem;
+    left:50%;
+    top:40%;
+    margin-left:-1.86rem;
+    letter-spacing: 1px;
+    text-align: center;
+}
+.prompt_2{
+    left:50%;
+    margin-left:-2.67rem;
+    line-height: 0.4rem;
+}
+.overlay{
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 3;
+}
+.waDhPop {
+    z-index: 5;
+    position: fixed;
+    width: 6.06rem;
+    height: auto;
+    background: #fff;
+    border: 2px solid #000;
+    left: 50%;
+    top: 28%;
+    margin-left: -3.03rem;
+    border-radius: 10px;
+    padding:0 0.5rem;
+    box-sizing: border-box;
+}
+.waDhPop p, .waDhPop span {
+    font-size: .3rem;
+    color: #000;
+    text-align: center;
+    margin: 0.3rem auto 0.3rem;
+    line-height: 0.5rem;
+}
+.waDhPop p>em{
+    color:#fd3030;
+}
+.buttonBox {
+    width: 4.30rem;
+    margin: 0 auto;
+    display: block;
+}
+.buttonBox i {
+    width: 1.93rem;
+    height: 0.65rem;
+    border: 2px solid #000;
+    line-height: 0.65rem;
+    text-align: center;
+    color: #000;
+    float: left;
+    display: block;
+    border-radius: 20px;
+    font-size: 0.29rem;
+}
+.buttonBox i.dhConfirm {
+    float: right;
+}
+.buttonBox i {
+    width: 1.93rem;
+    height: 0.65rem;
+    border: 2px solid #000;
+    line-height: 0.65rem;
+    text-align: center;
+    color: #000;
+    float: left;
+    display: block;
+    border-radius: 20px;
+    font-size: 0.29rem;
+}
+.cs{
+    width: 100%;
+    height: 1rem;
+    background-color: yellow;
+    opacity:0;
+}
+.cs2{
+    width: 100%;
+    height: 1.20rem;
+    background-color: yellow;
+    opacity:0;
+}
+.copyright{
+    width: 100%;
+    height:0.84rem;
+    text-align: center;
+}
+/*.copyright_content{*/
+    /*margin: 0 auto;*/
+    /*!*width: 4.40rem;*!*/
+    /*height: 0.20rem;*/
+/*}*/
+.copyright_content p{
+    margin: 0 auto;
+    color: #999999;
+    /*width: 4.40rem;*/
+    height: 0.40rem;
+    font-size: 0.20rem;
+    line-height:0.20rem;
+    padding-top: 0.32rem;
+}
+
+
+
+

@@ -1,0 +1,149 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/e20171120/20.png" type="image/x-icon" />
+    <title>萌趣抓娃娃</title>
+    <meta name="keywords" content="抓娃娃 娃娃 萌 好玩">
+    <meta name="description" itemprop="description" content="萌趣抓娃娃 - 萌萌哒,趣味抓">
+    <meta itemprop="name" content="萌趣抓娃娃">
+    <meta itemprop="image" content="http://lianai-image-sys.qiniudn.com/e20171121/128.png">
+    <style>
+    body {
+        background-color: rgb(255, 242, 3);
+        margin: 0;
+    }
+
+    .main_body {
+        display: flex;
+        display: -webkit-flex;
+        align-items: center;
+        width: 80%;
+        font-size: 0;
+        margin: 0 auto;
+        align-items: flex-end;
+        margin-top: 5%;
+    }
+
+    .left_content {
+        text-align: center;
+        align-self: flex-start;
+        display: flex;
+        display: -webkit-flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: flex-start;
+    }
+
+    .right_content {
+        text-align: center;
+        width: 17rem;
+        flex-basis: 1;
+        align-self: flex-end;
+        padding-left: 10%;
+    }
+
+    .item {
+        align-self: flex-end;
+        padding-left: 3%;
+    }
+
+    .logo_area {
+        padding: 3rem;
+        padding-top: 0;
+    }
+
+    .main_leaft {
+        padding: 5rem 0 0 4rem;
+    }
+
+    .left_main_crea {
+        display: flex;
+        display: -webkit-flex;
+        align-items: center;
+    }
+
+    .solgen_area {
+        padding-bottom: 1rem;
+    }
+
+    .download_btn_area {
+        display: block;
+        text-align: left;
+    }
+
+    .download_btn_area_inline {
+        
+        display: inline-block;
+    }
+
+    .btn_img {
+        display: block;
+        padding-bottom: 0.5rem;
+        width: 95%;
+    }
+
+    img {
+        width: 100%;
+    }
+
+    .foot_area {
+        position: absolute;
+        bottom: 1%;
+        width: 100%;
+        text-align: center;
+        color: rgb(51, 51, 51);
+    }
+    </style>
+</head>
+
+<body>
+    <div style="display: none">
+        <span>萌趣抓娃娃 - 萌萌哒 趣味抓</span>
+    </div>
+    <div class="main_body">
+        <div class="left_content">
+            <div class="logo_area">
+                <img src="http://lianai-image-sys.qiniudn.com/e20171120/logo.png">
+            </div>
+            <div class="left_main_crea">
+                <div class="main_leaft">
+                    <div class="solgen_area">
+                        <img src="http://lianai-image-sys.qiniudn.com/e20171120/slogan.png">
+                    </div>
+                    <div class="download_btn_area">
+                        <div class="download_btn_area_inline" style="width: 35%;">
+                            <img class="btn_img" src="http://lianai-image-sys.qiniudn.com/mqww/qrcode/qr.png">
+                        </div>
+                        <div class="download_btn_area_inline" style="width: 63%;">
+                            <a href="http://www.mengquww.com/download/gw"><img class="btn_img" src="http://lianai-image-sys.qiniudn.com/mqww/qrcode/btn1.png"></a>
+                            <a href="http://www.mengquww.com/download/gw"><img class="btn_img" src="http://lianai-image-sys.qiniudn.com/mqww/qrcode/btn2.png"></a>
+                        </div>
+                    </div>
+                </div>
+                <div class="item"><img src="http://lianai-image-sys.qiniudn.com/e20171120/q.png"></div>
+            </div>
+        </div>
+        <div class="right_content">
+            <img src="http://lianai-image-sys.qiniudn.com/e20171120/iphone.png">
+        </div>
+    </div>
+    <div class="foot_area">
+        <div>mengquww.com 2013-2017 All Rights Reserved. 广州炼爱网络科技股份有限公司版权所有 粤ICP备14013187号-5</div>
+        <div>增值电信业务经营许可证 粤B2-20160024</div>
+        <div>粤公网安备 44010602003314号</div>
+    </div>
+</body>
+<script type="text/javascript">
+var _hmt = _hmt || [];
+(function() {
+  var hm = document.createElement("script");
+  hm.src = "https://hm.baidu.com/hm.js?d58f3324cf8e20828e63d711ccd8cda6";
+  var s = document.getElementsByTagName("script")[0]; 
+  s.parentNode.insertBefore(hm, s);
+})();
+
+</script>
+
+</html>

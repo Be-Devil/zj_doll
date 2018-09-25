@@ -1,0 +1,14 @@
+package com.imlianai.dollpub.app.modules.core.user.service;
+
+import com.imlianai.dollpub.domain.user.UserSrc;
+
+/**
+ * @author wurui
+ * @create 2018-01-24 11:47
+ **/
+public interface UserSrcService {
+    public int saveUserSrc(UserSrc userSrc);
+    public int updateUserSrc(UserSrc userSrc);
+
+    public UserSrc getUserSrcBySrcUidAndCusId(String srcId,int customerId);
+}

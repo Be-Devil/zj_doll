@@ -1,0 +1,36 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.vo;
+
+
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * @author wurui
+ * @create 2018-03-28 18:23
+ **/
+@ApiModel(value = "操作推币机请求对象")
+public class OperateReqVO extends BaseReqVO {
+
+    @ApiModelProperty(value = "机器ID",notes = "请带上UID一起请求",required = true)
+    private int busId;
+
+    @ApiModelProperty(value = "商户ID",required = true)
+    private int customerId;
+
+    public int getBusId() {
+        return busId;
+    }
+
+    public void setBusId(int busId) {
+        this.busId = busId;
+    }
+
+    public int getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(int customerId) {
+        this.customerId = customerId;
+    }
+}

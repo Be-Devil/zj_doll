@@ -1,0 +1,101 @@
+package com.imlianai.dollpub.app.modules.core.user.customer.opt.router;
+
+import javax.annotation.Resource;
+
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import com.imlianai.dollpub.app.modules.support.exmaple.router.GuessRouter;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.manager.dbhandler.DBMapper;
+
+/**
+ * 上机操作分表路由
+ *
+ * @author wurui
+ */
+@Component
+public class CusOptRecordRouter {
+
+	private final BaseLogger logger = BaseLogger.getLogger(GuessRouter.class);
+
+	@Resource
+	private DBMapper dbMapper;
+	@Resource(name = "jdbcTemplateApp")
+	private JdbcTemplate jdbcTemplate;
+
+	// 表前缀
+	private final String TABLE_NAME = "app_opt_record_";
+	// 创表语句
+	private final String CREATE_TABLE = "CREATE TABLE %s (" + 
+			"`id` int(11) NOT NULL AUTO_INCREMENT COMMENT '自增Id'," + 
+			"`optId` int(11) NOT NULL COMMENT '操作记录id'," + 
+			"`busId` int(11) NOT NULL COMMENT '设备Id'," + 
+			"`dollId` int(11) NOT NULL COMMENT '娃娃Id'," + 
+			"`uid` int(11) NOT NULL COMMENT '用户id'," + 
+			"`customerId` int(11) NOT NULL COMMENT '客户id'," +
+			"`agentId` int(11)  COMMENT '代理id'," +
+			"`agentName` varchar(50)  COMMENT '代理名'," +
+			"`startTime` datetime DEFAULT NOW() COMMENT '游戏开始时间',"+
+			"`endTime` datetime DEFAULT NOW() COMMENT '游戏结束时间'," + 
+			"result int(2) COMMENT '抓取结果 (1:成功0:失败)'," + 
+			"remark varchar(255) COMMENT '备注'," + 
+			"PRIMARY KEY (`id`)," +
+			"KEY `index_optId` (`optId`)," +
+			"KEY `index_uid` (`uid`)," +
+			"KEY `index_customerId` (`customerId`)," +
+			"KEY `index_startTime` (`startTime`)," + 
+			"KEY `index_result` (`result`)" + 
+			") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4";
+
+	/**
+	 * 获取表名-未知表生成表
+	 * 
+	 * @param groupId
+	 * @return TableName
+	 */
+	public String getTableName(int groupId) {
+		String partTableName = "";
+		if(groupId < 10) {
+			partTableName = TABLE_NAME + "0" + groupId;
+		}else {
+			partTableName = TABLE_NAME + groupId;
+		}
+		// 判断表是否存在
+		if (!dbMapper.getMapper().containsKey(partTableName)) {
+			// 执行建表语句
+			jdbcTemplate.execute(String.format(CREATE_TABLE, partTableName));
+			// 刷新DBMapper映射关系
+			dbMapper.refreshTableToDBMapperNow();
+			logger.info("新建表名:" + partTableName + " 刷新映射关系...");
+		}
+		return partTableName;
+	}
+	
+	/**
+	 * 格式化sql
+	 * @param sql
+	 * @param groupId
+	 * @return
+	 */
+	public String getFormatSql(String sql,int groupId) {
+		if(sql != null && sql.indexOf("%s") > -1)
+				return String.format(sql, getTableName(groupId));
+		return "";
+	}
+	
+	/**
+	 * 判断对应商户组的表是否存在
+	 * 
+	 * @param groupId
+	 * @return
+	 */
+	public boolean isTableExist(Integer groupId) {
+		String partTableName = "";
+		if (groupId < 10) {
+			partTableName = TABLE_NAME + "0" + groupId;
+		} else {
+			partTableName = TABLE_NAME + groupId;
+		}
+		return dbMapper.getMapper().containsKey(partTableName);
+	}
+}

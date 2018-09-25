@@ -1,0 +1,288 @@
+package com.imlianai.dollpub.app.pvd;
+
+import java.util.List;
+import java.util.TimerTask;
+
+import javax.annotation.Resource;
+
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.iface.IAppCoreRemoteService;
+import com.imlianai.dollpub.app.modules.core.api.service.CustomerDollBusService;
+import com.imlianai.dollpub.app.modules.core.dice.service.DiceService;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.app.modules.core.doll.list.DollListService;
+import com.imlianai.dollpub.app.modules.publics.security.SecurityManager;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinMachineService;
+import com.imlianai.dollpub.app.modules.support.machine.service.MachineService;
+import com.imlianai.dollpub.app.modules.support.version.service.VersionService;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.domain.machine.*;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.BaseLogger;
+//import com.imlianai.doll.app.modules.core.article.chapter.ArticleChapterService;
+//import com.imlianai.doll.app.modules.core.article.content.ArticleContentService;
+//import com.imlianai.doll.app.modules.core.article.role.ArticleRoleService;
+//import com.imlianai.doll.app.modules.core.article.service.ArticleService;
+//import com.imlianai.doll.app.modules.core.edit.chapter.ArticleEditChapterService;
+//import com.imlianai.doll.app.modules.core.edit.service.ArticleEditService;
+
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.SysTimerHandle;
+
+@Service(interfaceClass = IAppCoreRemoteService.class)
+public class AppCoreRemoteServiceImpl implements IAppCoreRemoteService {
+
+    private BaseLogger logger = BaseLogger.getLogger(this.getClass());
+
+    @Resource
+    private VersionService versionService;
+
+    @Resource
+    private SecurityManager securityManager;
+
+    @Resource
+    private DollListService dollListService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private MachineService machineService;
+
+    @Resource
+    private CustomerDollBusService customerDollBusService;
+
+    @Resource
+    private PushCoinMachineService pushCoinMachineService;
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+    @Resource
+    private DiceService diceService;
+
+
+    @Override
+    public boolean checkLogin(long uid, String loginKey) {
+        return securityManager.isLoginSecurityCodeValid(uid, loginKey);
+    }
+
+    @Override
+    public List<DollBus> busGetDollBus() {
+        return dollListService.getBusList();
+    }
+
+    @Override
+    public List<DollBus> busGetDeviceList() {
+        return dollBusService.getCurrentDevice();
+    }
+
+    @Override
+    public MachineResultCallback returnMachineResult(String deviceId, boolean result) {
+        return null;
+    }
+
+    @Override
+    public void deliverMachineResult(final String deviceId, final int busId, final long logId,
+                                     final boolean catchResult, final int group) {
+        logger.info("deliverMachineResult now:" + DateUtils.getNowTime() + "deviceId:" + deviceId + " busId:" + busId
+                + " logId:" + logId + " catchResult:" + catchResult + " group:" + group);
+
+        try {
+            //记录回调结果
+            machineService.add(new MachineCallback(deviceId, busId, logId, group, catchResult, "deliverMachineResult now=>" + DateUtils.getNowTime() + ",deviceId=>" + deviceId + ",busId=>" + busId
+                    + ",logId=>" + logId + ",catchResult=>" + catchResult + ",group=>" + group));
+        } catch (Exception e) {
+            PrintException.printException(logger, e);
+        }
+
+        SysTimerHandle.execute(new TimerTask() {
+            @Override
+            public void run() {
+                try {
+                    //machineService.returnMachineResult(deviceId, catchResult);
+                    customerDollBusService.returnMachineResult(deviceId, busId, logId, catchResult, group, "提供者回调");
+                } catch (Exception e) {
+                    PrintException.printException(logger, e);
+                }
+            }
+        }, 0);
+
+    }
+
+    @Override
+    public void deliverMachineMsg(final String deviceId, final List<String> hexs) {
+        logger.info("deliverMachineMsg now:" + DateUtils.getNowTime() + "deviceId:" + deviceId + " hexs:" + JSON.toJSONString(hexs));
+        if (deviceId != null && !deviceId.equals("") && null != hexs && hexs.size() > 0) {
+            DollBus dollBus = dollBusService.getDollBusByDeviceId(deviceId);
+            if (dollBus != null) {
+                switch (dollBus.getType()) {
+                    case 0://娃娃机
+                        this.machineSetHandle(dollBus, deviceId, hexs);
+                        break;
+                    case 1://推币机
+                        this.pushMachineHandle(dollBus, deviceId, hexs);
+                        break;
+                    case 2://骰子机
+                        this.diceMachineHandle(dollBus, deviceId, hexs);
+                        break;
+                    default:
+                        logger.info("无效的类型=>" + dollBus.getType());
+                        break;
+                }
+            }
+        }
+    }
+
+
+    /**
+     * 机器相关设置与查询
+     *
+     * @param dollBus
+     * @param deviceId
+     * @param hexs
+     */
+    private void machineSetHandle(DollBus dollBus, final String deviceId, final List<String> hexs) {
+        try {
+            switch (hexs.get(2)) {
+
+                // ###################################### 设置相关回调 ###################################### //
+
+                case "10"://机器基础数据设置返回结果
+                    if (hexs.get(3).equals("02")) {
+                        logger.info("设置机器基础数据结果回调成功,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                        if (hexs.get(4).equals("01")) {
+                            //MachineBasicData machineBasicData = (MachineBasicData) machineService.machineSettingQuery(deviceId,1);
+                            if (dollBus != null) {
+                                logger.info("机器基础数据设置成功,开始查询机器基础数据最新设置.....");
+                                machineService.initMachineBasicData(dollBus.getBusId());
+                                machineService.machineRESET(dollBus.getBusId());//复位
+                            }
+                        } else {
+                            logger.info("机器基础数据设置失败,hexs=>" + JSON.toJSONString(hexs));
+                        }
+                    }
+                    break;
+                case "11"://机器爪力电压设置返回结果
+                    if (hexs.get(3).equals("02")) {
+                        logger.info("设置机器爪力电压结果回调成功,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                        if (hexs.get(4).equals("01")) {
+                            //MachineClawVoltage machineClawVoltage = (MachineClawVoltage) machineService.machineSettingQuery(deviceId,2);
+                            if (dollBus != null) {
+                                logger.info("机器爪力电压设置成功,开始查询机器爪力电压最新设置......");
+                                machineService.initMachineClawVoltage(dollBus.getBusId());
+                                machineService.machineRESET(dollBus.getBusId());//复位
+                            }
+                        } else {
+                            logger.info("机器爪力电压设置失败,hexs=>" + JSON.toJSONString(hexs));
+                        }
+                    }
+                    break;
+                case "12"://机器马达速度设置返回结果
+                    if (hexs.get(3).equals("02")) {
+                        logger.info("设置机器马达速度结果回调成功,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                        if (hexs.get(4).equals("01")) {
+                            //MachineMotorSpeed machineMotorSpeed = (MachineMotorSpeed) machineService.machineSettingQuery(deviceId,3);
+                            if (dollBus != null) {
+                                logger.info("机器马达速度设置成功,开始查询机器马达速度最新设置......");
+                                machineService.initMachineMotorSpeed(dollBus.getBusId());
+                                machineService.machineRESET(dollBus.getBusId());//复位
+                            }
+                        } else {
+                            logger.info("机器马达速度设置失败,hexs=>" + JSON.toJSONString(hexs));
+                        }
+                    }
+                    break;
+
+                // ###################################### 查询相关回调 ###################################### //
+
+                case "16"://查询机器基础数据设置
+                    logger.info("查询机器基础设置回调成功=>,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                    if (machineService.machineBasicDataSettingHandle(deviceId, hexs) > 0) {
+                        logger.info("新增或更新机器基础数据设置成功");
+                    }
+                    break;
+                case "17"://查询机器爪力电压设置
+                    logger.info("查询爪力电压设置回调成功=>,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                    if (machineService.machineClawVoltageHandle(deviceId, hexs) > 0) {
+                        logger.info("新增或更新机器爪力电压设置成功");
+                    }
+                    break;
+                case "18"://查询机器马达速度设置
+                    logger.info("查询机器马达速度回调成功=>,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                    if (machineService.machineMotorSpeedHandle(deviceId, hexs) > 0) {
+                        logger.info("新增或更新机器马达速度成功");
+                    } else {
+                        logger.info("新增或更新机器马达速度失败....");
+                    }
+                    break;
+
+
+                case "19"://机器复位
+                    logger.info("机器复位回调成功=>,deviceId=>" + deviceId + ",hexs=>" + JSON.toJSONString(hexs));
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            PrintException.printException(logger, e);
+        }
+    }
+
+
+    /**
+     * 推币机相关回调处理
+     *
+     * @param dollBus
+     * @param deviceId
+     * @param hexs
+     */
+    private void pushMachineHandle(DollBus dollBus, final String deviceId, final List<String> hexs) {
+        switch (hexs.get(2)) {
+            case "02"://投币
+                logger.info("投币回调=>" + hexs.get(4));
+                break;
+            case "03"://输出信号
+                logger.info("输出信号回调=>");
+                break;
+            case "04"://复位
+                break;
+            case "05"://查询退币光眼计数
+                if (hexs.get(3).equals("02")) {
+                    pushCoinMachineService.resultHandle(dollBus, deviceId, hexs.get(4));
+                }
+                break;
+            case "06"://查询礼品信号
+                break;
+            default:
+                break;
+        }
+    }
+
+
+    /**
+     * 骰子机相关
+     *
+     * @param dollBus
+     * @param deviceId
+     * @param hexs
+     */
+    private void diceMachineHandle(DollBus dollBus, final String deviceId, final List<String> hexs) {
+        logger.info("diceMachineHandle======");
+        switch (hexs.get(2)) {
+            case "02"://结果
+                int point = Integer.parseInt(hexs.get(4), 16);
+                logger.info("骰子结果=>" + point);
+                diceService.resultHandle(dollBus,deviceId,hexs);
+                break;
+            default:
+                break;
+        }
+    }
+
+
+}

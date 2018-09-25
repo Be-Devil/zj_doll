@@ -1,0 +1,571 @@
+package com.imlianai.zjdoll.app.modules.core.push.service;
+
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.google.common.collect.Maps;
+import com.imlianai.dollpub.domain.coinfactory.MachinePushCoin;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.TradeOperationException;
+import com.imlianai.rpc.support.common.json.JsonUtils;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.zjdoll.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.ZengjingUtils;
+import com.imlianai.zjdoll.app.modules.core.push.consts.PushCoinConsts;
+import com.imlianai.zjdoll.app.modules.core.push.dao.PushCoinBoxDao;
+import com.imlianai.zjdoll.app.modules.core.push.dao.PushCoinOptRouterDao;
+import com.imlianai.zjdoll.app.modules.core.push.vo.ApplyRespVO;
+import com.imlianai.zjdoll.app.modules.core.push.vo.BoxValueRespVO;
+import com.imlianai.zjdoll.app.modules.core.push.vo.OperateRespVO;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+import com.imlianai.zjdoll.domain.msg.MsgRoom;
+import com.imlianai.zjdoll.domain.msg.MsgRoomType;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBox;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxLog;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxPool;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinBoxPoolLog;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.trade.TradeCostType;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.zjdoll.domain.user.UserGeneral;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+
+
+/**
+ * @author wurui
+ * @create 2018-05-23 9:45
+ **/
+@Service
+public class PushCoinServiceImpl implements PushCoinService {
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Resource
+    private PushCoinOptRouterDao pushCoinOptRouterDao;
+
+    @Resource
+    private TradeService tradeService;
+
+    @Resource
+    private UserService userService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private DollInfoService dollInfoService;
+
+    @Resource
+    private MsgService msgService;
+
+    @Resource
+    private PushCoinBoxDao pushCoinBoxDao;
+
+
+    @Override
+    public BaseRespVO apply(long uid, int busId, int customerId) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "上机失败:类型错误");
+            }
+            UserBase userBase = userService.getUserBase(uid);
+            if (userBase != null) {
+                try {
+                    TradeAccount tradeAccount = tradeService.getAccount(userBase.getUid());
+                    if (tradeAccount != null) {
+                        if (tradeAccount.getCoin() >= dollBus.getPrice()) {
+                            ApplyRespVO vo = ZengjingUtils.apply(uid, Integer.parseInt(dollBus.getDeviceId()), customerId);
+                            logger.info(JSON.toJSONString(vo));
+                            if (!StringUtil.isNullOrEmpty(vo) && vo.isState() && vo.getOptId() != 0) {
+                                MachinePushCoin machinePushCoin = new MachinePushCoin();
+                                machinePushCoin.setOptId(vo.getOptId());
+                                machinePushCoin.setUid(userBase.getUid());
+                                machinePushCoin.setBusId(dollBus.getBusId());
+                                machinePushCoin.setDeviceId(dollBus.getDeviceId());
+                                machinePushCoin.setCustomerId(customerId);
+                                if (pushCoinOptRouterDao.insert(machinePushCoin) > 0) {
+                                    logger.info("新增操作流水成功");
+                                    UserGeneral userGeneral = userService.getUserGeneral(uid);
+                                    if (userGeneral != null) {
+                                        Map<String, Object> data = Maps.newHashMap();
+                                        data.put("uid", userGeneral.getUid());
+                                        sendRoomMsg(dollBus, MsgRoomType.START_PLAY.type, data, userGeneral.getName() + " 成功上机");
+                                    }
+                                    return vo;
+                                }
+                            }
+                            return new BaseRespVO(0, false, vo.getMsg());
+                        } else {
+                            return new BaseRespVO(0, false, "上机失败:余额不足");
+                        }
+                    } else {
+                        tradeService.initAccount(userBase.getUid());
+                        return new BaseRespVO(0, false, "上机失败:账户异常");
+                    }
+                } catch (Exception e) {
+                    logger.info("apply=>" + e.getMessage());
+                    return new BaseRespVO(0, false, "上机失败:异常操作");
+                }
+            } else {
+                return new BaseRespVO(0, false, "上机失败:用户不存在");
+            }
+        }
+        return new BaseRespVO(0, false, "上机失败:机器不存在");
+    }
+
+    @Override
+    public BaseRespVO push(long uid, int busId, int customerId, long optId) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "推币失败:类型错误");
+            }
+
+            UserBase userBase = userService.getUserBase(uid);
+            if (userBase != null) {
+                try {
+                    MachinePushCoin machinePushCoin = pushCoinOptRouterDao.getOne(optId, uid);
+                    if (machinePushCoin != null) {
+                        if (machinePushCoin.getState() != 1 && machinePushCoin.getUid() == uid && machinePushCoin.getBusId() == busId) {
+
+                            logger.info("push  machinePushCoin=>" + JSON.toJSONString(machinePushCoin));
+
+                            TradeAccount tradeAccount = tradeService.getAccount(userBase.getUid());
+                            if (tradeAccount != null) {
+                                logger.info("push  tradeAccount=>" + JSON.toJSONString(tradeAccount));
+                                if (tradeAccount.getCoin() >= dollBus.getPrice()) {
+                                    //return iAppPushCoinRemoteService.putCoin(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+                                    //扣费
+                                    TradeRecord record = new TradeRecord(userBase.getUid(), 0, TradeType.PUSH_COIN.type, dollBus.getBusId(), dollBus.getPrice(), TradeCostType.COST_COIN.type, "推币机消费" + dollBus.getPrice() + "游戏币");
+                                    record.setOptId(machinePushCoin.getOptId());
+
+                                    if (tradeService.consume(record)) {
+                                        OperateRespVO vo = ZengjingUtils.push(uid, Integer.parseInt(dollBus.getDeviceId()), customerId);
+                                        logger.info("push  OperateRespVO=>" + JSON.toJSONString(vo));
+                                        if (!StringUtil.isNullOrEmpty(vo) && vo.isState()) {
+                                            if (pushCoinOptRouterDao.updateCoin(vo.getOptId(), 1, 0) > 0) {
+                                                if (pushCoinBoxDao.addBoxCoin(busId, dollBus.getPrice() / 10, uid) > 0) {
+                                                    logger.info("推币机=>" + dollBus.getBusId() + ",uid=>" + uid + ",coin=>" + dollBus.getPrice() + ",money=>" + dollBus.getPrice() / 10);
+                                                    this.calcBonus(dollBus.getPrice());
+                                                }
+                                                return vo;
+                                            }
+                                        }
+                                        return new BaseRespVO(0, false, null != vo.getMsg() ? vo.getMsg() : "数据请求失败");
+                                    }
+                                }
+                                return new BaseRespVO(0, false, "推币失败:余额不足");
+                            } else {
+                                return new BaseRespVO(0, false, "推币失败:账户异常");
+                            }
+                        }
+                    }
+
+                } catch (Exception e) {
+                    logger.info("apply=>" + e.getMessage());
+                    return new BaseRespVO(0, false, "推币失败:扣费失败");
+                }
+            } else {
+                return new BaseRespVO(0, false, "推币失败:用户不存在");
+            }
+        }
+        return new BaseRespVO(0, false, "推币失败:机器不存在");
+    }
+
+    @Override
+    public BaseRespVO operate(long uid, int busId) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "摆动失败:类型错误");
+            }
+            //return iAppPushCoinRemoteService.operate(vo.getUid(),vo.getBusId());
+            return ZengjingUtils.operate(uid, Integer.parseInt(dollBus.getDeviceId()));
+        }
+        return new BaseRespVO(0, false, "摆动失败:机器不存在");
+    }
+
+    @Override
+    public BaseRespVO query(long optId, int customerId) {
+        return ZengjingUtils.query(optId, customerId);
+    }
+
+    @Override
+    public BaseRespVO finish(long uid, int busId, int customerId) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            if (dollBus.getValid() != 1) {
+                return new BaseRespVO(0, false, "当前机器下架");
+            }
+            if (dollBus.getType() != 1) {
+                return new BaseRespVO(0, false, "下机失败:机器类型错误");
+            }
+            BaseRespVO vo = ZengjingUtils.finish(uid, Integer.parseInt(dollBus.getDeviceId()), customerId);
+            if (vo.isState()) {
+                Map<String, Object> data = Maps.newHashMap();
+                data.put("uid", uid);
+                sendRoomMsg(dollBus, MsgRoomType.PUSH_COIN_RELEASE.type, data, "用户下机");
+                return vo;
+            }
+            //return iAppPushCoinRemoteService.finish(vo.getUid(),vo.getBusId(),vo.getCustomerId());
+            return new BaseRespVO(0, false, vo.getMsg());
+        }
+        return new BaseRespVO(0, false, "下机失败:机器不存在");
+    }
+
+    @Override
+    public BaseRespVO getStatus(int busId, int customerId) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            return ZengjingUtils.getStatus(Integer.parseInt(dollBus.getDeviceId()), customerId);
+        }
+        return new BaseRespVO(0, false, "获取状态失败:机器不存在");
+    }
+
+    /**
+     * 系统充值
+     *
+     * @param uid
+     * @param optId
+     * @param jewel
+     * @return
+     * @throws TradeOperationException
+     */
+    private int charge(long uid, long optId, int busId, int jewel, String remark) {
+        logger.info("CoinToJewel 执行系统充值");
+        try {
+            TradeRecord tradeRecord = new TradeRecord(uid, uid,
+                    TradeType.PUSH_PRIZE.type, busId, jewel,
+                    TradeCostType.COST_JEWEL.type, remark);
+            tradeRecord.setOptId(optId);
+
+            if (tradeService.charge(tradeRecord)) {
+                logger.info("CoinToJewel 成功充值=>" + jewel + " 个钻石");
+                return 1;
+            }
+        } catch (TradeOperationException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
+
+
+    private void sendRoomMsg(DollBus dollBus, int msgRoomType, Map<String, Object> data, String body) {
+        MsgRoom msgRoom = new MsgRoom(dollBus, msgRoomType, body);
+        if (!StringUtil.isNullOrEmpty(data)) {
+            msgRoom.setData(JSON.toJSONString(data));
+        }
+        msgService.sendMsgRoom(msgRoom);
+    }
+
+
+    @Override
+    public int CoinToJewel(long uid, int busId, long optId, int outCoin, int isFinal) {
+
+        logger.info("CoinToJewel 收到" + outCoin + "币");
+        UserBase userBase = userService.getUserBase(uid);
+        if (userBase != null) {
+
+            MachinePushCoin machinePushCoin = pushCoinOptRouterDao.getOne(optId, uid);
+            if (machinePushCoin != null) {
+                try {
+
+                    DollBus dollBus = dollBusService.getDollBus(machinePushCoin.getBusId());
+
+                    logger.info("CoinToJewel dollBus=>" + JSON.toJSONString(dollBus));
+
+                    if (dollBus != null && dollBus.getDeviceId().equals(busId + "")) {
+
+                        logger.info("CoinToJewel 同一台机器");
+                        DollInfo dollInfo = dollInfoService.getDollInfo(dollBus.getDollId());
+                        if (dollInfo != null) {
+
+                            //消息体
+                            Map<String, Object> map = Maps.newHashMap();
+                            map.put("isFinal", isFinal);
+                            map.put("uid", uid);
+                            UserGeneral userGeneral = userService.getUserGeneral(uid);
+                            if (userGeneral != null) {
+                                map.put("name", userGeneral.getName());
+                                map.put("head", userGeneral.getHead());
+
+
+                                //实时更新
+                                if (isFinal == 0) {
+                                    logger.info("CoinToJewel 实时更新");
+                                    if (outCoin == 0) return 0;
+                                    if (pushCoinBoxDao.updateBoxPoolValue(dollBus.getBusId(), -outCoin,0,outCoin,0,outCoin) > 0) {
+                                        logger.info("推币机出币，奖池 -" + outCoin);
+                                    }
+
+                                    int jewel = dollInfo.getReturnJewel() * outCoin;
+                                    if (machinePushCoin.getState() != 1 && machinePushCoin.getJewelStatus() != 1) {
+                                        if (pushCoinOptRouterDao.updateCoin(optId, outCoin, 1) > 0) {
+                                            logger.info("CoinToJewel 实际出币=>" + outCoin + ",兑换成钻石比例 1:" + dollInfo.getReturnJewel() + ",实际兑换钻石数=>" + jewel);
+                                            if (pushCoinOptRouterDao.updateJewel(jewel, machinePushCoin.getOptId()) > 0) {
+                                                if (this.charge(userBase.getUid(), machinePushCoin.getOptId(), dollBus.getBusId(), jewel, "推币得" + jewel + "钻") == 1) {
+                                                    map.put("jewel", jewel);
+                                                    map.put("time", 30);
+                                                    sendRoomMsg(dollBus, MsgRoomType.PUSH_COIN_JEWEL.type, map, "恭喜玩家 <span style='color: #eaec04'>" + userGeneral.getName() + " </span>获得 <span style='color: #4d16ec'>" + jewel + " </span>钻石");
+                                                    return 1;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                //最终状态
+                                if (isFinal == 1) {
+                                    logger.info("CoinToJewel 最终状态");
+                                    //更新状态
+                                    if (pushCoinOptRouterDao.updateState(optId) > 0 && pushCoinOptRouterDao.updateJewelStatus(optId) > 0) {
+                                        logger.info("CoinToJewel 更新操作状态成功");
+                                        map.put("jewel", 0);
+                                        map.put("time", 0);
+                                        sendRoomMsg(dollBus, MsgRoomType.PUSH_COIN_RELEASE.type, map, "操作到期，可以重新上机");
+                                        return 1;
+                                    }
+                                }
+
+                            }
+
+                        }
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public BaseRespVO getBoxValue(int busId) {
+        BoxValueRespVO vo = new BoxValueRespVO();
+        PushCoinBox pushCoinBox = pushCoinBoxDao.getBox(busId);
+        if (pushCoinBox != null) {
+            vo.setTotal(pushCoinBox.getTotal());
+            vo.setValue(pushCoinBox.getCurrent());
+            if (vo.getValue() >= vo.getTotal()) {
+                vo.setIsOpen(1);
+            }
+        }
+        vo.setMsg("数据请求成功");
+        vo.setState(true);
+        vo.setResult(100);
+        return vo;
+    }
+
+    @Override
+    public BaseRespVO openBox(int busId, long uid) {
+
+        //推币机是否存在
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        logger.info("dollBus=>" + JSON.toJSONString(dollBus));
+        if (dollBus != null) {// && dollBus.getBusType() == 1 && dollBus.getValid() == 1
+            BaseRespVO vo = ZengjingUtils.getStatus(Integer.parseInt(dollBus.getDeviceId()),88);
+            if (vo.isState() && vo.getResult() == 100 && null != vo.getData()){
+                JSONObject object = JSONObject.parseObject(vo.getData().toString());
+                long bus_uid = object.getLong("uid");
+                long optId = object.getLong("optId");
+                if (bus_uid != 0 && uid == bus_uid){
+
+                    UserBase userBase = userService.getUserBase(uid);
+                    if (userBase != null) {
+
+                        //箱子是否能开
+                        PushCoinBox pushCoinBox = pushCoinBoxDao.getBox(busId);
+                        if (pushCoinBox != null) {
+
+                            logger.info("机器=>" + busId + ",当前投币=>" + pushCoinBox.getCurrent() + ",达到=>" + pushCoinBox.getTotal() + "可开宝箱");
+
+                            //可开
+                            if (pushCoinBox.getCurrent() >= pushCoinBox.getTotal()) {
+
+                                try {
+                                    //判断是否开过
+                                    if (pushCoinBoxDao.getRecordCount(dollBus.getBusId(), pushCoinBox.getBoxId(), userBase.getUid()) > 0) {
+                                        logger.info("用户=>" + uid + " 已开过宝箱,结束。");
+                                        return new BaseRespVO(0, false, "你已经开过一次箱子啦，不能太贪心哦~");
+                                    }
+
+                                    logger.info("开始执行清空奖池=>" + busId + ",uid=>" + uid);
+                                    int flag = pushCoinBoxDao.openBox(busId);
+                                    if (flag > 0) {
+                                        logger.info("清空奖池成功=>" + busId + ",uid=>" + uid + ",奖金=>" + pushCoinBox.getJackpot());
+                                        int rate = 10;
+                                        DollInfo dollInfo = dollInfoService.getDollInfo(dollBus.getDollId());
+                                        if (dollInfo != null) {
+                                            rate = dollInfo.getReturnJewel();//可回收的钻石数量
+                                        }
+                                        logger.info("比例=>" + rate);
+
+                                        Map<String, Object> map = Maps.newHashMap();
+                                        map.put("uid", uid);
+                                        UserGeneral userGeneral = userService.getUserGeneral(uid);
+                                        if (userGeneral != null) {
+                                            map.put("name", userGeneral.getName());
+                                            map.put("head", userGeneral.getHead());
+                                            if (rate != 0) {
+                                                if (pushCoinBox.getJackpot() > 0) {
+                                                    //  金额换算成钻石
+                                                    int jewel = pushCoinBox.getJackpot() * rate; //奖金 * 当前娃娃可兑换的钻石
+                                                    logger.info("金额换算成钻石=>" + jewel);
+                                                    PushCoinBoxLog pushCoinBoxLog = new PushCoinBoxLog();
+                                                    pushCoinBoxLog.setBusId(pushCoinBox.getBusId());
+                                                    pushCoinBoxLog.setBoxId(pushCoinBox.getBoxId());
+                                                    pushCoinBoxLog.setUid(userBase.getUid());
+                                                    pushCoinBoxLog.setLastId(pushCoinBox.getLastId());
+                                                    pushCoinBoxLog.setRate(rate);
+                                                    pushCoinBoxLog.setNum(jewel);
+                                                    pushCoinBoxLog.setType(4);//钻石
+                                                    if (pushCoinBoxDao.addOpenBoxRecord(pushCoinBoxLog) > 0) {
+                                                        logger.info("新增开箱记录");
+                                                        if (this.charge(userBase.getUid(), optId, dollBus.getBusId(), jewel, "开宝箱得" + jewel + "钻") == 1) {
+                                                            logger.info("成功充值=>" + jewel + "钻");
+                                                            map.put("type", 4);
+                                                            map.put("value", jewel);
+                                                            sendRoomMsg(dollBus, MsgRoomType.PUSH_COIN_BOX.type, map, "开启宝箱成功");
+                                                            return new BaseRespVO(100, true, "开箱成功,共获得:" + jewel + "钻石");
+                                                        }
+                                                    }
+                                                } else {
+                                                    logger.info("奖池金额为0,执行赠送其他操作");
+                                                    PushCoinBoxLog pushCoinBoxLog = new PushCoinBoxLog();
+                                                    pushCoinBoxLog.setBusId(pushCoinBox.getBusId());
+                                                    pushCoinBoxLog.setBoxId(pushCoinBox.getBoxId());
+                                                    pushCoinBoxLog.setUid(userBase.getUid());
+                                                    pushCoinBoxLog.setLastId(pushCoinBox.getLastId());
+                                                    pushCoinBoxLog.setRate(rate);
+                                                    pushCoinBoxLog.setNum(100);
+                                                    pushCoinBoxLog.setType(1);//碎片
+
+                                                    if (pushCoinBoxDao.addOpenBoxRecord(pushCoinBoxLog) > 0) {
+                                                        logger.info("新增开箱记录");
+                                                        if (this.charge(userBase.getUid(), optId, dollBus.getBusId(), 100, "开宝箱得" + 100 + "碎片") == 1) {
+                                                            logger.info("成功充值=>" + 100 + "碎片");
+                                                            map.put("type", 1);
+                                                            map.put("value", 100);
+                                                            sendRoomMsg(dollBus, MsgRoomType.PUSH_COIN_BOX.type, map, "开启宝箱成功");
+                                                            return new BaseRespVO(100, true, "开箱成功,共获得:" + 100 + "碎片");
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    logger.info("开箱异常=>" + e.getMessage());
+                                }
+                            }
+                        } else {
+                            logger.info("宝箱未初始化,执行初始化操作,当前开箱失败!");
+                            if (pushCoinBoxDao.addBoxCoin(busId, 0, 0) > 0) {
+                                logger.info("初始化宝箱成功.");
+                            }
+                        }
+                        return new BaseRespVO(0, false, "当前宝箱还不能开哦~");
+                    }
+                }else {
+                    return new BaseRespVO(0, false, "上机之后才能开宝箱哦~");
+                }
+            }
+        }
+        return new BaseRespVO(0, false, "开箱失败~");
+    }
+
+    /**
+     * 计算总奖池
+     *
+     * @param coin
+     */
+    private void calcBonus(int coin) {
+        logger.info("开始统计奖池,投入=>" + coin + "币");
+        if (coin > 0) {
+            try {
+                int money = coin / 10;
+                logger.info("换算为=>" + money + " 元");
+                if (money > 0) {
+                    if (pushCoinBoxDao.updateBoxPoolValue(PushCoinConsts.PUSH_COIN_BOX_POOL_ID, money,coin,0,coin,0) > 0) {
+                        PushCoinBoxPool pushCoinBoxPool = pushCoinBoxDao.getBoxPool(PushCoinConsts.PUSH_COIN_BOX_POOL_ID);
+                        logger.info("奖池实体=>" + JSON.toJSONString(pushCoinBoxPool));
+                        if (pushCoinBoxPool != null) {
+                            int total = pushCoinBoxPool.getTotal(); //奖池峰值
+                            int current = pushCoinBoxPool.getCurrent();//当前奖池
+                            int intoCoin = pushCoinBoxPool.getIntoCoin();//当前入币
+                            int outCoin = pushCoinBoxPool.getOutCoin();//当前出币
+                            int rate = pushCoinBoxPool.getRate();//当前比例
+                            if (current >= total) {
+                                logger.info("奖池已达到一个峰值,开始计算返现到宝箱金额");
+                                if (pushCoinBoxDao.emptyBoxPool(PushCoinConsts.PUSH_COIN_BOX_POOL_ID,intoCoin,outCoin) > 0) {
+
+                                    logger.info("奖池峰值=>" + total + ",当前=>" + current);
+                                    List<PushCoinBox> boxList = pushCoinBoxDao.getBoxList();
+                                    if (!StringUtil.isNullOrEmpty(boxList) && boxList.size() != 0) {
+                                        logger.info("所有宝箱=>" + JSON.toJSONString(boxList) + "\n\n");
+                                        int alloc = total / boxList.size();
+                                        String remark;
+                                        Map<Integer,Integer> disBusAlloc = Maps.newHashMap();
+                                        if (alloc != 0) {
+                                            remark = "平均每个宝箱将获得=>" + alloc + " 金额，开始执行分配";
+                                            logger.info(remark);
+                                            for (PushCoinBox pushCoinBox : boxList) {
+                                                if (pushCoinBoxDao.addJackpot(pushCoinBox.getBusId(), alloc) > 0) {
+                                                    disBusAlloc.put(pushCoinBox.getBusId(),alloc);
+                                                    logger.info("推币机宝箱=>" + pushCoinBox.getBusId() + ",增加=>" + alloc + "元");
+                                                }
+                                            }
+                                        } else {
+                                            remark = "分配失败,分配金额为0";
+                                            logger.info(remark);
+                                        }
+
+                                        if(pushCoinBoxDao.addPoolRecord(new PushCoinBoxPoolLog(PushCoinConsts.PUSH_COIN_BOX_POOL_ID,current,intoCoin,outCoin,rate,JSON.toJSONString(disBusAlloc),alloc,remark))>0){
+                                            logger.info("新增奖池分配记录");
+                                        }
+
+                                    } else {
+                                        logger.info("宝箱列表为空或数量小于0");
+                                    }
+                                } else {
+                                    logger.info("清空奖池异常");
+                                }
+                            } else {
+                                logger.info("当前奖池=>" + current + ",未达到峰值=>" + total);
+                            }
+                        } else {
+                            logger.info("奖池实体不存在...");
+                        }
+                    } else {
+                        logger.info("更新当前奖池失败...");
+                    }
+                } else {
+                    logger.info("换算时小于0");
+                }
+            } catch (Exception e) {
+                logger.info("计算奖池异常=>" + e.getMessage());
+            }
+        }
+    }
+
+}

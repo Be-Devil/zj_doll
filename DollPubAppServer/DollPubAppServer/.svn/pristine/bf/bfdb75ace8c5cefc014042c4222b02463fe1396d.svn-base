@@ -1,0 +1,49 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.consts;
+
+/**
+ * 推币机相关指令
+ * @author wurui
+ * @create 2018-03-28 10:44
+ **/
+public class PushCoinCmdConst {
+
+    /**
+     *  获取下位机ID（指令ID：01）
+     *  eg:请求上位机连接到下位机
+     */
+    public static final byte[] GET_CONNECTION_CMD = {(byte)0x8a,(byte)0x03,(byte)0x01,(byte)0x01,(byte)0x05,(byte)0x55};
+
+    /**
+     * 投币命令（指令ID：02）
+     * eg:(固定一次一个)
+     */
+    public static final byte[] PUT_COIN_CMD ={(byte)0x8a,(byte)0x04,(byte)0x02,(byte)0x01,(byte)0x01,(byte)0x08,(byte)0x55};
+
+    /**
+     *  输出信号命令（指令ID：03）
+     *
+     *  摇摆：OUTPUT_SIGNAL
+     *  下币：OUTPUT_SIGNAL_COIN
+     */
+    public static final byte[] OUTPUT_SIGNAL = {(byte)0x8a,(byte)0x04,(byte)0x03,(byte)0x01,(byte)0xfe,(byte)0x06,(byte)0x55};
+    public static final byte[] OUTPUT_SIGNAL_COIN = {(byte)0x8a,(byte)0x04,(byte)0x03,(byte)0x01,(byte)0x01,(byte)0x09,(byte)0x55};
+
+    /**
+     *  复位下位机（指令ID：04）
+     */
+    public static final byte[] RESET_CMD = {(byte)0x8a,(byte)0x03,(byte)0x04,(byte)0x01,(byte)0x08,(byte)0x55};
+
+    /**
+     * 上位机查询退币光眼计数（指令ID：05）
+     */
+    public static final byte[] QUERY_REFUND_COIN_OPTICAL_COUNT_CMD = {(byte)0x8a,(byte)0x03,(byte)0x05,(byte)0x01,(byte)0x09,(byte)0x55};
+
+    /**
+     *  上位机主动查询礼品信号（指令ID：06）
+     */
+    public static final byte[] QUERY_GIFT_CMD = {(byte)0x8a,(byte)0x03,(byte)0x06,(byte)0x01,(byte)0x0a,(byte)0x55};
+
+
+    public static final byte[] TEST_DOLL_BUS = {(byte)0x8a,(byte)0x03,(byte)0x06,(byte)0x01,(byte)0x0a,(byte)0x55};
+
+}

@@ -1,0 +1,261 @@
+package com.imlianai.zjdoll.app.modules.core.doll.pattern.service;
+
+import java.util.List;
+import java.util.Random;
+import java.util.TimerTask;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.domain.doll.BusOperatingRecord;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.zjdoll.domain.doll.DollOptRecord;
+import com.imlianai.zjdoll.domain.doll.DollOptRecord.DollOptRecordStrong;
+import com.imlianai.zjdoll.domain.doll.pattern.BusPatternStat;
+import com.imlianai.zjdoll.domain.user.UserAttribute;
+import com.imlianai.zjdoll.domain.user.UserValue;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.manager.aspect.annotations.CacheWrite;
+import com.imlianai.rpc.support.utils.SysTimerHandle;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.dao.DollBusPatternDao;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.domain.DollBusStrongDetailRecord;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.domain.UserStageRecord;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.domain.UserStageRecord.UserRoundStage;
+import com.imlianai.zjdoll.app.modules.core.doll.record.DollRecordService;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.ZengjingUtils;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.domain.ZengjingClawType;
+import com.imlianai.zjdoll.app.modules.core.doll.vo.DollOperateReqVO;
+import com.imlianai.zjdoll.app.modules.core.user.attribute.UserAttributeService;
+import com.imlianai.zjdoll.app.modules.core.user.value.UserValueService;
+import com.imlianai.zjdoll.app.modules.publics.cms.service.CmsService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+
+@Service
+public class DollBusPatternServiceImpl implements DollBusPatternService {
+	protected final BaseLogger logger = BaseLogger.getLogger(this.getClass());
+	@Resource
+	DollBusPatternDao dollBusPatternDao;
+	private static final int strongLimit = 8;
+	@Resource
+	UserValueService userValueService;
+	@Resource
+	DollRecordService dollRecordService;
+	@Resource
+	MsgService msgService;
+	@Resource
+	CmsService cmsService;
+	@Resource
+	UserAttributeService userAttributeService;
+	
+	@Override
+	public BusPatternStat getStat(int busId) {
+		BusPatternStat stat = dollBusPatternDao.getStat(busId);
+		if (stat == null) {
+			dollBusPatternDao.initStat(busId);
+			stat = new BusPatternStat(busId);
+		}
+		return stat;
+	}
+
+	@Override
+	public List<DollBusStrongDetailRecord> getDollBusStrongDetailRecord(
+			int busId, String start, String end) {
+		return dollBusPatternDao
+				.getDollBusStrongDetailRecord(busId, start, end);
+	}
+
+	@Override
+	@CacheWrite(validTime = 20, pkField = "optId")
+	public int handleZengjingCatch(final long optId,
+			final DollOperateReqVO reqVo, final DollBus dollBus,
+			final BusOperatingRecord operatingRecord) {
+		SysTimerHandle.execute(new TimerTask() {
+			@Override
+			public void run() {
+				try {
+					long uid = reqVo.getUid();
+					logger.info("handleZengjingCatch 下爪"
+							+ operatingRecord.getOptId() + " uid:" + uid);
+					// 娃娃下爪控制
+					DollOptRecord record=dollRecordService.getOptRecord(optId);
+					logger.info("handleZengjingCatch 下爪"
+							+ operatingRecord.getOptId() + " uid:" + uid+" record:"+JSON.toJSONString(record));
+					if (record!=null) {
+						int isStrong=record.getIsStrong();
+						if (isStrong==DollOptRecordStrong.FULL_STRONG.type||isStrong==DollOptRecordStrong.STRONG.type) {
+							ZengjingUtils.controlClaw(uid, dollBus.getDeviceId(),
+									operatingRecord.getLogId(), ZengjingClawType.Strong.type);
+						}else{
+							ZengjingUtils.controlClaw(uid, dollBus.getDeviceId(),
+									operatingRecord.getLogId(), ZengjingClawType.Default.type);
+						}
+					}else{
+						ZengjingUtils.controlClaw(uid, dollBus.getDeviceId(),
+								operatingRecord.getLogId(), ZengjingClawType.Default.type);
+					}
+				} catch (Exception e) {
+					PrintException.printException(logger, e);
+				}
+			}
+		}, 0);
+		return 1;
+	}
+
+	/**
+	 * 判断抓力设置
+	 * 
+	 * @param
+	 * @return
+	 */
+	@Override
+	public DollOptRecordStrong judgeClaw(long uid, DollBus dollBus) {
+
+		return DollOptRecordStrong.DEFAULT;
+
+//		// 预估本次理论出爪
+//		if (cmsService.isStrongUid(uid) || dollBus.getStrong() == 1) {
+//			logger.info("内部100%强爪用户 uid:" + uid);
+//			return DollOptRecordStrong.FULL_STRONG;
+//		}
+//		if (dollBus.getStrong() == 999) {
+//			logger.info("机器100%弱爪用户 uid:" + uid);
+//			return DollOptRecordStrong.WEAK;
+//		}
+//		UserValue userValue = userValueService.getUserValue(uid);
+//		UserStageRecord record = dollBusPatternDao.getUserStage(uid);
+//		if (record == null) {// 用户策略
+//			dollBusPatternDao.initUserStage(uid);
+//			record = dollBusPatternDao.getUserStage(uid);
+//		}
+//		if (userValue != null && userValue.getDollNum() > 0) {
+//			// 有捉到娃娃但没充值的，一直弱爪
+//			UserAttribute userAttribute=userAttributeService.getUserAttribute(uid);
+//			if (userAttribute!=null&&userAttribute.getTotalCharge()==0) {
+//				return DollOptRecordStrong.WEAK;
+//			}
+//			// 背包1
+//			if (userValue.getDollNum() == 1) {
+//				if (record.getStage() == UserRoundStage.BeWeak.type&&(record.getNum() < 6||record.getNum() >= (6+8))) {// 新用户策略补偿7次弱爪
+//					if (record.getNum() < 6) {
+//						return DollOptRecordStrong.WEAK;
+//					}else{// 机器概率失败8次才出强爪
+//						return DollOptRecordStrong.FULL_STRONG;
+//					}
+//				} else {
+//					return DollOptRecordStrong.DEFAULT;
+//				}
+//			} else {// 背包大于1
+//				if (record.getStage() == UserRoundStage.BeWeak.type&&(record.getNum() < 5||record.getNum() >= (5+12))) {// 捉成功1次策略补偿5次弱爪
+//					if (record.getNum() < 5) {
+//						return DollOptRecordStrong.WEAK;
+//					}else{// 机器概率失败12次才出强爪
+//						return DollOptRecordStrong.FULL_STRONG;
+//					}
+//				} else {
+//					return DollOptRecordStrong.DEFAULT;
+//				}
+//			}
+//		} else if (userValue != null && userValue.getDollNum()== 0){
+//			// 新用户-前两次机器 持续强
+//			if (record == null) {// 机器概率
+//				dollBusPatternDao.initUserStage(uid);
+//				return DollOptRecordStrong.WEAK;
+//			} else if (record.getTotal() < 3) {
+//				return DollOptRecordStrong.WEAK;
+//			} else {// 持续强到捉中
+//				return DollOptRecordStrong.FULL_STRONG;
+//			}
+//		}else {
+//			return DollOptRecordStrong.DEFAULT;
+//		}
+	}
+
+	@Override
+	public void handleFinalPlay(DollBus bus, DollOptRecord record, int result) {
+		try {
+			int busId = bus.getBusId();
+			int isStrong=record.getIsStrong();
+			// 增景结果处理
+			if (result == 1) {// 成功开始新一轮
+				BusPatternStat stat = getStat(busId);
+				dollBusPatternDao.addDetailRecord(record.getOptId(),
+						bus.getBusId(), record.getUid(), bus.getStrong(),
+						stat.getStrong(), stat.getCurrent(), 1);
+				int rand = new Random().nextInt(5);
+				int probability=bus.getStrong()+rand;
+				dollBusPatternDao.updateStrongFlag(busId,
+						probability);
+				dollBusPatternDao.resetStatRound(bus.getBusId());
+				//用户的统计进阶-重置进入
+				updateUserStage(record.getUid(), UserRoundStage.BeWeak.type);
+				if (isStrong==DollOptRecordStrong.FULL_STRONG.type) {
+					dollBusPatternDao.updateUserStageSuccess(record.getUid(), true);
+				}else {
+					dollBusPatternDao.updateUserStageSuccess(record.getUid(), false);
+				}
+			} else {
+				if (isStrong==DollOptRecordStrong.FULL_STRONG.type||isStrong==DollOptRecordStrong.WEAK.type) {
+					return;
+				}
+				// 当前累计次数
+				BusPatternStat stat = getStat(busId);
+				dollBusPatternDao.addDetailRecord(record.getOptId(),
+						bus.getBusId(), record.getUid(), bus.getStrong(),
+						stat.getStrong(), stat.getCurrent(), 0);
+			}
+		} catch (Exception e) {
+			PrintException.printException(logger, e);
+		}
+	}
+
+	
+	@Override
+	public DollOptRecordStrong handleDefaultPattern(DollBus dollBus,boolean save) {
+		if (dollBus == null) {
+			return DollOptRecordStrong.DEFAULT;
+		}
+		// 本轮捉取次数
+		BusPatternStat stat = getStat(dollBus.getBusId());
+		if (stat != null && stat.getCurrent() == stat.getStrong()) {// 本次强爪
+			if (save) {
+				dollBusPatternDao.updateStat(dollBus.getBusId(), 1);
+				int rand = new Random().nextInt(5);
+				int probability=dollBus.getStrong()+rand;
+				dollBusPatternDao.updateStrongFlag(dollBus.getBusId(),
+						probability);
+			}
+			return DollOptRecordStrong.STRONG;
+		}
+		if (save) {
+			dollBusPatternDao.updateStat(dollBus.getBusId(), 0);
+		}
+		return DollOptRecordStrong.DEFAULT;
+	}
+
+	// 默认强爪成功期望
+	private static final int successExpect = 1;
+
+	@Override
+	public int hasStrongChange(long uid) {
+		return dollBusPatternDao.hasStrongChange(uid);
+	}
+
+	@Override
+	public void updateUserStage(long uid, long optId, boolean isStrong) {
+		dollBusPatternDao.updateUserStage(uid, optId, isStrong);
+	}
+
+	@Override
+	public void updateUserStage(long uid, int stage) {
+		dollBusPatternDao.updateUserStage(uid, stage);
+	}
+
+	@Override
+	public UserStageRecord getUserStage(long uid) {
+		return dollBusPatternDao.getUserStage(uid);
+	}
+
+}

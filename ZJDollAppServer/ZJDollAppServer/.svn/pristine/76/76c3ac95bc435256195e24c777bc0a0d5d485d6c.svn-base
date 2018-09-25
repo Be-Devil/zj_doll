@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html style="font-size: 100px;">
+
+<head lang="en">
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>萌趣抓娃娃亲密付</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="萌趣抓娃娃亲密付">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="萌趣抓娃娃亲密付">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/normalize.css" type="text/css" />
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/css/style.css" type="text/css" />
+    <link rel="stylesheet" href="http://lianai-image-sys.qiniudn.com/e20180125/index.css" type="text/css" />
+    <script src="http://lianai-image-sys.qiniudn.com/web_common/jquery.min.js" type="text/javascript"></script>
+    <script src="http://lianai-image-sys.qiniudn.com/js/font.js"></script>
+    <script src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+    <script src="https://unpkg.com/vue"></script>
+    <style type="text/css">
+    .toast {
+        width: 100%;
+        height: auto;
+        position: fixed;
+        z-index: 9;
+        top: 40%;
+        text-align: center;
+    }
+
+    .toast>p {
+        display: inline-block;
+        padding: 0.25rem;
+        background: #333;
+        color: #fff;
+        border-radius: 0.24rem;
+    }
+    </style>
+</head>
+
+<body style="font-size: 12px;">
+    <section class="maxBox">
+        <img src="http://lianai-image-sys.qiniudn.com/qmf/qinmifu_bg.png" alt="" />
+        <div class="downTop">
+            <img src="http://lianai-image-sys.qiniudn.com/qmf/logo.png" alt="" />
+            <p>
+                <em>萌趣抓娃娃</em>
+                <i>手机抓娃娃，全国包邮送到家</i>
+            </p>
+            <button class="downBtn">去抓娃娃</button>
+        </div>
+        <section class="contenBox">
+            <div class="top_tle">
+                <p><img src="http://lianai-image-sys.qiniudn.com/qmf/pic_texture_top.png" alt="" /></p>
+                <p class="top_tle_txt">
+                    <i>你在TA的眼里，总是那么特别</i>
+                    <i>还有什么比让TA快乐来得更重要的呢?</i>
+                </p>
+                <p><img src="http://lianai-image-sys.qiniudn.com/qmf/pic_texture_bottom.png" alt="" /></p>
+            </div>
+            <!--分享用户-->
+            <div class="user ks-clear">
+                <div class="userPic" id="userInfo">
+                    <span><img :src="user.head" alt=""></span>
+                    <p class="userName" v-text="user.name"></p>
+                    <p class="userNum">萌趣ID:<em v-text="user.uid"></em></p>
+                </div>
+                <div class="userTxt">亲爱哒，我在萌趣抓娃娃玩嗨啦，给我充点游戏币呗~~</div>
+            </div>
+            <!--分享用户-->
+            <!--支付-->
+            <div class="payBox" id="catalogs">
+                <ul class="pay_list ks-clear">
+                    <li v-for="(catalog,index) in catalogs" @click="choice(catalog.code)">
+                        <span :class="selected==catalog.code?'hotlist':''">
+                            <h6>{{catalog.name}}</h6>
+                            <p>{{catalog.price}}元</p>
+                        </span>
+                        <p>{{catalog.repayDetail}}</p>
+                    </li>
+                </ul>
+                <div class="selectBtn">
+                    <button class="selectBtn_one" @click="nomoney">我没钱</button>
+                    <button class="selectBtn_two" @click="pay">为TA亲密付</button>
+                </div>
+                <img src="http://lianai-image-sys.qiniudn.com/qmf/pic_texture.png" alt="" class="linePic" />
+                <p class="footerTxt">温馨提示：充值前，请与当事人当面确认，谨防诈骗本次充值的游戏币将加到对方的萌趣抓娃娃账户</p>
+            </div>
+            <!--支付-->
+            <img src="http://lianai-image-sys.qiniudn.com/qmf/pic_ad.jpg" alt="" class="footerPic" />
+        </section>
+    </section>
+    <!--提示-->
+    <div class="toast" style="display: none">
+        <p>陪伴是最长情的告白</p>
+    </div>
+</body>
+
+</html>
+<script>
+var request = function(paramName) {
+    var url = location.href;
+    var paraString = url.substring(url.indexOf("?") + 1, url.length).split(
+        "&");
+    var params = {}
+    for (i = 0; j = paraString[i]; i++) {
+        params[j.substring(0, j.indexOf("=")).toLowerCase()] = j.substring(
+            j.indexOf("=") + 1, j.length);
+    }
+    var returnValue = params[paramName.toLowerCase()];
+    if (typeof(returnValue) == "undefined") {
+        return "";
+    } else {
+        return returnValue;
+    }
+};
+var uid = request('uid');
+var code = request('itemCode');
+var openId = request('openId');
+var unionId = request('unionId');
+(function(win) {
+    $(".downBtn").click(function() {
+        window.location = "http://www.mengquww.com/download/gw";
+    });
+
+    $(".pay_list li").each(function(i, domEle) {
+        $(this).click(function() {
+            $(this).children("span").addClass("hotlist");
+            $(this).siblings("li").children("span").removeClass("hotlist");
+        });
+    });
+    uid = request('uid');
+    code = request('itemCode');
+    openId = request('openId');
+    unionId = request('unionId');
+    getList(uid, code);
+
+})(window);
+
+
+$(".selectBtn_one").click(function() {
+    $(".toast").fadeIn().delay(1000).fadeOut(3000);
+});
+
+
+
+function doConfig() {
+    var shareTitel = "亲爱哒，我有句话想跟你说……";
+    var shareDesc = "你在我心里总是那么特别那么重要。";
+    var shareUrl = "http://t.xiehou360.com/DollPubAppServer/api/oauth/wxAuth/1/pay4met?appid=wxc68eccf842b1eeb0&userInfoMark=userInfoSave&authBefore=authBefore&uid="+uid+"&itemCode="+code;
+    var head = "http://sglive.imlianai.com/cmsdoll/20171209095029515";
+    var visit_qq = "http://t.xiehou360.com/DollPubAppServer/api/oauth/wxAuth/1/pay4met?appid=wxc68eccf842b1eeb0&userInfoMark=userInfoSave&authBefore=authBefore&uid="+uid+"&itemCode="+code;
+    $.getJSON('http://www.mengquww.com/api/wechatSupport/info', {
+        url: document.location.href,
+        type: 2
+    }, function(data) {
+        if (data.state) {
+            var res = data.js;
+            wx.config({
+                debug: false,
+                appId: res.appId,
+                timestamp: res.timestamp,
+                nonceStr: res.nonceStr,
+                signature: res.signature,
+                jsApiList: ['onMenuShareTimeline',
+                    'onMenuShareAppMessage', 'onMenuShareQQ', 'hideMenuItems'
+                ]
+            });
+
+            //getChargeOrder(uid,code,1);
+            wx.ready(function() {
+                wx.onMenuShareAppMessage({
+                    title: shareTitel,
+                    desc: shareDesc,
+                    link: shareUrl,
+                    imgUrl: head,
+                    success: function() {}
+                });
+
+                wx.onMenuShareTimeline({
+                    title: shareTitel,
+                    link: shareUrl,
+                    imgUrl: head,
+                    success: function() {
+
+                    }
+
+                });
+
+                wx.onMenuShareQQ({
+                    title: shareTitel,
+                    desc: shareDesc,
+                    link: visit_qq,
+                    imgUrl: head,
+                    success: function() {}
+                });
+
+            });
+
+        }
+    });
+}
+
+
+function onBridgeReady(appId, timeStamp, nonceStr, package, paySign) {
+    WeixinJSBridge.invoke('getBrandWCPayRequest', {
+        appId: appId, //公众号名称，由商户传入     
+        timeStamp: timeStamp, //时间戳，自1970年以来的秒数     
+        nonceStr: nonceStr, //随机串     
+        package: package,
+        signType: "MD5", //微信签名方式：     
+        paySign: paySign
+        //微信签名 
+    }, function(res) {
+        //alert(res.err_msg);
+        if (res.err_msg == "get_brand_wcpay_request:ok") {
+        } // 使用以上方式判断前端返回,微信团队郑重提示：res.err_msg将在用户支付成功后返回    ok，但并不保证它绝对可靠。 
+    });
+}
+/* if (typeof WeixinJSBridge == "undefined"){
+   if( document.addEventListener ){
+       document.addEventListener('WeixinJSBridgeReady', onBridgeReady, false);
+   }else if (document.attachEvent){
+       document.attachEvent('WeixinJSBridgeReady', onBridgeReady); 
+       document.attachEvent('onWeixinJSBridgeReady', onBridgeReady);
+   }
+}else{
+   //onBridgeReady();
+   getChargeOrder(uid,code,1);
+}
+ */
+
+var userInfo = new Vue({
+    el: '#userInfo',
+    data: {
+        user: { uid: 10000, name: '萌趣抓娃娃' }
+    }
+})
+
+var catalogs = new Vue({
+    el: '#catalogs',
+    data: {
+        catalogs: [],
+        selected: -1,
+    },
+    methods: {
+        choice: function(selected) {
+            this.selected = selected;
+        },
+        pay: function() {
+            getChargeOrder(uid, this.selected, openId, unionId);
+        },
+        nomoney: function() {
+            $(".toast").fadeIn().delay(1000).fadeOut(3000);
+        }
+    }
+})
+
+function getChargeOrder(uid, code, openId, unionId) {
+    $.getJSON('http://t.xiehou360.com/DollAppServer/api/web/chargeweb/orderH5', {
+        code: code,
+        uid: uid,
+        chargeType: 1,
+        openId: openId,
+        unionId: unionId
+    }, function(data) {
+        if (data.state) {
+            onBridgeReady(data.wxRes.appid, data.wxRes.timestamp,
+                data.wxRes.noncestr, data.wxRes.package,
+                data.wxRes.sign);
+        } else {
+            alert(data.msg);
+        }
+    });
+}
+
+function getList(uid, itemCode) {
+    $.getJSON('http://t.xiehou360.com/DollAppServer/api/web/chargeweb/getHoneyList', {
+        uid: uid,
+        chargeType: 1,
+        openId: openId,
+        itemCode: itemCode
+    }, function(data) {
+        if (data.state) {
+            userInfo.user = data.data.user;
+            catalogs.catalogs = data.data.catalogs;
+            catalogs.selected = itemCode;
+        } else {}
+    });
+}
+
+window.onload = function() {　　
+    doConfig();
+}
+</script>

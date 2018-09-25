@@ -1,0 +1,347 @@
+package com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.service;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.TimerTask;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.imlianai.zjdoll.domain.doll.DollInfo;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.trade.TradeCostType;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.LivePropsUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.rpc.support.utils.SysTimerHandle;
+import com.imlianai.zjdoll.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.zjdoll.app.modules.core.doll.robot.service.DollRobotService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.dao.UserDAO;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.constants.TwistedEggConstants;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.dao.EventTwistedEgg20180305Dao;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.domain.Event20180306TwistedeggUserDayRechargeSum;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.domain.Event20180306TwistedeggUserRechargeSum;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.domain.Event20180306TwistedeggUserTwistedeggInfo;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.enm.AwardEnm;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.enm.TwistedEggEnm;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.utils.TwistedEggUtils;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEgg20180305.vo.TwistedEggInfo;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.constants.TwistedEggMachineConstants;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.enm.AwardType;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.enm.BigPrizeEnm;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.service.EventTwistedEggMachineService;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.utils.TwistedEggMachineUtils;
+import com.imlianai.zjdoll.app.modules.support.event.twistedEggMachine.vo.AwardItem;
+import com.imlianai.zjdoll.app.modules.support.userdoll.service.UserDollService;
+
+@Service
+public class EventTwistedEgg20180305ServiceImpl implements EventTwistedEgg20180305Service{
+	
+	private static final BaseLogger LOG = BaseLogger.getLogger(EventTwistedEgg20180305ServiceImpl.class);
+	
+	public static int luckyBagId = Integer.parseInt(LivePropsUtil.getString("twistedEgg.luckyBagId")); // 福袋ID
+	
+	public static String bigPrizeIds = LivePropsUtil.getString("twistedEgg.bigPrizeIds"); // 大奖品ID
+	
+	public static String H5_URL = LivePropsUtil.getString("twistedEgg.url"); // h5地址
+	
+	public static List<Integer> bigPrizeIdList = new ArrayList<Integer>(); // 大奖品ID列表
+	
+	@Resource
+	EventTwistedEgg20180305Dao eventTwistedEgg20180305Dao;
+	@Resource
+	TradeService tradeService;
+	@Resource
+	UserDollService userDollService;
+	@Resource
+	DollInfoService dollInfoService;
+	@Resource
+	EventTwistedEggMachineService eventTwistedEggMachineService;
+	@Resource
+	UserDAO userDAO;
+	@Resource
+	MsgService msgService;
+	@Resource 
+	DollRobotService dollRobotService;
+
+	@Override
+	public List<TwistedEggInfo> getList(Long uid) {
+		List<TwistedEggInfo> resultList = new ArrayList<TwistedEggInfo>();
+		int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+		List<Event20180306TwistedeggUserTwistedeggInfo> twistedeggInfos = eventTwistedEgg20180305Dao.getTwistedeggInfoList(uid, dateCode);
+		Map<Integer, Event20180306TwistedeggUserTwistedeggInfo> twistedeggInfoMap = new HashMap<Integer, Event20180306TwistedeggUserTwistedeggInfo>();
+		if(!StringUtil.isNullOrEmpty(twistedeggInfos)) {
+			for(Event20180306TwistedeggUserTwistedeggInfo twistedeggInfo : twistedeggInfos) {
+				twistedeggInfoMap.put(twistedeggInfo.gettEggId(), twistedeggInfo);
+			}
+		}
+		for(TwistedEggEnm twistedEgg : TwistedEggEnm.values()) {
+			Event20180306TwistedeggUserTwistedeggInfo twistedeggInfo = twistedeggInfoMap.get(twistedEgg.getId());
+			TwistedEggInfo tEggInfo = new TwistedEggInfo(twistedEgg.getId(), twistedeggInfo == null ? -1 : twistedeggInfo.getStatus(), twistedEgg.getAmt());
+			resultList.add(tEggInfo);
+		}
+		return resultList;
+	}
+
+	@Override
+	public void handleRecharge(double cost, long uid) {
+		try {
+			if(TwistedEggUtils.eventStatus() == 1)  { // 活动期间
+				int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+				if(eventTwistedEgg20180305Dao.saveOrUpdateUserDayRechargeSum(uid, dateCode, cost) > 0) {
+					updateUserRechargeSum(uid, cost, 0, "用户充值");
+					updateUserRechargeSum(0l, cost, 1, "用户充值");
+					updateUserRechargeSum(0l, cost, 2, "用户充值");
+					List<Integer> amtList = new ArrayList<Integer>();
+					for(TwistedEggEnm twistedEggEnm : TwistedEggEnm.values()) {
+						amtList.add(twistedEggEnm.getAmt());
+					}
+					Collections.reverse(amtList);
+					Event20180306TwistedeggUserDayRechargeSum userDayRechargeSum = eventTwistedEgg20180305Dao.getUserDayRechargeSum(uid, dateCode);
+					double newAmt = userDayRechargeSum.getAmount();
+					int maxTeggId = 0;
+					for(Integer amt : amtList) {
+						if(newAmt >= amt) {
+							TwistedEggEnm twistedEggEnm = TwistedEggEnm.getTwistedEggEnmByAmt(amt);
+							if(twistedEggEnm != null) {
+								maxTeggId = twistedEggEnm.getId();
+								break;
+							}
+						}
+					}
+					if(maxTeggId > 0) {
+						for(int i = 1; i <= maxTeggId ; i++) {
+							Event20180306TwistedeggUserTwistedeggInfo userTwistedeggInfo = eventTwistedEgg20180305Dao.getUserTwistedeggInfoByParams(uid, i, dateCode);
+							if(userTwistedeggInfo == null) {
+								if(eventTwistedEgg20180305Dao.saveOrUpdateUserTwistedeggInfo(uid, dateCode, i) > 0) {
+									TwistedEggEnm twistedEgg = TwistedEggEnm.getTwistedEggEnmById(i);
+									String textString = "小主今天累计充值满" + twistedEgg.getAmt() + "元，奖励你1颗任务扭蛋哦，快去领取吧~";
+									MsgNotice msg=new MsgNotice(uid, MsgType.NOTICE_SYS.type, textString);
+									UserBase userBase = userDAO.getUserBase(uid);
+									msg.setJumpWeb(H5_URL + "?uid=" + uid + "&loginKey=" + userBase.getLoginKey());
+									msg.setPushMsg(textString);
+									msg.setTargetTitle("任务扭蛋等你领");
+									msg.setTargetName("任务扭蛋等你领");
+									msgService.sendMsg(msg);
+								}
+							}
+						}
+					}
+				}
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+		}
+	}
+
+	@Override
+	public AwardItem play(Long uid) {
+		AwardItem awardItem = null;
+		try {
+			Event20180306TwistedeggUserRechargeSum userRechargeSum = eventTwistedEgg20180305Dao.getUserRechargeSum(0l, 1);
+			Event20180306TwistedeggUserRechargeSum commUserRechargeSum = eventTwistedEgg20180305Dao.getUserRechargeSum(uid, 0);
+			Event20180306TwistedeggUserRechargeSum luckyBagUserRechargeSum = eventTwistedEgg20180305Dao.getUserRechargeSum(0l, 2);
+			int type = 0;
+			if(userRechargeSum != null && userRechargeSum.getAmount() >= TwistedEggConstants.BIG_PRIZE_MIN_RECHARGE) { // 有抽中【大奖品】机会(平台)
+				if(commUserRechargeSum != null && commUserRechargeSum.getAmount() >= TwistedEggConstants.BIG_PRIZE_USER_MIN_RECHARGE) { // 有抽中【大奖品】机会(用户)
+					if(luckyBagUserRechargeSum != null && luckyBagUserRechargeSum.getAmount() >= TwistedEggConstants.LUCKY_BAG_MIN_RECHARGE) { // 全站有1次抽中福袋的机会
+						type = TwistedEggUtils.getAwardType(4);
+					} else {
+						type = TwistedEggUtils.getAwardType(3);
+					}
+				} else {
+					type = getAwardType(luckyBagUserRechargeSum);
+				}
+			} else {
+				if(commUserRechargeSum != null && commUserRechargeSum.getAmount() >= TwistedEggConstants.BIG_PRIZE_USER_MIN_RECHARGE) { // 有抽中【大奖品】机会(用户)
+					type = getAwardType(luckyBagUserRechargeSum);
+				} else {
+					type = getAwardType(luckyBagUserRechargeSum);
+				}
+			}
+			AwardEnm awardEnm = AwardEnm.getAwardEnmById(type);
+			if(awardEnm != null) {
+				int awardId = 0;
+				int awardCoin = 0;
+				String awardName = "";
+				int awardType = awardEnm.getType();
+				String icon = "";
+				if(awardEnm.getType() == AwardType.COIN.type) { // 金币
+					awardCoin = awardEnm.getNum();
+					awardName = awardEnm.getNum() + "币";
+					icon = TwistedEggMachineConstants.COIN_ICON;
+				} else if(awardEnm.getType() == AwardType.LUCKYBAG.type) { // 福袋
+					awardId = luckyBagId;
+					icon = TwistedEggMachineConstants.LUCKY_BAG_ICON;
+				} else if(awardEnm.getType() == AwardType.BIGPRIZE.type) { // 大奖品
+					int randomNum = new Random().nextInt(bigPrizeIdList.size());
+					awardId = bigPrizeIdList.get(randomNum);
+					icon = BigPrizeEnm.values()[randomNum].getIcon();
+				}
+				DollInfo dollInfo = null;
+				if(awardId > 0) {
+					dollInfo = dollInfoService.getDollInfo(awardId);
+					awardName = dollInfo == null ? "" : dollInfo.getName();
+				}
+				int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+				if(!StringUtil.isNullOrEmpty(awardName) 
+						&& eventTwistedEggMachineService.saveUserOptRecord(uid, 1, awardType, awardId, awardName, awardCoin , "使用任务扭蛋抽奖获得【" + awardName + "】", dateCode, 0) > 0) {
+					if(awardEnm.getType() == AwardType.COIN.type) { // 金币
+						TradeRecord tradeRecord = new TradeRecord(uid, uid,
+								TradeType.TWISTEDEGG_MACHINE_GET_COIN.type, 0, awardEnm.getNum(),
+								TradeCostType.COST_COIN.type, "扭蛋机抽奖获得" + awardEnm.getNum() + "币");
+						tradeService.charge(tradeRecord);
+					} else {
+						if(dollInfo != null) {
+							long uDollId = userDollService.saveUserDoll(uid, awardId, 0l, "扭蛋机抽奖获得【" + dollInfo.getName() + "】", 0);
+							if(awardEnm.getType() == AwardType.BIGPRIZE.type) { // 大奖品
+								updateUserRechargeSum(uid, -commUserRechargeSum.getAmount(), 0, "扭蛋机抽奖获得大奖品【" + dollInfo.getName() + "】,用户累计充值减" + commUserRechargeSum.getAmount());
+								updateUserRechargeSum(0l, -TwistedEggConstants.BIG_PRIZE_MIN_RECHARGE, 1, "扭蛋机抽奖获得大奖品【" + dollInfo.getName() + "】,平台累计充值减" + TwistedEggConstants.BIG_PRIZE_MIN_RECHARGE);
+							} else { // 福袋
+								updateUserRechargeSum(0l, -TwistedEggConstants.LUCKY_BAG_MIN_RECHARGE, 2, "扭蛋机抽奖获得福袋【" + dollInfo.getName() + "】,平台累计充值减" + TwistedEggConstants.LUCKY_BAG_MIN_RECHARGE);
+							}
+							// 系统通知
+							String textString = "恭喜小主在扭蛋机扭出  " + dollInfo.getName();
+							MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type, textString);
+							msg.setJumpDoll(uDollId);
+							msgService.sendMsg(msg);
+						}
+					}
+					// 手气值
+					int coinSum = awardCoin;
+					int fortuneValue = TwistedEggMachineUtils.getFortuneValue(coinSum); // 手气值
+					eventTwistedEggMachineService.saveUserFortune(uid, dateCode, fortuneValue, "使用任务扭蛋抽奖获得" + fortuneValue + "手气值");
+					
+					return new AwardItem(awardType, awardName, awardCoin, icon);
+				}
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+		}
+		return awardItem;
+	}
+	
+	private void updateUserRechargeSum(Long uid, double amount, int type, String remark) {
+		int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+		if(eventTwistedEgg20180305Dao.saveOrUpdateUserRechargeSum(uid, type, amount) > 0) {
+			eventTwistedEgg20180305Dao.saveUserRechargeRecord(uid, type, dateCode, amount, remark);
+		}
+	}
+
+	private static int getAwardType(Event20180306TwistedeggUserRechargeSum userRechargeSum) {
+		int type = 0;
+		if(userRechargeSum != null && userRechargeSum.getAmount() >= TwistedEggConstants.LUCKY_BAG_MIN_RECHARGE) { // 全站有1次抽中福袋的机会
+			type = TwistedEggUtils.getAwardType(2);
+		} else {
+			type = TwistedEggUtils.getAwardType(1);
+		}
+		return type;
+	}
+	
+	@Override
+	public BaseRespVO receive(Long uid, int teggId) {
+		try {
+			LOG.info("receive:uid-" + uid + ",teggId-" + teggId);
+			int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+			Event20180306TwistedeggUserTwistedeggInfo userTwistedeggInfo = eventTwistedEgg20180305Dao.getUserTwistedeggInfoByParams(uid, teggId, dateCode);
+			if(userTwistedeggInfo == null) {
+				return new BaseRespVO(-1, false, "该扭蛋还未能领取，快快去充值吧~");
+			}
+			if(userTwistedeggInfo.getStatus() == 1 || userTwistedeggInfo.getStatus() == 2) {
+				return new BaseRespVO(-1, false, "该扭蛋已被领取，不能重复领取哦~");
+			}
+			if(userTwistedeggInfo.getStatus() == 3) {
+				return new BaseRespVO(-1, false, "该扭蛋已过期，不能领取哦~");
+			}
+			if(eventTwistedEgg20180305Dao.updateUserTwistedEggInfoStatus(uid, teggId, dateCode) > 0) {
+				eventTwistedEggMachineService.updateUserTwistedeggNum(uid, dateCode, 1, "充值完成目标获得任务扭蛋*1");
+				return new BaseRespVO();
+			} else {
+				return new BaseRespVO(-1, false, "网络异常，请重试~");
+			}
+		} catch(Exception e) {
+			PrintException.printException(LOG, e);
+			return new BaseRespVO(-1, false, "系统异常，请重试~");
+		}
+	}
+	
+	@Override
+	public void twistedEggUpdateStatusTask() {
+		eventTwistedEgg20180305Dao.handleExpire();
+	}
+	
+	@Override
+	public int getDayRechargeAmt(Long uid) {
+		int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+		Event20180306TwistedeggUserDayRechargeSum userDayRechargeSum = eventTwistedEgg20180305Dao.getUserDayRechargeSum(uid, dateCode);
+		if(userDayRechargeSum != null) {
+			return new Double(userDayRechargeSum.getAmount()).intValue();
+		}
+		return 0;
+	}
+	
+	@Override
+	public void twistedEggEvery5MinsTask() {
+		try {
+			if(TwistedEggUtils.eventStatus() == 1) {
+				int randomNum = new Random().nextInt(6);
+				final Long robotUid = dollRobotService.getRandomRobot();
+				if(robotUid != null && robotUid.longValue() > 0) {
+					if (robotUid != 0) {
+						SysTimerHandle.execute(new TimerTask() {
+							@Override
+							public void run() {
+								if(TwistedEggUtils.eventStatus() == 1) {
+									int dateCode = Integer.parseInt(DateUtils.dateToString(new Date(), "yyyyMMdd"));
+									int awardType = new Random().nextInt(2) + 1;
+									int awardId = 0;
+									if(awardType == AwardType.BIGPRIZE.type) { // 大奖品
+										int randomNum = new Random().nextInt(bigPrizeIdList.size());
+										awardId = bigPrizeIdList.get(randomNum);
+									} else { // 福袋
+										awardId = luckyBagId;
+									}
+									if(awardId > 0) {
+										DollInfo dollInfo = dollInfoService.getDollInfo(awardId);
+										String awardName = dollInfo == null ? "" : dollInfo.getName();
+										eventTwistedEggMachineService.saveUserOptRecord(robotUid, 1, awardType, awardId, awardName, 0, "机器人抽奖记录", dateCode, 1);
+									}
+								}
+							}
+						}, randomNum*60);
+					}
+				}
+			}
+		} catch (Exception e) {
+			PrintException.printException(LOG, e);
+		}
+	}
+	
+	@PostConstruct
+	public void initData() {
+		if(!StringUtil.isNullOrEmpty(bigPrizeIds)) {
+			String[] bigPrizeIdArry = bigPrizeIds.split(",");
+			if(bigPrizeIdArry != null && bigPrizeIdArry.length > 0) {
+				for(String bigPrizeId : bigPrizeIdArry) {
+					bigPrizeIdList.add(Integer.parseInt(bigPrizeId));
+				}
+			}
+		}
+	}
+}

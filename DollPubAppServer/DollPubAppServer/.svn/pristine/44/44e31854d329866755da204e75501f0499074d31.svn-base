@@ -1,0 +1,576 @@
+package com.imlianai.dollpub.app.modules.core.doll.cmd;
+
+import com.imlianai.dollpub.app.modules.support.probability.service.DownClawService;
+import com.imlianai.dollpub.domain.user.*;
+import com.imlianai.dollpub.machine.iface.domain.MachineCmdResult;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Path;
+
+import org.springframework.stereotype.Component;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.api.dao.DollBusStatusDAO;
+import com.imlianai.dollpub.app.modules.core.api.service.CustomerDollBusService;
+import com.imlianai.dollpub.app.modules.core.api.service.DollBusStatusService;
+import com.imlianai.dollpub.app.modules.core.api.vo.DollBusApplyMachineRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.app.modules.core.doll.info.DollInfoService;
+import com.imlianai.dollpub.app.modules.core.doll.list.DollListService;
+import com.imlianai.dollpub.app.modules.core.doll.pattern.service.DollBusPatternService;
+import com.imlianai.dollpub.app.modules.core.doll.record.DollRecordService;
+import com.imlianai.dollpub.app.modules.core.doll.service.DollService;
+import com.imlianai.dollpub.app.modules.core.doll.vo.BusEnterRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.BusWatchersRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollApplyReqVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollApplyRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollInfoReqVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollInfoRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollListReqVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollListRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.vo.DollOperateReqVO;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeService;
+import com.imlianai.dollpub.app.modules.core.user.customer.service.CustomerService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.support.banner.service.BannerService;
+import com.imlianai.dollpub.app.modules.support.invite.h5.service.InviteH5Service;
+import com.imlianai.dollpub.app.modules.support.pack.domain.GrabDollRecord;
+import com.imlianai.dollpub.app.modules.support.pack.service.PackService;
+import com.imlianai.dollpub.constants.MachineStateConst;
+import com.imlianai.dollpub.domain.banner.Banner;
+import com.imlianai.dollpub.domain.banner.Banner.BannerLocationType;
+import com.imlianai.dollpub.domain.banner.BannerRes;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.domain.doll.BusOperatingRecord;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.domain.doll.DollInfo;
+import com.imlianai.dollpub.domain.doll.DollRewardRecord;
+import com.imlianai.dollpub.domain.msg.MsgRoomJump;
+import com.imlianai.dollpub.domain.msg.MsgRoomType;
+import com.imlianai.dollpub.domain.trade.TradeAccount;
+import com.imlianai.dollpub.domain.trade.TradeCostType;
+import com.imlianai.dollpub.domain.trade.TradeRecord;
+import com.imlianai.dollpub.domain.trade.TradeType;
+import com.imlianai.dollpub.machine.iface.IMachineRemoteService;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.common.exception.NotEnoughBeanException;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.common.exception.TradeOperationException;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.manager.aspect.annotations.LogHead;
+import com.imlianai.rpc.support.manager.aspect.annotations.LoginCheck;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+@Component("doll")
+@Api("娃娃机相关")
+public class CmdDollHandler extends RootCmd {
+    @Resource
+    private CustomerDollBusService customerDollBusService;
+
+    @Resource
+    private DollBusStatusService dollBusStatusService;
+    @Resource
+    DollListService dollListService;
+    @Resource
+    DollRecordService dollRecordService;
+    @Resource
+    DollService dollService;
+    @Resource
+    TradeService tradeService;
+    @Resource
+    TradeChargeService tradeChargeService;
+    @Resource
+    BannerService bannerService;
+    @Resource
+    DollInfoService dollInfoService;
+    @Resource
+    DollBusService dollBusService;
+    @Resource
+    UserService userService;
+    @Resource
+    DollBusPatternService dollBusPatternService;
+    @Resource
+    PackService packService;
+
+    @Reference
+    private IMachineRemoteService iMachineRemoteService;
+
+    @Resource
+    private CustomerService customerService;
+
+    @Resource
+    private DollBusStatusDAO busStatusDAO;
+
+
+    @Resource
+    private InviteH5Service inviteH5Service;
+
+    @Resource
+    private DownClawService downClawService;
+
+    @ApiHandle
+    @LogHead("获取娃娃机列表接口")
+    @Path("api/doll/list")
+    @ApiOperation(position = 1, value = "【1.0.0】1、获取娃娃机列表接口", notes = "获取娃娃机列表", httpMethod = "POST", response = DollListRespVO.class)
+    public BaseRespVO list(DollListReqVO reqVO) {
+        Customer customer = null;
+        if (reqVO.getCustomerId() != null && reqVO.getCustomerId() != 0) {
+            customer = customerService.getCustomerById(reqVO.getCustomerId());
+        } else {
+            if (reqVO.getUid() == null) {
+                return new DollListRespVO();
+            }
+            UserBase userBase = userService.getUserBase(reqVO.getUid());
+            if (userBase == null) {
+                return new BaseRespVO(-1, false, "当前用户不存在=>" + reqVO.getUid());
+            }
+            customer = customerService
+                    .getCustomerById(userBase.getCustomerId());
+        }
+        List<DollBus> list = customerDollBusService.getCustomerDollBusList(
+                customer, 0, 1000);
+        List<DollBus> reslist = new ArrayList<DollBus>();
+        if (!StringUtil.isNullOrEmpty(list)) {
+            List<Integer> dollList = new ArrayList<Integer>();
+            for (DollBus dollBus : list) {
+                dollList.add(dollBus.getDollId());
+                if (StringUtil.isNullOrEmpty(dollBus.getConversationId())) {
+                    dollBus = dollService.initBusConversationId(dollBus);
+                }
+            }
+            Map<Integer, DollInfo> infoMap = dollInfoService
+                    .getDollInfos(dollList);
+            for (DollBus dollBus : list) {
+                DollInfo info = infoMap.get(dollBus.getDollId());
+                if (info != null) {
+                    dollBus.setDollInfo(info);
+                }
+                if (customer.getId() == 22) {
+                    dollBus.setName(dollBus.getNickName());
+                }
+                if (dollBus.getStatus() != MachineStateConst.BROKEN || customer.getId() == 22) {
+                    reslist.add(dollBus);
+                }
+            }
+        }
+//        if (reqVO.getCustomerId() == 80) {
+//            List<DollBus> reslistH5 = new ArrayList<DollBus>();
+//            for (DollBus dollBus : reslist) {
+//                if (dollBus.getSupportType() == 1) {
+//                    reslistH5.add(dollBus);
+//                }
+//            }
+//            reslist = reslistH5;
+//        }
+        DollListRespVO respVO = new DollListRespVO();
+        respVO.setList(reslist);
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("进入娃娃机房间接口")
+    @Path("api/doll/enter")
+    @LoginCheck
+    @ApiOperation(position = 2, value = "【1.0.0】2、进入娃娃机房间接口", notes = "进入娃娃机房间,特殊返回码146-娃娃机维护中，去试试其他机器吧", httpMethod = "POST", response = BusEnterRespVO.class)
+    public BaseRespVO enter(DollApplyReqVO reqVO) {
+        // 娃娃机信息
+        DollBus bus = dollListService.getDollBus(reqVO.getBusId(), false);
+        BusEnterRespVO respVO = new BusEnterRespVO();
+        if (bus != null) {
+            respVO.setInfo(bus);
+            dollService.enterBus(reqVO.getUid(), reqVO.getBusId());
+            TradeAccount tradeAccount = tradeService.getAccount(reqVO.getUid());
+            if (tradeAccount != null) {
+                respVO.setCoin(tradeAccount.getCoin());
+            }
+            List<Banner> banners = bannerService.getBannerByLocation(
+                    reqVO.getUid(), BannerLocationType.BUS_FLOAT.type,
+                    reqVO.getOsType(), reqVO.getChannel(), reqVO.getCustomerId());
+            if (!StringUtil.isNullOrEmpty(banners)) {
+                Banner bannerRes = banners.get(0);
+                MsgRoomJump msgRoom = new MsgRoomJump(bus,
+                        MsgRoomType.DANMU.type, bannerRes.getFloatDesc());
+                msgRoom.setJumpUrl(bannerRes.getUrl());
+                msgRoom.setTargetTitle(bannerRes.getTitle());
+                respVO.setAd(msgRoom);
+            }
+            banners = bannerService.getBannerByLocation(reqVO.getUid(),
+                    BannerLocationType.BUS_NOTICE.type, reqVO.getOsType(),
+                    reqVO.getChannel(), reqVO.getCustomerId());
+            if (!StringUtil.isNullOrEmpty(banners)) {
+                Banner bannerRes = banners.get(0);
+                MsgRoomJump msgRoom = new MsgRoomJump(bus,
+                        MsgRoomType.NORMAL_MSG.type, bannerRes.getFloatDesc());
+                respVO.setBroad(msgRoom);
+            }
+            BusOperatingRecord record = dollBusService
+                    .getBusOperatingRecord(bus.getBusId());
+            if (record != null) {
+                UserGeneral user = userService.getUserGeneral(record.getUid());
+                if (user != null) {
+                    respVO.setPlayer(new UserSimple(user));
+                }
+            }
+			/*if (reqVO.getBusId() % 2 == 1) {
+				respVO.setWallPaint("http://lianai-image-sys.qiniudn.com/mqww/wallp.png");
+				respVO.setSlient(true);
+			} else {
+				respVO.setNeedTalkPhone(true);
+			}*/
+        } else {
+            return new BaseRespVO(ResCodeEnum.DOLL_BUS_MATIAN);
+        }
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("申请上机接口")
+    @Path("api/doll/apply")
+    @ApiOperation(position = 3, value = "【1.0.0】3、申请上机接口", notes = "申请上机,特殊返回码146-娃娃机维护中，去试试其他机器吧 147-有人先你一步上机，请稍后 148-上机失败", httpMethod = "POST", response = DollApplyRespVO.class)
+    public BaseRespVO apply(DollApplyReqVO reqVO) {
+        Customer customer = null;
+        if (reqVO.getCustomerId() != null && reqVO.getCustomerId() != 0) {
+            customer = customerService.getCustomerById(reqVO.getCustomerId());
+        } else {
+            UserBase userBase = userService.getUserBase(reqVO.getUid());
+            if (userBase == null) {
+                return new BaseRespVO(-1, false, "当前用户不存在=>" + reqVO.getUid());
+            }
+            customer = customerService
+                    .getCustomerById(userBase.getCustomerId());
+        }
+        // 娃娃机信息
+        DollBus bus = dollBusService.getDollBus(reqVO.getBusId());
+        if (bus != null && bus.getGroupId() == customer.getGroupId()) {
+            DollInfo info = dollInfoService
+                    .getDollInfo(bus.getDollId());
+            String name = "";
+            if (info != null) {
+                name = info.getName();
+            }
+            boolean applyRes = dollBusStatusService.isApply(reqVO.getBusId(),
+                    reqVO.getUid());
+            if (applyRes) {
+                TradeRecord record = new TradeRecord(reqVO.getUid(), 0,
+                        TradeType.PLAY.type, reqVO.getBusId(), bus.getPrice(),
+                        TradeCostType.COST_COIN.type, "房间 " + name);
+                try {
+                    if (bus.getGroupId() != 22) {
+                        tradeService.consume(record);
+                    }
+                } catch (TradeOperationException e) {
+                    PrintException.printException(logger, e);
+                    return new BaseRespVO(ResCodeEnum.JEWEL_TOO_LESS);
+                } catch (NotEnoughBeanException e) {
+                    PrintException.printException(logger, e);
+                    return new BaseRespVO(ResCodeEnum.JEWEL_TOO_LESS);
+                }
+                DollBusApplyMachineRespVO respVOApply = customerDollBusService
+                        .applyMachine(reqVO.getUid(), reqVO.getBusId(),
+                                customer, "");
+                logger.info("apply respVOApply:"
+                        + JSON.toJSONString(respVOApply));
+                if (!respVOApply.isState()) {
+
+                    TradeRecord feedBack = new TradeRecord(reqVO.getUid(), 0,
+                            TradeType.PLAY_FAIL.type, reqVO.getBusId(),
+                            bus.getPrice(), TradeCostType.COST_COIN.type, "房间 "
+                            + name);
+                    try {
+                        if (bus.getGroupId() != 22) {
+                            tradeService.charge(feedBack);
+                        }
+                    } catch (TradeOperationException e) {
+                        PrintException.printException(logger, e);
+                    }
+                    return new BaseRespVO(ResCodeEnum.DOLL_BUS_OCCUPY);
+                } else {
+                    DollApplyRespVO respVO = new DollApplyRespVO();
+                    respVO.setOptId(respVOApply.getOptId());
+                    respVO.setLogKey(respVOApply.getOptId());
+                    respVO.setRemainSecond(30);
+                    respVO.setBusInfo(bus);
+                    TradeAccount account = tradeService.getAccount(reqVO
+                            .getUid());
+                    if (account != null) {
+                        respVO.setCoin(account.getCoin());
+                    }
+                    dollService.sendApplyMsg(reqVO.getUid(), bus);
+                    if (reqVO.getCustomerId() == 84) {
+                        inviteH5Service.handleApplySuccess(reqVO.getUid());
+                    }
+                    return respVO;
+                }
+            } else {
+                return new BaseRespVO(ResCodeEnum.DOLL_BUS_OCCUPY);
+            }
+        } else {
+            return new BaseRespVO(ResCodeEnum.DOLL_BUS_MATIAN);
+        }
+    }
+
+    @ApiHandle
+    @LogHead("操作娃娃机接口")
+    @Path("api/doll/operate")
+    @ApiOperation(position = 4, value = "【1.0.0】4、操作娃娃机接口", notes = "操作娃娃机 1-前进，2-后退，3,-左移，4-右移，5-抓取娃娃 6-前进终止，7-后退终止，8-左移终止，9-右移终止", httpMethod = "POST", response = BaseRespVO.class)
+    public BaseRespVO operate(DollOperateReqVO reqVO) {
+        DollApplyRespVO respVO = new DollApplyRespVO();
+        // 【1】向前移动，【2】向后移动，【3】向左移动，【4】向右移动，【5】开始游戏，【6】下抓，【7】停止移动
+        int opt = 7;
+        if (reqVO.getOpt() == 5) {
+            opt = 6;
+        } else if (reqVO.getOpt() >= 6) {
+            opt = 7;
+        } else {
+            opt = reqVO.getOpt();
+        }
+        if (opt == 6) {
+            int flag = busStatusDAO.updateDownClaw(reqVO.getBusId(), reqVO.getOptId());
+            if (flag == 0) {
+                return new BaseRespVO();
+            }
+            //新的机器概率
+            UserBase userBase = userService.getUserBase(reqVO.getUid());
+            logger.info("userBase=>" + JSON.toJSONString(userBase));
+            if (userBase != null){
+                Customer customer = customerService.getCustomerById(userBase.getCustomerId());
+                logger.info("customer=>" + JSON.toJSONString(customer));
+                if (customer != null && customer.getChanceOptimize() == 1){
+                    downClawService.downClawHandle(reqVO.getBusId(),reqVO.getUid(),reqVO.getOptId());
+                    return respVO;
+                }
+            }
+        }
+        MachineCmdResult machineCmdResult = iMachineRemoteService.sendMachineCmd(reqVO.getBusId(), reqVO.getUid(),
+                reqVO.getOptId(), opt);
+
+        //记录下爪
+        if (machineCmdResult != null && machineCmdResult.isSuccess() && machineCmdResult.getType() != -1){
+            downClawService.addUserDownClawRecord(new UserDownClawRecord(reqVO.getBusId(), reqVO.getUid(),
+                    reqVO.getOptId(),machineCmdResult.getType(), "API 操作娃娃机接口(api/doll/operate) "));
+        }
+
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("操作娃娃机接口")
+    @Path("api/doll/operateh5")
+    @ApiOperation(position = 4, value = "【1.0.0】4、操作娃娃机接口", notes = "操作娃娃机 1-前进，2-后退，3,-左移，4-右移，5-抓取娃娃 6-前进终止，7-后退终止，8-左移终止，9-右移终止", httpMethod = "POST", response = BaseRespVO.class)
+    public BaseRespVO operateh5(DollOperateReqVO reqVO) {
+        DollApplyRespVO respVO = new DollApplyRespVO();
+        // 【1】向前移动，【2】向后移动，【3】向左移动，【4】向右移动，【5】开始游戏，【6】下抓，【7】停止移动
+        if (reqVO.getOpt() == 6){
+
+            int flag = busStatusDAO.updateDownClaw(reqVO.getBusId(), reqVO.getOptId());
+            if (flag == 0) {
+                return new BaseRespVO();
+            }
+
+            //新的机器概率
+            UserBase userBase = userService.getUserBase(reqVO.getUid());
+            logger.info("userBase=>" + JSON.toJSONString(userBase));
+            if (userBase != null){
+                Customer customer = customerService.getCustomerById(userBase.getCustomerId());
+                logger.info("customer=>" + JSON.toJSONString(customer));
+                if (customer != null && customer.getChanceOptimize() == 1){
+                    downClawService.downClawHandle(reqVO.getBusId(),reqVO.getUid(),reqVO.getOptId());
+                    return respVO;
+                }
+            }
+        }
+        iMachineRemoteService.sendMachineCmd(reqVO.getBusId(), reqVO.getUid(),
+                reqVO.getOptId(), reqVO.getOpt());
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("离开娃娃机房间接口")
+    @Path("api/doll/leave")
+    @ApiOperation(position = 5, value = "【1.0.0】5、离开娃娃机房间接口", notes = "离开娃娃机房间", httpMethod = "POST", response = BaseRespVO.class)
+    public BaseRespVO leave(DollApplyReqVO reqVO) {
+        dollService.leaveBus(reqVO.getUid(), reqVO.getBusId());
+        return new BaseRespVO();
+    }
+
+    @ApiHandle
+    @LogHead("放弃上机接口")
+    @Path("api/doll/abandon")
+    @ApiOperation(position = 6, value = "【1.0.0】6、放弃上机接口", notes = "放弃上机", httpMethod = "POST", response = BaseRespVO.class)
+    public BaseRespVO abandon(DollApplyReqVO reqVO) {
+        if (dollBusService.abandon(reqVO.getUid(), reqVO.getBusId()) == 1) {
+            return new BaseRespVO(100, true, "放弃成功");
+        }
+        return new BaseRespVO(-1, false, "放弃成功");
+    }
+
+    private final int pageSize = 10;
+
+    @ApiHandle
+    @LogHead("获取娃娃机详情接口")
+    @Path("api/doll/info")
+    @ApiOperation(position = 4, value = "【1.0.0】获取娃娃机详情接口", notes = "获取娃娃机详细信息（包括广告banner、捉取记录、娃娃图片）", httpMethod = "POST", response = DollInfoRespVO.class)
+    public BaseRespVO info(DollInfoReqVO reqVO) {
+        DollInfoRespVO respVO = new DollInfoRespVO();
+        DollBus bus = dollListService.getDollBus(reqVO.getBusId(), false);
+        if (bus != null) {
+            int dollId = bus.getDollId();
+            DollInfo dollInfo = dollInfoService.getDollInfo(dollId);
+            if (!StringUtil.isNullOrEmpty(dollInfo)) {
+                respVO.setDollInfo(dollInfo);
+            }
+        }
+        List<BannerRes> banners = bannerService.getBanners(reqVO.getOsType(),
+                reqVO.getVersion(), reqVO.getChannel(),
+                BannerLocationType.BUS_BANNER.type, reqVO.getCustomerId() == null ? 0 : reqVO.getCustomerId());
+        if (!StringUtil.isNullOrEmpty(banners)) {
+            respVO.setBanners(banners);
+        }
+        List<DollRewardRecord> records = dollRecordService.getBusRewardRecords(
+                reqVO.getBusId(), reqVO.getPage(), pageSize);
+        if (!StringUtil.isNullOrEmpty(records)) {
+            respVO.setRecords(records);
+        }
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("查询娃娃机详情接口")
+    @Path("api/doll/query")
+    @ApiOperation(value = "【1.0.0】查询娃娃机详情接口", notes = "获取娃娃机详细信息（只包含流地址封面等简要信息）,特殊返回码 146-娃娃机维护中，去试试其他机器吧╮(￣▽￣)╭", httpMethod = "POST", response = BusEnterRespVO.class)
+    public BaseRespVO query(DollApplyReqVO reqVO) {
+        BusEnterRespVO respVO = new BusEnterRespVO();
+        DollBus bus = dollListService.getDollBus(reqVO.getBusId(), false);
+        if (bus != null) {
+            respVO.setInfo(bus);
+        } else {
+            return new BaseRespVO(ResCodeEnum.DOLL_BUS_MATIAN);
+        }
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("查询娃娃机详情接口")
+    @Path("api/doll/enterH5")
+    @ApiOperation(value = "【1.0.0】查询娃娃机详情接口", notes = "获取娃娃机详细信息（只包含流地址封面等简要信息）,特殊返回码 146-娃娃机维护中，去试试其他机器吧╮(￣▽￣)╭", httpMethod = "POST", response = BusEnterRespVO.class)
+    public BaseRespVO enterH5(DollApplyReqVO reqVO) {
+        BusEnterRespVO respVO = new BusEnterRespVO();
+        DollBus bus = dollListService.getDollBus(reqVO.getBusId(), false);
+        if (bus != null) {
+            respVO.setInfo(bus);
+        } else {
+            return new BaseRespVO(ResCodeEnum.DOLL_BUS_MATIAN);
+        }
+        try {
+            if (reqVO.getUid() != null && reqVO.getUid() > 0) {
+                dollService.enterBus(reqVO.getUid(), reqVO.getBusId());
+                TradeAccount account = tradeService.getAccount(reqVO.getUid());
+                if (account != null) {
+                    respVO.setCoin(account.getCoin());
+                }
+                if (tradeChargeService.hasCharge(reqVO.getUid()) > 0) {
+                    respVO.setHasCharge(true);
+                }
+            }
+        } catch (Exception e) {
+        }
+
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("查询娃娃机详情接口")
+    @Path("api/doll/infoH5")
+    @ApiOperation(value = "【1.0.0】查询娃娃机详情接口", notes = "获取娃娃机详细信息（只包含流地址封面等简要信息）,特殊返回码 146-娃娃机维护中，去试试其他机器吧╮(￣▽￣)╭", httpMethod = "POST", response = BusEnterRespVO.class)
+    public BaseRespVO infoH5(DollApplyReqVO reqVO) {
+        DollInfoRespVO respVO = new DollInfoRespVO();
+        DollBus bus = dollListService.getDollBus(reqVO.getBusId(), false);
+        if (bus != null) {
+            int dollId = bus.getDollId();
+            DollInfo dollInfo = dollInfoService.getDollInfo(dollId);
+            if (!StringUtil.isNullOrEmpty(dollInfo)) {
+                respVO.setDollInfo(dollInfo);
+            }
+        }
+        List<DollRewardRecord> records = dollRecordService.getBusRewardRecords(
+                reqVO.getBusId(), 1, pageSize);
+        if (!StringUtil.isNullOrEmpty(records)) {
+            respVO.setRecords(records);
+        }
+        return respVO;
+    }
+
+    @ApiHandle
+    @LogHead("获取捉取记录接口")
+    @Path("api/doll/records")
+    @ApiOperation(value = "【1.0.0】获取捉取记录接口", notes = "获取捉取记录（只包含流地址封面等简要信息）,特殊返回码 146-娃娃机维护中，去试试其他机器吧╮(￣▽￣)╭", httpMethod = "POST", response = BusEnterRespVO.class)
+    public BaseRespVO records(long uid, long lastId) {
+        List<GrabDollRecord> list = packService.getGrabRecord(uid);
+        Map<String, Object> resMap = new HashMap<String, Object>();
+        resMap.put("list", list);
+        return new BaseRespVO(resMap);
+    }
+
+    @ApiHandle
+    @LogHead("获取观众列表接口")
+    @Path("api/doll/watchers")
+    @ApiOperation(position = 4, value = "【1.0.0】获取观众列表接口", notes = "观众列表", httpMethod = "POST", response = BusWatchersRespVO.class)
+    public BaseRespVO watchers(DollInfoReqVO reqVO) {
+        BusWatchersRespVO respVO = new BusWatchersRespVO();
+        List<UserCommon> watchers = dollRecordService.getWatchList(
+                reqVO.getBusId(), reqVO.getPage(), pageSize);
+        if (!StringUtil.isNullOrEmpty(watchers)) {
+            respVO.setWatchers(watchers);
+        }
+        DollBus bus = dollListService.getDollBus(reqVO.getBusId(), false);
+        if (bus != null) {
+            respVO.setWatcherNum(bus.getWatchNum());
+        }
+        com.imlianai.dollpub.domain.doll.DollBusStatus dollBusStatus = dollBusStatusService
+                .getDollBusStatusByBusId(reqVO.getBusId());
+        if (dollBusStatus != null) {
+            UserGeneral user = userService.getUserGeneral(dollBusStatus
+                    .getUserId());
+            if (user != null) {
+                respVO.setPlayer(new UserSimple(user));
+            }
+        }
+        return respVO;
+    }
+
+    @Override
+    public String doBack(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        String busId = request.getParameter("busId");
+        String key = request.getParameter("key");
+        try{
+            if (busId != null && key != null && key.equals("RESET_DOLL_BUSS_INVENTORY")) {
+                int int_busId = Integer.parseInt(busId);
+                DollBus dollBus = dollBusService.getDollBus(int_busId);
+                if (dollBus != null){
+                    if (dollBusService.resetInventory(int_busId) > 0) {
+                        logger.info("娃娃机库存补充完毕...");
+                    }
+                    return responseJson(response, "娃娃机：[" + dollBus.getNickName() + "] 库存补充完毕，现在开始重新统计~~~~", "响应请求");
+                }
+            }
+        }catch (Exception e){
+            logger.info(e.getMessage());
+            return responseJson(response, e.getMessage(), "响应请求");
+        }
+        return responseJson(response, "当前机器ID：" + busId + " 不存在哦~", "响应请求");
+    }
+
+}

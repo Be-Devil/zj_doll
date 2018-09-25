@@ -1,0 +1,70 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service;
+
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.EntryVirtualRoomReqVO;
+import com.imlianai.dollpub.domain.coinfactory.virtual.base.PushCoinVirtualConfig;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+import java.util.Map;
+
+/**
+ * 处理3D推币机逻辑
+ * @author wurui
+ * @create 2018-06-30 11:05
+ **/
+public interface PushCoinUnity3DService {
+
+    /**
+     * 上机
+     * @param uid
+     * @param busId
+     * @param customer
+     * @return
+     */
+    BaseRespVO apply(long uid, int busId, Customer customer);
+
+
+    /**
+     * 投币
+     * @param uid
+     * @param busId
+     * @param customer
+     * @return
+     */
+    BaseRespVO putCoin(long uid, int busId,Customer customer);
+
+
+    /**
+     * 操作(摆动)
+     * @param uid
+     * @param busId
+     * @return
+     */
+    BaseRespVO operate(long uid,int busId,Customer customer);
+
+
+    /**
+     * 主动下机
+     * @param uid
+     * @param busId
+     * @return
+     */
+    BaseRespVO finish(long uid,int busId,Customer customer);
+
+    /**
+     * 获取机器配置
+     * @param busId
+     * @return
+     */
+    BaseRespVO getVirtualPushCoinConfig(int busId);
+
+    BaseRespVO entryVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO);
+    BaseRespVO laveVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO);
+    BaseRespVO handleCallback(String p1,String p2,String md5_value, String p4,String p5,int p6,int p7,int p8,int p9,DollBus dollBus, long uid, Customer customer);
+
+
+    int updateEndTime(long uid,long optId,int busId, Customer customer);
+
+    void handleTimeOutRecord();
+}

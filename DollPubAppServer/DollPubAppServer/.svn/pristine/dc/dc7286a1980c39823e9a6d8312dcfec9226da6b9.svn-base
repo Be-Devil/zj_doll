@@ -1,0 +1,528 @@
+package com.imlianai.dollpub.app.modules.core.api.service;
+
+import java.util.*;
+
+import javax.annotation.Resource;
+
+import com.imlianai.dollpub.app.modules.core.api.vo.UserSrcLoginRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserService;
+import com.imlianai.dollpub.app.modules.core.user.service.UserSrcService;
+import com.imlianai.dollpub.app.modules.publics.security.SecurityManager;
+import com.imlianai.dollpub.app.modules.support.machine.service.MachineService;
+import com.imlianai.dollpub.app.modules.support.probability.service.DownClawService;
+import com.imlianai.dollpub.domain.machine.MachineCallback;
+import com.imlianai.dollpub.domain.user.*;
+import com.imlianai.dollpub.machine.iface.IMachineRemoteService;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.common.entity.HttpEntity;
+import com.imlianai.rpc.support.utils.*;
+import org.springframework.stereotype.Service;
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.TypeReference;
+import com.imlianai.dollpub.app.modules.core.api.dao.DollBusStatusDAO;
+import com.imlianai.dollpub.app.modules.core.user.customer.opt.dao.CustomerOptRecordDao;
+import com.imlianai.dollpub.app.modules.core.api.dto.OptRecordCallbackDTO;
+import com.imlianai.dollpub.app.modules.core.api.vo.DollBusApplyMachineRespVO;
+import com.imlianai.dollpub.app.modules.core.doll.service.DollService;
+import com.imlianai.dollpub.app.modules.core.user.customer.service.CustomerService;
+import com.imlianai.dollpub.app.modules.support.invite.service.InviteService;
+import com.imlianai.dollpub.app.modules.support.userdoll.service.UserDollService;
+import com.imlianai.dollpub.constants.MachineStateConst;
+import com.imlianai.dollpub.domain.callback.DollMachSignUtil;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.domain.doll.DollBus;
+import com.imlianai.dollpub.domain.doll.DollBusStatus;
+import com.imlianai.dollpub.domain.machine.MachineStateEnum;
+import com.imlianai.dollpub.domain.optrecord.OptRecord;
+import com.imlianai.dollpub.machine.iface.domain.MachineCmdResult;
+import com.imlianai.dollpub.machine.iface.domain.MachineOpt;
+import com.imlianai.dollpub.machine.iface.domain.MachineOptRecord;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+@Service
+public class CustomerDollBusServiceImpl implements CustomerDollBusService {
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+    @Resource
+    private DollBusStatusDAO busStatusDAO;
+
+    @Resource
+    private DollService dollService;
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private CustomerService customerService;
+
+    @Resource
+    private UserDollService userDollService;
+
+    @Resource
+    private CustomerOptRecordDao customerOptRecordDao;
+
+    @Reference
+    private IMachineRemoteService iMachineRemoteService;
+
+    @Resource
+    private InviteService inviteService;
+
+    @Resource
+    private UserService userService;
+
+    @Resource
+    private UserSrcService userSrcService;
+
+    @Resource
+    private SecurityManager securityManager;
+
+    @Resource
+    private MachineService machineService;
+
+    @Resource
+    private DownClawService downClawService;
+
+
+    // 需增加的操作时间
+    private final int OPT_TIME = 10;
+
+    // 持续时间
+    private final int KEEP_TIME = 12;
+
+    @Override
+    public List<DollBus> getCustomerDollBusList(Customer customer, int start, int size) {
+        logger.info("getCustomerDollBusList==>" + JSON.toJSONString(customer));
+        if (customer != null) {
+            if (customer.getGroupId() == 22) {
+                return dollBusService.getAllDollBus(start, size);
+            }
+            List<DollBus> list = dollBusService.getDollBusByGroupId(customer.getGroupId(), start, size);
+            logger.info("getCustomerDollBusList==>" + customer.getGroupId() + " " + start + " " + size + " " + JSON.toJSONString(list));
+            return list;
+        }
+        logger.info("商户不存在");
+        return null;
+    }
+
+    @Override
+    public DollBusApplyMachineRespVO applyMachine(long uid, int busId, Customer customer, String remark) {
+        DollBusApplyMachineRespVO applyMachineRespVO = new DollBusApplyMachineRespVO();
+        logger.info("applyMachine==>" + uid + ",busId==>" + busId + ",customer==>" + JSON.toJSONString(customer));
+
+        if (customer != null) {
+            DollBusStatus dollBusStatus = busStatusDAO.getDollBusStatusByBusId(busId);
+            // 空闲可上机
+            if (dollBusStatus == null || dollBusStatus.getStatus() == MachineStateConst.LEISURE) {
+                logger.info("用户第一次上机==>" + uid + ",机器状态==>" + JSON.toJSONString(dollBusStatus));
+                return this.apply(uid, busId, customer, remark);
+            }
+
+            // 正在玩
+            if (dollBusStatus.getStatus() == MachineStateConst.IS_PLAY) {
+
+                //用户再次上机
+                if (customer.getLevel() == 1 && dollBusStatus.getUserId() == uid) {
+                    logger.info("用户再次上机==>" + uid + ",所属商户等级==>" + customer.getLevel() + ",机器占用用户==>" + dollBusStatus.getUserId());
+                    return this.apply(uid, busId, customer, remark);
+                }
+
+                logger.info("机器占用用户==>" + dollBusStatus.getUserId() + ",尝试上机的用户==>" + uid);
+                applyMachineRespVO.setSuccess(false);
+                applyMachineRespVO.setState(false);
+                applyMachineRespVO.setMsg(MachineStateEnum.MACHINE_IS_PLAY.msg);
+                return applyMachineRespVO;
+            }
+
+            // 故障
+            if (dollBusStatus.getStatus() == MachineStateConst.BROKEN) {
+                logger.info("机器故障==>" + dollBusStatus.getBusId() + ",设备id==>" + dollBusStatus.getDeviceId() + ",尝试上机的用户==>" + uid);
+                applyMachineRespVO.setSuccess(false);
+                applyMachineRespVO.setState(false);
+                applyMachineRespVO.setMsg(MachineStateEnum.MACHINE_BROKEN.msg);
+                return applyMachineRespVO;
+            }
+        } else {
+            return new DollBusApplyMachineRespVO(-1, false, "上机失败-->商户不存在");
+        }
+        return applyMachineRespVO;
+    }
+
+    @Override
+    public BaseRespVO controlMachine(int busId, long uid, long optId, int type) {
+        DollBusStatus dollBusStatus = busStatusDAO.getDollBusStatusByBusId(busId);
+        logger.info("controlMachine==>" + JSON.toJSONString(dollBusStatus));
+
+        if (dollBusStatus != null && dollBusStatus.getStatus() == MachineStateConst.IS_PLAY
+                && dollBusStatus.getUserId() == uid && dollBusStatus.getOptId() == optId) {
+            if (type == 6) {
+                int flag = busStatusDAO.updateDownClaw(busId, optId);
+                if (flag == 0) {
+                    return new BaseRespVO();
+                }
+            }
+            // 可以操作
+            MachineCmdResult machineCmdResult = iMachineRemoteService.sendMachineCmd(busId, uid, optId, type);
+            if (machineCmdResult != null) {
+                logger.info("操作机器用户==>" + uid + ",操作id==>" + optId + ",操作指令==>" + type + ",机器操作结果==>" + JSON.toJSONString(machineCmdResult));
+                return new BaseRespVO(100, machineCmdResult.isSuccess(), machineCmdResult.getMsg());
+            }
+            return new BaseRespVO(-1, false, "操作失败");
+        }
+        return new BaseRespVO(-1, false, "请先申请上机");
+    }
+
+    @Override
+    public OptRecord queryOptResult(long optId, String appId) {
+        Customer customer = customerService.getCustomer(appId);
+        logger.info("queryOptResult==>" + JSON.toJSONString(customer));
+
+        if (customer != null) {
+            OptRecord optRecord = customerOptRecordDao.getEntityByOptId(customer.getGroupId(), optId);
+            logger.info("optId==>" + optId + ",操作结果==>" + JSON.toJSONString(optRecord));
+
+            if (optRecord != null) {
+                return optRecord;
+            } else {
+                // 否则查询机器拿结果
+                MachineOptRecord machineOptRecord = iMachineRemoteService.queryMachineOptResult(optId);
+                logger.info("查询机器操作结果==>" + JSON.toJSONString(machineOptRecord));
+                if (machineOptRecord != null) {
+                    OptRecord machineOpt = new OptRecord();
+                    machineOpt.setUid(machineOptRecord.getUid());
+                    machineOpt.setResult(machineOptRecord.getResult());
+                    machineOpt.setOptId(machineOptRecord.getOptId());
+                    return machineOpt;
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void
+    returnMachineResult(String deviceId, int busId, long optId, boolean catchResult, int groupId, String remark) {
+        logger.info(remark + ",操作记录id=>" + optId + ",抓取结果=>" + catchResult);
+        OptRecord optRecord = customerOptRecordDao.getEntityByOptId(groupId, optId);
+
+        logger.info("操作记录==>" + JSON.toJSONString(optRecord));
+
+        if (optRecord != null) {
+            optRecord.setResult(catchResult ? 1 : 0);
+            // 更新结果
+            try {
+
+                if (customerOptRecordDao.updateEntityById(groupId, optRecord) > 0) {
+                    logger.info("更新操作结果成功=>" + JSON.toJSONString(optRecord));
+                }
+
+                //更新下爪操作结果
+                if (downClawService.updateResult(optRecord.getUid(), optRecord.getOptId(), optRecord.getResult()) > 0) {
+                    logger.info("更新下爪操作结果成功=>" + JSON.toJSONString(optRecord));
+                }
+
+            } catch (Exception e) {
+
+                logger.info("更新结果时出现问题==>" + JSON.toJSONString(optRecord) + ",异常信息==>" + e.getMessage());
+
+            } finally {
+
+                //查询对应的商户信息
+                Customer customer = customerService.getCustomerById(optRecord.getCustomerId());
+
+
+                //商户等级: 0接口，1全套
+                if (customer != null && customer.getLevel() == 1) {
+                    DollBus dollBus = dollBusService.getDollBus(busId);
+                    if (catchResult) {
+
+                        if (customer.getGroupId() == groupId) {
+                            //触发用户相关服务
+                            userDollService.resultUserDoll(optRecord, dollBus, groupId);
+                        }
+
+                        if (busStatusDAO.deleteDollBusStatusByBusId(busId) > 0) {
+                            logger.info("清除上机状态成功=>" + busId);
+                        }
+
+                        //处理成功捉取娃娃
+                        inviteService.handleCatchDollSuccess(optRecord.getUid());
+
+                    } else {
+
+                        //未抓取到娃娃则设置持续时间
+                        if (busStatusDAO.updateDollBusStatusKeepTime(busId, DateUtils.addSECONDToDate(new Date(), KEEP_TIME)) > 0) {
+                            logger.info("设置" + KEEP_TIME + "秒持续时间=>" + busId);
+                        }
+
+                    }
+                    // h5消息
+                    dollService.handleH5ResultMsg(dollBus, optRecord, catchResult, groupId);
+                } else {
+
+                    if (busStatusDAO.deleteDollBusStatusByBusId(busId) > 0) {
+                        logger.info("清除上机状态成功=>" + busId);
+                    }
+                    // 商户消息
+                    this.customerResultNotice(customer, optRecord.getOptId());
+                }
+
+                if (catchResult) {
+                    logger.info("后续处理=>" + JSON.toJSONString(customer));
+
+                    //监控
+                    dollBusService.alertInventory(busId);
+
+                    //概率优化
+                    downClawService.resetDownClawNumAndMachineTime(customer, optRecord.getUid(), optRecord.getOptId(), deviceId);
+
+                    //抓中保护
+                    downClawService.catchSafe(customer, busId);
+
+                }
+
+            }
+            return;
+        }
+        logger.info("操作记录不存在=>" + optId + ",所属商户组=>" + groupId);
+    }
+
+    /**
+     * 商户结果通知
+     *
+     * @param customer
+     * @param optId
+     */
+    @Override
+    public void customerResultNotice(Customer customer, long optId) {
+        if (customer != null) {
+            if (customer.getLevel() != 1) {
+                //logger.info("通知结果回调=>" + JSON.toJSONString(customer));
+                OptRecord optRecord = customerOptRecordDao.getEntityByOptId(customer.getGroupId(), optId);
+                if (optRecord != null) {
+                    Map<String, Object> postMap = JSON.parseObject(JSON.toJSONString(new OptRecordCallbackDTO(optRecord)),
+                            new TypeReference<Map<String, Object>>() {
+                            });
+
+                    postMap.put("ts", System.currentTimeMillis());
+                    postMap.put("appId", customer.getAppId());
+
+                    String signText = DollMachSignUtil.createLinkString(DollMachSignUtil.paraFilter(postMap));
+                    logger.info("signText:" + signText);
+
+                    String firstSign = MD5_HexUtil.md5Hex(signText);
+                    logger.info("firstSign:" + firstSign);
+
+                    String signRes = MD5_HexUtil.md5Hex(firstSign + customer.getAppKey());
+                    logger.info("signRes:" + signRes);
+
+                    postMap.put("sign", signRes);
+
+                    try {
+                        if (!StringUtil.isNullOrEmpty(customer.getCallbackUrl())) {
+                            HttpEntity httpEntity = HttpUtil.Post(customer.getCallbackUrl(), JSON.toJSONString(postMap));
+                            machineService.update(new MachineCallback(optId, customer.getId(), customer.getCallbackUrl(), JSON.toJSONString(postMap), JSON.toJSONString(httpEntity)));
+                            if (httpEntity != null) {
+                                logger.info("通知结果回调=>" + JSON.toJSONString(httpEntity));
+                            }
+                        }
+                    } catch (Exception e) {
+                        logger.info("customerResultNotice error ==>" + e.getMessage());
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 上机逻辑
+     *
+     * @param uid      用户id
+     * @param busId    机器id
+     * @param customer 商户
+     * @param remark   备注
+     * @return
+     */
+    private DollBusApplyMachineRespVO apply(long uid, int busId, Customer customer, String remark) {
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            MachineOpt machineOpt = iMachineRemoteService.applyMachine(uid, busId, customer.getGroupId());
+            logger.info("机器返回上机结果=====>" + JSON.toJSON(machineOpt));
+
+            if (machineOpt != null) {
+
+                if (!machineOpt.isSuccess()) {
+                    logger.info("上机失败==>" + machineOpt.getMsg());
+                    return new DollBusApplyMachineRespVO(-1, machineOpt.isSuccess(), machineOpt.getMsg());
+                }
+                try {
+                    OptRecord optRecord = new OptRecord();
+                    optRecord.setUid(uid);
+                    optRecord.setBusId(busId);
+                    optRecord.setDollId(dollBus.getDollId());
+                    optRecord.setOptId(machineOpt.getOptId());
+                    optRecord.setCustomerId(customer.getId());
+                    optRecord.setRemark(remark);// 备注
+                    if (customerOptRecordDao.insertEntity(customer.getGroupId(), optRecord) > 0) {
+                        logger.info("新增操作记录成功==>" + JSON.toJSONString(optRecord));
+
+                        if (busStatusDAO.addDollBusStatus(dollBus.getBusId(), machineOpt.getOptId(), uid, MachineStateConst.IS_PLAY, machineOpt.getPlayTime() + OPT_TIME) > 0) {
+                            logger.info("新增机器状态成功==>" + dollBus.getBusId() + ",操作id==>" + machineOpt.getOptId() + ",上机用户==>" + uid + ",操作时间==>" + (machineOpt.getPlayTime() + 10) + " 秒");
+
+                            DollBusApplyMachineRespVO applyMachineRespVO = new DollBusApplyMachineRespVO();
+                            applyMachineRespVO.setOptId(machineOpt.getOptId());
+                            applyMachineRespVO.setDeviceId(dollBus.getDeviceId());
+                            applyMachineRespVO.setSuccess(true);
+                            applyMachineRespVO.setGameTime(machineOpt.getPlayTime());
+                            applyMachineRespVO.setMsg(MachineStateEnum.MACHINE_PLAY_SUCCESS.msg);
+                            return applyMachineRespVO;
+                        }
+                    }
+                } catch (Exception e) {
+                    logger.info(e.getMessage());
+                    return new DollBusApplyMachineRespVO(-1, false, "请5分钟后重试...");
+                }
+            } else {
+                return new DollBusApplyMachineRespVO(-1, false, "机器无响应或者出问题了=>" + busId);
+            }
+        }
+        return new DollBusApplyMachineRespVO(-1, false, "娃娃机不存在=>" + busId);
+    }
+
+
+    /**
+     * 发送下爪指令
+     *
+     * @param busId
+     * @param uid
+     * @param optId
+     * @param type  【0】默认，【1】弱爪，【2】强爪
+     * @return
+     */
+    @Override
+    public BaseRespVO downClaw(int busId, long uid, long optId, int type) {
+        DollBusStatus dollBusStatus = busStatusDAO.getDollBusStatusByBusId(busId);
+        logger.info("downClaw==>" + JSON.toJSONString(dollBusStatus));
+
+        if (dollBusStatus != null && dollBusStatus.getStatus() == MachineStateConst.IS_PLAY
+                && dollBusStatus.getUserId() == uid && dollBusStatus.getOptId() == optId) {
+
+            // 可以操作
+            MachineCmdResult machineCmdResult = iMachineRemoteService.sendClawCmd(busId, uid, optId, type);
+            if (machineCmdResult != null) {
+                logger.info("操作机器用户==>" + uid + ",操作id==>" + optId + ",操作指令==>" + type + ",机器操作结果==>" + JSON.toJSONString(machineCmdResult));
+
+                //下抓记录
+                downClawService.addUserDownClawRecord(new UserDownClawRecord(busId, uid, optId, type, "API 发送下爪指令"));
+                return new BaseRespVO(100, machineCmdResult.isSuccess(), machineCmdResult.getMsg());
+            }
+            return new BaseRespVO(-1, false, "操作失败");
+        }
+        return new BaseRespVO(-1, false, "请先申请上机");
+    }
+
+
+    @Override
+    public BaseRespVO srcUserLogin(String srcId, String srcCode, int customerId) {
+        logger.info("srcUserLogin: srcId==>" + srcId + ",srcCode==>" + srcCode + ",customerId==>" + customerId);
+        UserSrcLoginRespVO respVo = new UserSrcLoginRespVO();
+
+        Customer customer = customerService.getCustomerById(customerId);
+        if (customer != null) {
+            try {
+                UserSrc userSrc = userSrcService.getUserSrcBySrcUidAndCusId(srcId, customer.getId());
+                logger.info("userSrc==>" + JSON.toJSONString(userSrc));
+                // 查询第三方用户是否存在
+                if (userSrc != null) {
+                    if (!userSrc.getSrcCode().equals(srcCode)) {
+                        return new BaseRespVO(-1, false, "授权码错误");
+                    }
+                    if (userSrc.getUid() != 0) {
+                        UserBase userBase = userService.getUserBase(userSrc.getUid());
+                        if (userBase != null) {
+                            UserGeneral userGeneral = userService.getUserGeneral(userBase.getUid());
+                            if (userGeneral.getValid() != 0) {
+                                return new BaseRespVO().getRespVO(ResCodeEnum.LOGIN_BLOCK);
+                            }
+                            UserCommon userCommon = new UserCommon(userGeneral, userBase);
+                            String loginKey = securityManager.getLoginSecurityCode(userBase.getUid());
+                            respVo.setLoginKey(loginKey);
+                            respVo.setUid(userBase.getUid());
+                            respVo.setUserCommon(userCommon);
+                            return respVo;
+                        }
+                    }
+                } else {
+                    UserBase userBase = new UserBase(5, srcId);
+                    userBase.setCustomerId(customer.getId());
+
+                    UserGeneral user = new UserGeneral();
+                    user.setCustomerId(customer.getId());
+
+                    // 注册
+                    long uid = userService.initUser(userBase, user);
+                    logger.info("生成uid==>" + uid);
+                    if (uid > 0) {
+                        if (userSrcService.saveUserSrc(new UserSrc(uid, srcId, srcCode, customer.getId())) > 0) {
+                            logger.info("生成第三方登陆用户");
+                            // TODO 通过 srcUid 和 code 拿到用户信息
+                            String name = "name:" + uid;
+                            String head = "http://www.img.com";
+                            if (userSrcService.updateUserSrc(new UserSrc(uid, name, head)) > 0) {
+                                logger.info("更新成功: name=>" + name + ",head=>" + head);
+                            }
+                            UserBase userBase1 = userService.getUserBase(uid);
+                            logger.info("userBase==>" + JSON.toJSONString(userBase));
+                            if (userBase1 != null) {
+                                UserGeneral userGeneral = userService.getUserGeneral(userBase1.getUid());
+                                if (userGeneral.getValid() != 0) {
+                                    return new BaseRespVO().getRespVO(ResCodeEnum.LOGIN_BLOCK);
+                                }
+                                UserCommon userCommon = new UserCommon(userGeneral, userBase1);
+                                String loginKey = securityManager.getLoginSecurityCodeNew(userBase1.getUid());
+                                respVo.setLoginKey(loginKey);
+                                respVo.setUid(userBase1.getUid());
+                                respVo.setUserCommon(userCommon);
+                                return respVo;
+                            } else {
+                                respVo.setMsg("用户信息为空");
+                            }
+                        }
+                    } else {
+                        respVo.setMsg("注册失败，请重试！");
+                    }
+                }
+            } catch (Exception e) {
+                logger.info(e.getMessage());
+                respVo.setMsg("error");
+            }
+        } else {
+            respVo.setMsg("当前商户不存在！");
+        }
+        respVo.setResult(-1);
+        respVo.setState(false);
+        return respVo;
+    }
+
+    @Override
+    public boolean isBelongCurrentCustomer(int busId, String appId) {
+        boolean isBelong = false;
+        DollBus dollBus = dollBusService.getDollBus(busId);
+        if (dollBus != null) {
+            List<Customer> customerList = customerService.getCustomerByGroupId(dollBus.getGroupId());
+            Customer currentCustomer = customerService.getCustomer(appId);
+            if (!StringUtil.isNullOrEmpty(customerList)) {
+                for (Customer customer : customerList) {
+                    if (currentCustomer != null && (customer.getId() == currentCustomer.getId())) {
+                        isBelong = true;
+                        break;
+                    }
+                }
+            }
+        }
+        return isBelong;
+    }
+}

@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="UTF-8">
+		<title></title>
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<link rel="stylesheet" href="https://at.alicdn.com/t/font_234130_nem7eskcrkpdgqfr.css">
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+			
+			*,
+			*:after,
+			*:before {
+				-webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+			}
+			
+			html,
+			body {
+				width: 100%;
+				height: 100%;
+				font-family: "微软雅黑"
+			}
+			
+			input:focus {
+				outline: none;
+			}
+			
+			html {
+				font-size: 10px
+			}
+			
+			@media screen and (min-width:321px) and (max-width:375px) {
+				html {
+					font-size: 11px
+				}
+			}
+			
+			@media screen and (min-width:376px) and (max-width:414px) {
+				html {
+					font-size: 12px
+				}
+			}
+			
+			@media screen and (min-width:415px) and (max-width:639px) {
+				html {
+					font-size: 15px
+				}
+			}
+			
+			@media screen and (min-width:640px) and (max-width:719px) {
+				html {
+					font-size: 20px
+				}
+			}
+			
+			@media screen and (min-width:720px) and (max-width:749px) {
+				html {
+					font-size: 22.5px
+				}
+			}
+			
+			@media screen and (min-width:750px) and (max-width:799px) {
+				html {
+					font-size: 23.5px
+				}
+			}
+			
+			@media screen and (min-width:800px) {
+				html {
+					font-size: 25px
+				}
+			}
+			
+			body {
+				background-color: #fff;
+			}
+			
+			#app {
+				position: relative;
+				width: 100%;
+				height: 100%;
+			}
+			
+			.header {
+				width: 100%;
+				height: 80px;
+				line-height: 80px;
+				display: flex;
+			}
+			
+			.time,
+			.people-total {
+				flex: 1;
+				text-align: center;
+			}
+			
+			.btn {
+				background-color: #F16543;
+				color: #fff;
+				border-radius: 1.6rem;
+				font-size: 1.2rem;
+				padding: 4px 16px;
+				box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
+				background-image: linear-gradient(to right, #e74c3c, #a569bd);
+				background-image: -webkit-linear-gradient(to right, #e74c3c, #a569bd);
+			}
+			
+			.people-total .btn {
+				padding: 3px 12px !important;
+				margin: 0 5px;
+			}
+			
+			.btn1 {
+				background-color: #fff;
+				color: #a569bd;
+				border-radius: 1.6rem;
+				font-size: 1.1rem;
+				padding: 4px 16px;
+				box-shadow: 0 0 10px 0 rgba(0, 0, 0, .2);
+				border: 1px solid #a569bd;
+			}
+			
+			.table {
+				width: 100%;
+				text-align: center;
+			}
+			
+			.table th {
+				font-size: 1.2rem;
+				color: #a569bd;
+				padding: 10px 0;
+			}
+			
+			.table td {
+				font-size: 1.2rem;
+				color: #333;
+				padding: 6px 0;
+				border: 1px solid #f2f2f2;
+			}
+			
+			.schedule-hd {
+				display: flex;
+				justify-content: space-between;
+				padding: 20px 15px;
+			}
+			
+			ul {
+				list-style: none;
+			}
+			
+			.today {
+				flex: 1;
+				text-align: center;
+			}
+			
+			.ul-box {
+				overflow: hidden;
+			}
+			
+			.ul-box>li {
+				float: left;
+				width: 14.28%;
+				text-align: center;
+				padding: 5px 0;
+			}
+			
+			.other-month {
+				color: #999999;
+			}
+			
+			.current-month {
+				color: #333333;
+			}
+			
+			.today-style {
+				border-radius: 50%;
+				background: #58d321;
+			}
+			
+			.arrow {
+				cursor: pointer;
+			}
+			
+			.dayStyle {
+				display: inline-block;
+				width: 35px;
+				height: 35px;
+				border-radius: 50%;
+				text-align: center;
+				line-height: 35px;
+				cursor: pointer;
+			}
+			
+			.current-month>.dayStyle:hover {
+				background: #00BDFF;
+				color: #ffffff;
+			}
+			
+			.today-flag {
+				background: #00C2B1;
+				color: #fff;
+			}
+			
+			.boxshaw {
+				box-shadow: 2px 2px 15px 2px #e3e3e3;
+			}
+			
+			.selected-style {
+				background: #00BDFF;
+				color: #ffffff;
+			}
+			
+			#modal {
+				position: fixed;
+				top: 0%;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: none;
+				z-index: 50;
+				background-color: rgba(0, 0, 0, .5)
+			}
+			
+			#date {
+				position: fixed;
+				left: 50%;
+				bottom: 15%;
+				transform: translateX(-50%);
+				width: 90%;
+				z-index: 100;
+				padding: 20px 0;
+				background-color: #fff;
+				box-shadow: 0 0 15px 0 rgba(0, 0, 0, .1);
+				display: none;
+			}
+			
+			.ctrl {
+				z-index: 100;
+				position: fixed;
+				left: 50%;
+				bottom: 5%;
+				transform: translateX(-50%);
+				width: 90%;
+				display: none;
+			}
+			
+			.query,
+			.close {
+				text-align: center;
+				width: 100%;
+				border: 1px solid #ccc;
+				padding: 10px 0;
+				margin-top: 10px;
+				color: #a569bd;
+				background-color: #fff;
+				font-size: 15px;
+				/*box-shadow: 0 0 15px 0 rgba(0, 0, 0, .1);*/
+			}
+			
+			.time-box {
+				display: flex;
+				width: 100%;
+				height: 70px;
+				line-height: 70px;
+			}
+			
+			.time-box>div {
+				flex: 1;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="app">
+
+			<div class="time-box">
+				<div class="time-start">
+					<span class="btn1" @click="startFn">{{start}}</span>
+				</div>
+				<div class="time-end">
+					<span class="btn1" @click="endFn">{{end}}</span>
+				</div>
+				<div class="time-query">
+
+					<span class="btn" @click="query">		
+							按时间查询
+						</span>
+				</div>
+			</div>
+			<div class="header">
+				<div class="people-total">
+					<span class="btn">							
+							邀请总人数：
+							<span style="margin-left: 5px;">{{total}}</span>
+					</span>
+					<span class="btn">							
+							总充值：
+							<span style="margin-left: 5px;">{{charge}}</span>
+					</span>
+				</div>
+			</div>
+			<table class="table">
+				<tr>
+					<th>ID</th>
+					<th>昵称</th>
+					<th>充值金额</th>
+					<th>充值时间</th>
+				</tr>
+				<tr v-for="(item,index) in list" :key="index">
+					<td>{{item.uid}}</td>
+					<td>{{item.name}}</td>
+					<td>{{item.charge}}</td>
+					<td>{{item.time}}</td>
+				</tr>
+			</table>
+			<div id="modal"></div>
+			<div id="date"></div>
+			<div id="ctrl" class="ctrl">
+				<div class="close" @click="close">关闭</div>
+			</div>
+		</div>
+
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.5.16/dist/vue.min.js"></script>
+		<script src="https://cdn.bootcss.com/axios/0.18.0/axios.min.js"></script>
+		<script>
+			function GetRequest() {
+				var url = location.search; //获取url中"?"符后的字串 
+				var theRequest = {};
+				if(url.indexOf("?") != -1) {
+					var str = url.substr(1);
+					strs = str.split("&");
+					for(var i = 0; i < strs.length; i++) {
+						theRequest[strs[i].split("=")[0]] = unescape(strs[i].split("=")[1]);
+					}
+				}
+				return theRequest;
+			}
+			var query = GetRequest();;
+			(function(undefined) {
+				var _global;
+
+				function extend(def, opt, override) {
+					for(var k in opt) {
+						if(opt.hasOwnProperty(k) && (!def.hasOwnProperty(k) || override)) {
+							def[k] = opt[k]
+						}
+					}
+					return def;
+				}
+
+				function formartDate(y, m, d, symbol) {
+					symbol = symbol || '-';
+					m = (m.toString())[1] ? m : '0' + m;
+					d = (d.toString())[1] ? d : '0' + d;
+					return y + symbol + m + symbol + d
+				}
+
+				function Schedule(opt) {
+					var def = {},
+						opt = extend(def, opt, true),
+						curDate = opt.date ? new Date(opt.date) : new Date(),
+						year = curDate.getFullYear(),
+						month = curDate.getMonth(),
+						day = curDate.getDate(),
+						currentYear = curDate.getFullYear(),
+						currentMonth = curDate.getMonth(),
+						currentDay = curDate.getDate(),
+						selectedDate = '',
+						el = document.querySelector(opt.el) || document.querySelector('body'),
+						_this = this;
+					var bindEvent = function() {
+						el.addEventListener('click', function(e) {
+							switch(e.target.id) {
+								case 'nextMonth':
+									_this.nextMonthFun();
+									break;
+								case 'nextYear':
+									_this.nextYearFun();
+									break;
+								case 'prevMonth':
+									_this.prevMonthFun();
+									break;
+								case 'prevYear':
+									_this.prevYearFun();
+									break;
+								default:
+									break;
+							};
+							if(e.target.className.indexOf('currentDate') > -1) {
+								opt.clickCb && opt.clickCb(year, month + 1, e.target.innerHTML);
+								selectedDate = e.target.title;
+								day = e.target.innerHTML;
+								render();
+							}
+						}, false)
+					}
+					var init = function() {
+						var scheduleHd = '<div class="schedule-hd">' +
+							'<div>' +
+							'<span class="arrow icon iconfont icon-116leftarrowheads" id="prevYear" ></span>' +
+							'<span class="arrow icon iconfont icon-112leftarrowhead" id="prevMonth"></span>' +
+							'</div>' +
+							'<div class="today">' + formartDate(year, month + 1, day, '-') + '</div>' +
+							'<div>' +
+							'<span class="arrow icon iconfont icon-111arrowheadright" id="nextMonth"></span>' +
+							'<span class="arrow icon iconfont icon-115rightarrowheads" id="nextYear"></span>' +
+							'</div>' +
+							'</div>'
+						var scheduleWeek = '<ul class="week-ul ul-box">' +
+							'<li>日</li>' +
+							'<li>一</li>' +
+							'<li>二</li>' +
+							'<li>三</li>' +
+							'<li>四</li>' +
+							'<li>五</li>' +
+							'<li>六</li>' +
+							'</ul>'
+						var scheduleBd = '<ul class="schedule-bd ul-box" ></ul>';
+						el.innerHTML = scheduleHd + scheduleWeek + scheduleBd;
+						bindEvent();
+						render();
+					}
+					var render = function() {
+						var fullDay = new Date(year, month + 1, 0).getDate(),
+							startWeek = new Date(year, month, 1).getDay(),
+							total = (fullDay + startWeek) % 7 == 0 ? (fullDay + startWeek) : fullDay + startWeek + (7 - (fullDay + startWeek) % 7),
+							lastMonthDay = new Date(year, month, 0).getDate(),
+							eleTemp = [];
+						for(var i = 0; i < total; i++) {
+							if(i < startWeek) {
+								eleTemp.push('<li class="other-month"><span class="dayStyle">' + (lastMonthDay - startWeek + 1 + i) + '</span></li>')
+							} else if(i < (startWeek + fullDay)) {
+								var nowDate = formartDate(year, month + 1, (i + 1 - startWeek), '-');
+								var addClass = '';
+								selectedDate == nowDate && (addClass = 'selected-style');
+								formartDate(currentYear, currentMonth + 1, currentDay, '-') == nowDate && (addClass = 'today-flag');
+								eleTemp.push('<li class="current-month" ><span title=' + nowDate + ' class="currentDate dayStyle ' + addClass + '">' + (i + 1 - startWeek) + '</span></li>')
+							} else {
+								eleTemp.push('<li class="other-month"><span class="dayStyle">' + (i + 1 - (startWeek + fullDay)) + '</span></li>')
+							}
+						}
+						el.querySelector('.schedule-bd').innerHTML = eleTemp.join('');
+						el.querySelector('.today').innerHTML = formartDate(year, month + 1, day, '-');
+					};
+					this.nextMonthFun = function() {
+						if(month + 1 > 11) {
+							year += 1;
+							month = 0;
+						} else {
+							month += 1;
+						}
+						render();
+						opt.nextMonthCb && opt.nextMonthCb(year, month + 1, day);
+					}, this.nextYearFun = function() {
+						year += 1;
+						render();
+						opt.nextYeayCb && opt.nextYeayCb(year, month + 1, day);
+					}, this.prevMonthFun = function() {
+						if(month - 1 < 0) {
+							year -= 1;
+							month = 11;
+						} else {
+							month -= 1;
+						}
+						render();
+						opt.prevMonthCb && opt.prevMonthCb(year, month + 1, day);
+					}, this.prevYearFun = function() {
+						year -= 1;
+						render();
+						opt.prevYearCb && opt.prevYearCb(year, month + 1, day);
+					}
+					init();
+				}
+				_global = (function() {
+					return this || (0, eval)('this')
+				}());
+				if(typeof module !== 'undefined' && module.exports) {
+					module.exports = Schedule;
+				} else if(typeof define === "function" && define.amd) {
+					define(function() {
+						return Schedule;
+					})
+				} else {
+					!('Schedule' in _global) && (_global.Schedule = Schedule);
+				}
+			}());
+			var time = new Date();
+			var y = time.getFullYear();
+			var m = time.getMonth() + 1;
+			var d = time.getDate();
+
+			var app = new Vue({
+				el: '#app',
+				data: {
+					start: '选择开始时间',
+					end: '选择结束时间',
+					type: 'start',
+					isCanQuery1: false,
+					isCanQuery2: false,
+					total: '加载中..',
+					charge: '加载中..',
+					date: y + '-' + m + '-' + d,
+					list: []
+				},
+				methods: {
+					startFn: function() {
+						this.type = 'start';
+						this.open()
+					},
+					endFn: function() {
+						this.type = 'end';
+						this.open()
+					},
+					open: function() {
+						document.getElementById('date').style.display = 'block';
+						document.getElementById('ctrl').style.display = 'block';
+						document.getElementById('modal').style.display = 'block';
+					},
+					close: function() {
+						document.getElementById('date').style.display = 'none';
+						document.getElementById('ctrl').style.display = 'none';
+						document.getElementById('modal').style.display = 'none';
+					},
+					query: function() {
+						var vm = this;
+						if(vm.isCanQuery2 && vm.isCanQuery1) {
+							axios.post('../api/uAgency/getList', {
+								uid: query.uid,
+								loginKey: query.loginKey,
+								start: vm.start,
+								end: vm.end
+							}, {
+								headers: {
+									'Content-Type': 'application/x-www-form-urlencoded'
+								}
+							}).then(function(res) {
+								if(res.data.state) {
+									vm.list = res.data.list;
+									vm.total = res.data.totalInvite;
+									vm.charge = res.data.totalCharge + '元'
+								}
+
+							}).catch(function(res) {
+								huiModal({
+									msg: res.data.msg,
+									modal: false
+								})
+							});
+						} else {
+							huiModal({
+								msg: '时间选择有误，请重新选择',
+								modal: false
+							})
+						}
+						// 查询结果
+						//vm.list = res
+					}
+
+				},
+				mounted: function() {
+					var vm = this;
+					var mySchedule = new Schedule({
+						el: '#date',
+						//date: '2018-9-20',
+						clickCb: function(y, m, d) {
+							if(app.type == 'start') {
+								vm.isCanQuery1 = true;
+								app.start = y + '-' + m + '-' + d;
+							} else {
+								var startArr = app.start.split('-');
+								startArr[0] = +startArr[0];
+								startArr[1] = +startArr[1];
+								startArr[2] = +startArr[2];
+								y = +y;
+								m = +m;
+								d = +d;
+								if(y < startArr[0]) {
+									huiModal('结束时间应在开始时间之后！')
+								} else if(y == startArr[0] && m < startArr[1]) {
+									huiModal('结束时间应在开始时间之后！')
+								} else if(y == startArr[0] && m == startArr[1] && d < startArr[2]) {
+									huiModal('结束时间应在开始时间之后！')
+								} else {
+									vm.isCanQuery2 = true;
+									app.end = y + '-' + m + '-' + d;
+								}
+							}
+							app.close()
+
+						}
+					});
+					axios.post('../api/uAgency/getList', {
+						uid: query.uid,
+						loginKey: query.loginKey,
+						start: '2017-1-1',
+						end: y + '-' + m + '-' + d,
+					}, {
+						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded'
+						}
+					}).then(function(res) {
+						if(res.data.state) {
+							vm.list = res.data.list;
+							vm.total = res.data.totalInvite;
+							vm.charge = res.data.totalCharge + '元'
+						}
+
+					}).catch(function(res) {
+						huiModal({
+							msg: res.data.msg,
+							modal: false
+						})
+					});
+				}
+			})
+
+			function huiModal(obj) {
+				return(new newModal(obj))
+			}
+
+			function newModal(obj) {
+				var sf = this;
+				var modal = createDOM('div');
+				var box = createDOM('div');
+				var content = createDOM('div');
+				var tool = createDOM('div');
+				var ok = createDOM('div');
+				var cancel = createDOM('div');
+
+				function createDOM(tag) {
+					return document.createElement(tag)
+				}
+
+				function css(el, obj) {
+					for(var key in obj) {
+						el.style[key] = obj[key]
+					}
+				}
+
+				function getCss(el, attr) {
+					if(el.currentStyle) {
+						return el.currentStyle[attr]
+					} else {
+						return getComputedStyle(el, false)[attr]
+					}
+				}
+
+				function run() {
+					css(modal, {
+						position: 'fixed',
+						top: 0,
+						left: 0,
+						width: window.innerWidth + 'px',
+						height: window.innerHeight + 'px',
+						backgroundColor: 'rgba(0,0,0,0)',
+						zIndex: 2000
+					});
+					css(box, {
+						position: 'absolute',
+						top: '50%',
+						left: '50%',
+						width: 'auto',
+						backgroundColor: '#fff',
+						maxWidth: '100%',
+						minWidth: '300px',
+						padding: '0 30px 20px 30px',
+						transition: 'all .2s ease-out',
+						transform: 'translate(-50%,-50%) scale(.86)',
+						opacity: 0,
+						zIndex: 2050,
+						boxShadow: '1px 1px 35px 0 rgba(0,0,0,.06)'
+					});
+					css(content, {
+						position: 'relative',
+						top: 0,
+						left: 0,
+						fontSize: '15px',
+						padding: '20px 10px'
+					});
+					css(tool, {
+						position: 'relative',
+						top: 0,
+						left: 0,
+						display: 'flex',
+						justifyContent: 'space-around',
+						position: 'relative',
+						zIndex: 2200
+					});
+					css(ok, {
+						padding: '6px 14px',
+						margin: '0 5px',
+						fontSize: '12px',
+						borderRadius: '6px',
+						color: '#fff',
+						cursor: 'pointer',
+						backgroundColor: '#40A3FF',
+						border: '1px solid #40A3FF'
+					});
+					css(cancel, {
+						padding: '6px 14px',
+						margin: '0 5px',
+						fontSize: '12px',
+						borderRadius: '6px',
+						color: '#40A3FF',
+						cursor: 'pointer',
+						border: '1px solid #40A3FF'
+					});
+					ok.innerHTML = obj && obj.ok ? obj.ok : '确定';
+					ok.addEventListener('click', function(evt) {
+						//						var e = evt;
+						if(obj && obj.clickOk && typeof obj.clickOk == 'function' && obj.clickOk.length >= 1) {
+							obj.clickOk.call(this, sf.close)
+						} else if(obj && obj.clickOk && typeof obj.clickOk == 'function') {
+							obj.clickOk();
+							sf.close()
+						} else {
+							sf.close()
+						}
+					});
+					cancel.innerHTML = obj && obj.cancel ? obj.cancel : '取消';
+					cancel.addEventListener('click', function(evt) {
+						//						var e = evt || window.event;
+						//						window.event ? e.cancelBubble = true : e.stopPropagation();
+
+						if(obj && typeof obj.clickCancel == 'function' && obj.clickCancel.length >= 1) {
+							obj.clickCancel.call(this, sf.close)
+						} else if(obj && typeof obj.clickCancel == 'function') {
+							obj.clickCancel()
+							sf.close();
+						} else {
+							sf.close();
+						}
+					});
+					if(typeof obj == 'string') {
+						content.innerHTML = obj
+					} else {
+						content.innerHTML = obj && obj.msg ? obj.msg : ''
+					}
+					if(obj.ok !== false) {
+						tool.appendChild(ok);
+					}
+					if(obj.cancel !== false) {
+						tool.appendChild(cancel);
+					}
+					box.appendChild(content);
+					box.appendChild(tool);
+					if(obj.modal == false) {
+						document.body.appendChild(box)
+					} else {
+						modal.appendChild(box);
+						document.body.appendChild(modal)
+					}
+					setTimeout(function() {
+						if(obj.modal != false) {
+							css(modal, {
+								transition: 'all .2s ease-out',
+								backgroundColor: 'rgba(0,0,0,.6)'
+							});
+						}
+						css(box, {
+							opacity: 1,
+							transform: 'translate(-50%,-50%) scale(1)'
+						});
+					}, 50);
+				}
+				if(obj && typeof obj.init == 'function') {
+					if(obj.init.length >= 1) {
+						obj.init.call(this, run)
+					} else {
+						obj.init();
+						run()
+					}
+				} else {
+					run()
+				}
+				sf.close = function() {
+					css(box, {
+						opacity: 0,
+						transform: 'translate(-50%,-50%) scale(.86)'
+					});
+					setTimeout(function() {
+						if(box) {
+							document.body.removeChild(box);
+						}
+					}, 200);
+					if(obj.modal != false) {
+						css(modal, {
+							backgroundColor: 'rgba(0,0,0,0)'
+						});
+						setTimeout(function() {
+							if(modal) {
+								document.body.removeChild(modal);
+							}
+						}, 200);
+					}
+				}
+				return sf;
+			}
+		</script>
+	</body>
+
+</html>

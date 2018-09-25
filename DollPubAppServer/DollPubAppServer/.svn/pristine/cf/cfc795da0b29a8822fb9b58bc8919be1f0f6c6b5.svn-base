@@ -1,0 +1,87 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory;
+
+import com.google.common.collect.Maps;
+import com.imlianai.rpc.support.utils.MD5_HexUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+
+import java.util.Map;
+import java.util.Random;
+import java.util.UUID;
+
+/**
+ * @author wurui
+ * @create 2018-06-30 11:34
+ **/
+public class PushCoinVirtualUtil {
+
+    private static String pubKey = "zj-pub-key";
+
+    private static Map<Integer, String> authMaps = Maps.newConcurrentMap();
+    private static Map<Integer,Integer> coinNum =  Maps.newConcurrentMap();
+
+    static {
+        if (authMaps != null) {
+            authMaps.put(1, "8c350e058edaceb760080826b2d666e7");
+            authMaps.put(2, "fdbe28ddade4a7e7ead149a12557b2b6");
+            authMaps.put(3, "07e763a19c4e7b8d139e6bbe21398ee0");
+            authMaps.put(4, "fa2b85904c518c427b307b0359e14b5b");
+            authMaps.put(5, "af297c53dc3e55438d162882fc7e8924");
+            authMaps.put(6, "220a49f346aae0e4fdf68a1d6878f997");
+            authMaps.put(7, "3e5428c4e006c72fbb1341b339ee29c9");
+            authMaps.put(8, "2557131c04c39daaa9c2791519a36e87");
+            authMaps.put(9, "303fb7e1b5671b60e08eee71a4e36c24");
+            authMaps.put(10, "1547b3d86e95408774c568134032cf39");
+        }
+        if (coinNum != null){
+            coinNum.put(1,80);
+            coinNum.put(2,81);
+            coinNum.put(3,82);
+            coinNum.put(4,83);
+            coinNum.put(5,84);
+            coinNum.put(6,85);
+            coinNum.put(7,86);
+            coinNum.put(8,87);
+            coinNum.put(9,88);
+            coinNum.put(10,90);
+        }
+    }
+
+
+    /**
+     * 获取认证权限
+     * @param key
+     * @return
+     */
+    public static String getAuthMaps(int key) {
+        if (!StringUtil.isNullOrEmpty(authMaps)) {
+            return authMaps.get(key);
+        }
+        return null;
+    }
+
+
+    public static int getRandomType(){
+        Random random = new Random();
+        int randNum = random.nextInt(10) + 1;
+        if (!StringUtil.isNullOrEmpty(authMaps) && !StringUtil.isNullOrEmpty(coinNum)){
+            if (authMaps.get(randNum) != null){
+                return randNum;
+            }
+        }
+        return 0;
+    }
+
+
+    public static void main(String[] args) {
+        //生成10个密钥
+//        for (int i = 0;i < 10;i++){
+//            System.out.println(MD5_HexUtil.md5Hex(pubKey + UUID.randomUUID().toString().replace("-","")));
+//        }
+
+        for (int i = 0;i < 1000;i++){
+            System.out.println(getRandomType());
+        }
+
+    }
+
+}

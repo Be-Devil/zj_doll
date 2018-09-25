@@ -1,0 +1,40 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.cmd;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.Unity3DReqVO;
+import com.imlianai.dollpub.domain.coinfactory.Unity3DCoinXYZ;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Component;
+
+import javax.ws.rs.Path;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-05-19 16:47
+ **/
+@Component("pushCoinUnity")
+public class PushCoinUnityCmd extends RootCmd{
+
+    @ApiHandle
+    @Path("api/pushCoinUnity/save")
+    public BaseRespVO save(Unity3DReqVO vo){
+        if (!StringUtil.isNullOrEmpty(vo)){
+            if (null != vo.getData() && !"".equals(vo.getData())){
+                List<Unity3DCoinXYZ> unity3DCoinXYZList = JSON.parseArray(vo.getData(), Unity3DCoinXYZ.class);
+                if (!StringUtil.isNullOrEmpty(unity3DCoinXYZList)){
+                    BaseRespVO respVO =  new BaseRespVO(100,true,"数据请求成功!");
+                    respVO.setData(JSON.toJSONString(unity3DCoinXYZList));
+                    return respVO;
+                }
+            }
+        }
+        BaseRespVO respVO =  new BaseRespVO(100,true,"数据请求失败!");
+        respVO.setData(vo.getData());
+        return respVO;
+    }
+
+}

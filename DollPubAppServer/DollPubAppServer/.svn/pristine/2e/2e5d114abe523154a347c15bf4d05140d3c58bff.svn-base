@@ -1,0 +1,184 @@
+package com.imlianai.dollpub.app.modules.support.invite.dao;
+
+import java.util.List;
+
+import com.imlianai.dollpub.domain.invite.InviteRelation;
+import com.imlianai.dollpub.domain.invite.InviteRewardRecord;
+import com.imlianai.dollpub.domain.invite.OfficialCode;
+
+/**
+ * 邀请相关
+ * @author Max
+ *
+ */
+public interface InviteDAO {
+
+	/**
+	 * 初始化邀请码
+	 * @param uid
+	 * @param code
+	 * @return
+	 */
+	public int initInviteCode(long uid,long code);
+	/**
+	 * 新增邀请
+	 * @param uid
+	 * @param inviteId
+	 * @return
+	 */
+	public int addInvite(long uid, long inviteId);
+	
+	/**
+	 * 获取被邀请记录
+	 * @param uid
+	 * @return
+	 */
+	public long getInviteId(long uid);
+	
+	/**
+	 * 根据code获取邀请关系
+	 * @param code
+	 * @return
+	 */
+	public InviteRelation getInviteRelationByCode(long code);
+
+	/**
+	 * 根据uid获取邀请关系
+	 * @param uid
+	 * @return
+	 */
+	public InviteRelation getInviteRelationByUid(long uid);
+	
+	/**
+	 * 插入邀请奖励记录
+	 * @param record
+	 * @return
+	 */
+	public int addRewardRecord(InviteRewardRecord record);
+	
+	/**
+	 * 是否已领取注册奖励
+	 * @param imei
+	 * @return
+	 */
+	public int hasGainRegReward(String imei,int customerId);
+	
+	/**
+	 * 增加领取注册奖励记录
+	 * @param uid
+	 * @param imei
+	 * @return
+	 */
+	public int addGainRegReward(long uid,String imei,int customerId);
+	
+	/**
+	 * 更新奖励记录
+	 * @param id
+	 * @param state
+	 * @return
+	 */
+	public int updateRewardRecord(long id,int state);
+	
+	/**
+	 * 更新邀请码使用次数
+	 * @param code
+	 * @return
+	 */
+	public int updateInviteUsedTimes(long uid);
+	
+	/**
+	 * 获取邀请码
+	 * @param location
+	 * @return
+	 */
+	public long getInviteCode(long location);
+	
+	/**
+	 * 获取邀请奖励
+	 * 
+	 * @param uid
+	 * @param type
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 */
+	public List<InviteRewardRecord> getInviteRewardRecords(long uid, int type,
+			int page, int pageSize);
+	
+	/**
+	 * 根据奖励id获取奖励记录
+	 * @param id
+	 * @return
+	 */
+	public InviteRewardRecord getInviteRewardRecord(long id);
+	
+	/**
+	 * 根据奖励id获取奖励记录
+	 * @param uid
+	 * @param type
+	 * @return
+	 */
+	public InviteRewardRecord getInviteRewardRecord(long uid,int type);
+	
+	/**
+	 * 获取官方邀请码
+	 * @param code
+	 * @return
+	 */
+	public OfficialCode getOfficialCode(long code);
+	
+	/**
+	 * 消耗总数量
+	 * @param id
+	 * @return
+	 */
+	public int consumeOfficialCode(int id,long code);
+	
+	/**
+	 * 更新领取到的币数
+	 * @param id
+	 * @param coin
+	 */
+	public void updateOfficialCodeCoin(int id,int coin);
+	
+	/**
+	 * 是否领取过
+	 * @param uid
+	 * @param id
+	 * @return
+	 */
+	public int hasGainOfficialCode(long uid,int id);
+	
+	/**
+	 * 是否领取过
+	 * @param uid
+	 * @param id
+	 * @return
+	 */
+	public int hasGainOfficialCode(String imei,int id);
+	
+	/**
+	 * 增加领取记录
+	 * @param uid
+	 * @param imei
+	 * @param id
+	 * @param code
+	 */
+	public void addGainOfficialRecord(long uid,String imei,int id,long code,int coin);
+	
+	/**
+	 * 记录用于展示的流水
+	 * @param record
+	 */
+	public void addInviteTotalRecord(InviteRewardRecord record);
+	
+	/**
+	 * 获取邀请奖励滚动列表
+	 * @param type
+	 * @param page
+	 * @param pageSize
+	 * @return
+	 */
+	public List<InviteRewardRecord> getInviteRewardRecords(int type,
+			int page, int pageSize);
+}

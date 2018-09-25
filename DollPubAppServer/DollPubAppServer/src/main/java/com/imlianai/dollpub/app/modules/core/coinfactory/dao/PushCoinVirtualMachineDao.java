@@ -1,0 +1,65 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.virtual.base.MachinePushCoinVirtual;
+
+import java.util.List;
+
+
+/**
+ * 虚拟推币机
+ * @author wurui
+ * @create 2018-03-28 15:17
+ **/
+public interface PushCoinVirtualMachineDao {
+    long insert(MachinePushCoinVirtual pushCoin);
+    MachinePushCoinVirtual getOne(long optId);
+    MachinePushCoinVirtual getOne(long optId, long uid);
+
+
+    /**
+     * 更新投币or出币
+     * @param type 0：更新投币个数，1：更新出币个数
+     * @param coin
+     * @return
+     */
+    int updateCoin(long optId, int coin, int type,int weight);
+
+    /**
+     * 锁定操作记录
+     * @param optId
+     * @return
+     */
+    int updateState(long optId);
+
+    /**
+     * 更新下一个节点并清空当前节点值
+     * @param currentNode
+     * @param optId
+     * @return
+     */
+    int updateNextNode(int currentNode,long optId);
+
+    /**
+     * 重置节点
+     * @param optId
+     * @return
+     */
+    int resetNode(long optId);
+
+    /**
+     * 获取指定机器的所有正在操作的记录
+     * @return
+     */
+    List<MachinePushCoinVirtual> getOptRecordByBusId(int busId);
+
+
+    /**
+     * 更新拉霸投币
+     * @param optId
+     * @param slots
+     * @param weight
+     * @return
+     */
+    int updateSlots(long optId,int slots,int weight);
+
+}

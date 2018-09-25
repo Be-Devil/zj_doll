@@ -1,0 +1,88 @@
+package com.imlianai.zjdoll.app.modules.core.push.vo;
+
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-06-20 11:35
+ **/
+public class BoxPointGiveReqVO extends BaseReqVO {
+
+    private int id;
+
+    //机器id
+    private int busId;
+
+    //额外赠送的钻石
+    private int exJewel;
+
+    //额外赠送的游戏币
+    private int exCoin;
+
+    //额外赠送的积分
+    private int exScore;
+
+    //额外赠送的时光卷
+    private int exCoupon;
+
+    //额外赠送的娃娃
+    private List<Integer> exDoll;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getBusId() {
+        return busId;
+    }
+
+    public void setBusId(int busId) {
+        this.busId = busId;
+    }
+
+    public int getExJewel() {
+        return exJewel;
+    }
+
+    public void setExJewel(int exJewel) {
+        this.exJewel = exJewel;
+    }
+
+    public int getExCoin() {
+        return exCoin;
+    }
+
+    public void setExCoin(int exCoin) {
+        this.exCoin = exCoin;
+    }
+
+    public int getExScore() {
+        return exScore;
+    }
+
+    public void setExScore(int exScore) {
+        this.exScore = exScore;
+    }
+
+    public int getExCoupon() {
+        return exCoupon;
+    }
+
+    public void setExCoupon(int exCoupon) {
+        this.exCoupon = exCoupon;
+    }
+
+    public List<Integer> getExDoll() {
+        return exDoll;
+    }
+
+    public void setExDoll(List<Integer> exDoll) {
+        this.exDoll = exDoll;
+    }
+}

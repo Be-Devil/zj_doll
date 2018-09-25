@@ -1,0 +1,64 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao.impl;
+
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinMachineDao;
+import com.imlianai.dollpub.domain.coinfactory.MachinePushCoin;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-03-28 16:12
+ **/
+@Repository
+public class PushCoinMachineDaoImpl implements PushCoinMachineDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public long insert(MachinePushCoin pushCoin) {
+        String insert = "INSERT INTO push_coin_opt(deviceId,busId,uid,customerId,startTime,createTime) VALUES(?,?,?,?,NOW(),NOW())";
+        return jdbcHandler.executeSql(insert,pushCoin.getDeviceId(),pushCoin.getBusId(),pushCoin.getUid(),pushCoin.getCustomerId());
+    }
+
+    private String select = "SELECT * FROM push_coin_opt";
+
+    @Override
+    public MachinePushCoin getOne(long optId) {
+        return jdbcHandler.queryOneBySql(MachinePushCoin.class,select + " WHERE optId=?",optId);
+    }
+
+    @Override
+    public MachinePushCoin getOne(long optId, long uid) {
+        return jdbcHandler.queryOneBySql(MachinePushCoin.class,select + " WHERE optId=? AND uid=?",optId,uid);
+    }
+
+    @Override
+    public int updateCoin(long optId,int coin,int type) {
+        String intoCoin = "UPDATE push_coin_opt SET intoCoin = intoCoin+?,endTime=NOW() WHERE state<>1 AND optId=?";
+        String outCoin = "UPDATE push_coin_opt SET outCoin = outCoin+? WHERE state<>1 AND optId=?";
+        //投币
+        if (type == 0){
+            return jdbcHandler.executeSql(intoCoin,coin,optId);
+        }
+        //出币
+        if (type == 1){
+            return jdbcHandler.executeSql(outCoin,coin,optId);
+        }
+        return 0;
+    }
+
+    @Override
+    public int updateState(long optId) {
+        return jdbcHandler.executeSql("UPDATE push_coin_opt SET state=1,endTime=NOW() WHERE state<>1 AND optId=?",optId);
+    }
+
+    @Override
+    public int updateMachineLocked(String deviceId, int status, long userId) {
+        return jdbcHandler
+                .executeSql(
+                        "update machine_device set status=? ,userId=? where deviceId=? and status<>?",
+                        status, userId, deviceId, status);
+    }
+}

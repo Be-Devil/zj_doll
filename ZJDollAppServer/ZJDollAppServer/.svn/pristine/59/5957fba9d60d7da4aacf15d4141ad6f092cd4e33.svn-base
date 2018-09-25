@@ -1,0 +1,95 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.virtual.base.MachinePushCoinVirtual;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinVirtualWinRecord;
+
+import java.util.List;
+
+/**
+ * 带路由的dao操作
+ * 规则：通过商户组区分表名
+ * @author wurui
+ * @create 2018-04-03 16:36
+ **/
+public interface PushCoinOptVirtualDao {
+
+    long insert(MachinePushCoinVirtual pushCoin);
+    MachinePushCoinVirtual getOne(long optId);
+    MachinePushCoinVirtual getOne(long optId, long uid);
+    List<MachinePushCoinVirtual> getTimeOutRecord();
+    int updateTimeOutStatus(int id);
+
+    /**
+     * 获取用户上机列表
+     * @return
+     */
+    List<MachinePushCoinVirtual> getUserPlayRecordList();
+
+    /**
+     * 更新投币or出币
+     * @param optId
+     * @param eCoin
+     * @param vCoin
+     * @param type 0：更新投币个数，1：更新出币个数
+     * @return
+     */
+    int updateCoin(long optId, int eCoin, int vCoin, int type);
+
+    /**
+     * 锁定操作记录
+     * @param optId
+     * @return
+     */
+    int updateState(long optId);
+
+
+    /**
+     * 更新钻石
+     * @param jewel
+     * @param optId
+     * @return
+     */
+    int updateJewel(int jewel, long optId);
+
+
+    /**
+     * 更新钻石状态
+     * @param optId
+     * @return
+     */
+    int updateJewelStatus(long optId);
+
+
+    /**
+     * 新增中奖记录
+     * @param record
+     * @return
+     */
+    int insertWinRecord(PushCoinVirtualWinRecord record);
+
+
+    /**
+     * 通过allotId获取记录
+     * @param allotId
+     * @return
+     */
+    PushCoinVirtualWinRecord getWinRecordByAllotId(long allotId);
+
+    /**
+     * 更新中奖结果
+     * @param allotId
+     * @param result
+     * @param rate
+     * @param remark
+     * @return
+     */
+    int updateWinRecordResult(long allotId,int result,int rate,String remark);
+
+    /**
+     * 刷新游戏时间
+     * @param optId
+     * @return
+     */
+    int refreshEndTime(long optId);
+
+}

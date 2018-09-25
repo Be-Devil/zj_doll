@@ -1,0 +1,133 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.dao.impl;
+
+
+import com.imlianai.dollpub.domain.coinfactory.virtual.base.MachinePushCoinVirtual;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.dao.PushCoinOptVirtualDao;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinOptVirtualWeight;
+import com.imlianai.zjdoll.domain.pushcoin.PushCoinVirtualWinRecord;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-04-03 16:56
+ **/
+@Repository
+public class PushCoinOptVirtualDaoImpl implements PushCoinOptVirtualDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+
+    @Override
+    public long insert(MachinePushCoinVirtual pushCoin) {
+        String insert = "insert into push_coin_opt_virtual (optId,deviceId,busId,uid,customerId,price,rate,time,weight,lean,magnetism,startTime,endTime,createTime) " +
+                "values(?,?,?,?,?,?,?,?,?,?,?,now(),date_add(now(),interval ? second),now())";
+        return jdbcHandler.executeSql(insert,pushCoin.getOptId(),pushCoin.getDeviceId(),pushCoin.getBusId(),pushCoin.getUid(),
+                pushCoin.getCustomerId(),pushCoin.getPrice(),pushCoin.getRate(),pushCoin.getTime(),pushCoin.getWeight(),pushCoin.getLean(),pushCoin.getMagnetism(),pushCoin.getTime());
+    }
+
+    private String select = "select * from push_coin_opt_virtual";
+
+    @Override
+    public MachinePushCoinVirtual getOne(long optId) {
+        return jdbcHandler.queryOneBySql(MachinePushCoinVirtual.class,select + " where optId=? order by createTime desc limit 1",optId);
+    }
+
+    @Override
+    public MachinePushCoinVirtual getOne(long optId, long uid) {
+        return jdbcHandler.queryOneBySql(MachinePushCoinVirtual.class,select + " where (optId=? and uid=?) and state<>1 order by createTime desc limit 1",optId,uid);
+    }
+
+    @Override
+    public List<MachinePushCoinVirtual> getTimeOutRecord() {
+        return jdbcHandler.queryBySql(MachinePushCoinVirtual.class,"select * from push_coin_opt_virtual where endTime < date_sub(now(),interval time second) and state<>1");
+    }
+
+    @Override
+    public int updateTimeOutStatus(int id) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set state=1,endTime=now(),remark='定时器更新' where state<>1 and id=?",id);
+    }
+
+    @Override
+    public List<MachinePushCoinVirtual> getUserPlayRecordList() {
+        return jdbcHandler.queryBySql(MachinePushCoinVirtual.class,"select * from push_coin_opt_virtual where state<>1");
+    }
+
+
+    @Override
+    public int updateCoin(long optId, int eCoin,int vCoin, int type) {
+        String intoCoin = "update push_coin_opt_virtual set intoCoin=intoCoin+?,vIntoCoin=vIntoCoin+?,endTime=date_add(now(),interval time second) where state<>1 and optId=?";
+        String outCoin = "update push_coin_opt_virtual set outCoin=outCoin+?,vOutCoin=vOutCoin+?,endTime=date_add(now(),interval time second) where state<>1 and optId=?";
+        //投币
+        if (type == 0){
+            return jdbcHandler.executeSql(intoCoin,eCoin,vCoin,optId);
+        }
+        //出币
+        if (type == 1){
+            return jdbcHandler.executeSql(outCoin,eCoin,vCoin,optId);
+        }
+        return 0;
+    }
+
+    @Override
+    public int updateState(long optId) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set state=1,endTime=now() where state<>1 and optId=?",optId);
+    }
+
+    @Override
+    public int updateJewel(int jewel,long optId) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set jewel=jewel+?,endTime=date_add(now(),interval time second) where jewelStatus<>1 and state<>1 and optId=?",jewel,optId);
+    }
+
+    @Override
+    public int updateJewelStatus(long optId) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set jewelStatus=1,endTime=now() where jewelStatus<>1 and optId=?",optId);
+    }
+
+    @Override
+    public int insertWinRecord(PushCoinVirtualWinRecord record) {
+        String sql = "insert into push_coin_virtual_win_record(busId,deviceId,uid,optId,allotId,fvId,type,coin,rate,magnetism,a,b,c,affirm,result,remark,time) values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,now())";
+        return jdbcHandler.executeSql(sql,record.getBusId(),record.getDeviceId(),record.getUid(),record.getOptId(),record.getAllotId(),record.getFvId(),
+                record.getType(),record.getCoin(),record.getRate(),record.getMagnetism(),record.getA(),record.getB(),record.getC(),record.getAffirm(),record.getResult(),record.getRemark());
+    }
+
+    @Override
+    public PushCoinVirtualWinRecord getWinRecordByAllotIdAndUid(long allotId,long uid) {
+        return jdbcHandler.queryOneBySql(PushCoinVirtualWinRecord.class,"select * from push_coin_virtual_win_record where allotId=? and uid=? and affirm<>1 order by time desc limit 1",allotId,uid);
+    }
+
+    @Override
+    public int updateWinRecordResult(long allotId, int result, int dialRate,String remark) {
+        return jdbcHandler.executeSql("update push_coin_virtual_win_record set result=?,dialRate=?,remark=?,affirm=1 where allotId=? and affirm<>1",result,dialRate,remark,allotId);
+    }
+
+    @Override
+    public int refreshEndTime(long optId) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set endTime=date_add(now(),interval time second) where state<>1 and optId=?",optId);
+    }
+
+    @Override
+    public int updateErrorRecord(long optId, long uid, String remark) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set error=error+1,remark=? where optId=? and uid=?",remark,optId,uid);
+    }
+
+    @Override
+    public int updateSlots(long optId, int slots,int vSlots) {
+        String intoCoin = "update push_coin_opt_virtual set slots=slots+?,vSlots=vSlots+?,slotsTime=slotsTime+1,endTime=date_add(now(),interval time second) where state<>1 and optId=?";
+        return jdbcHandler.executeSql(intoCoin,slots,vSlots,optId);
+    }
+
+    @Override
+    public PushCoinOptVirtualWeight getWeightByUid(long uid) {
+        return jdbcHandler.queryOneBySql(PushCoinOptVirtualWeight.class,"select * from push_coin_opt_virtual_weight where uid=?",uid);
+    }
+
+    @Override
+    public int updateTempWeight(int id,int tempWeight) {
+        return jdbcHandler.executeSql("update push_coin_opt_virtual set temp=? where id=?",tempWeight,id);
+    }
+}

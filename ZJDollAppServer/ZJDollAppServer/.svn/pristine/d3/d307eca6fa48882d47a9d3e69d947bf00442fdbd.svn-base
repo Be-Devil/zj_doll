@@ -1,0 +1,48 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.vo;
+
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+
+/**
+ * 虚拟水果机转盘响应对象
+ * @author wurui
+ * @create 2018-07-23 15:13
+ **/
+public class VirtualFruitsDialRespVO extends BaseRespVO {
+
+    private long uid;
+    private long optId;
+    private int coin;
+    private int rate;
+
+    public long getUid() {
+        return uid;
+    }
+
+    public void setUid(long uid) {
+        this.uid = uid;
+    }
+
+    public long getOptId() {
+        return optId;
+    }
+
+    public void setOptId(long optId) {
+        this.optId = optId;
+    }
+
+    public int getCoin() {
+        return coin;
+    }
+
+    public void setCoin(int coin) {
+        this.coin = coin;
+    }
+
+    public int getRate() {
+        return rate;
+    }
+
+    public void setRate(int rate) {
+        this.rate = rate;
+    }
+}

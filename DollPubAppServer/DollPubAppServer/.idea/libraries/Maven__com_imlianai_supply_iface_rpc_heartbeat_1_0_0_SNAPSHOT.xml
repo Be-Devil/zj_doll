@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.imlianai:supply-iface-rpc-heartbeat:1.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/supply-iface-rpc-heartbeat/1.0.0-SNAPSHOT/supply-iface-rpc-heartbeat-1.0.0-20180716.100227-233.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/supply-iface-rpc-heartbeat/1.0.0-SNAPSHOT/supply-iface-rpc-heartbeat-1.0.0-20180716.100227-233-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/supply-iface-rpc-heartbeat/1.0.0-SNAPSHOT/supply-iface-rpc-heartbeat-1.0.0-20180716.100227-233-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

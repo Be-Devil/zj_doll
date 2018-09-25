@@ -1,0 +1,30 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.dao;
+
+import com.imlianai.dollpub.domain.coinfactory.PushCoinVirtualConfig;
+
+/**
+ * 虚拟推币机默认配置
+ * @author wurui
+ * @create 2018-07-09 11:32
+ **/
+public interface PushCoinVirtualConfigDao {
+
+    /**
+     * 新增或修改虚拟推币机机器配置
+     * @param virtualConfig
+     * @return
+     */
+    int insertOrUpdateVirtualPushCoinConfig(PushCoinVirtualConfig virtualConfig);
+
+
+    int initConfig(int busId);
+
+
+    /**
+     * 获取虚拟推币机配置
+     * @param busId
+     * @return
+     */
+    PushCoinVirtualConfig getVirtualConfigByBusId(int busId);
+
+}

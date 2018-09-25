@@ -1,0 +1,53 @@
+package com.imlianai.zjdoll.app.modules.publics.msg.rabbitmq.task;
+
+import com.imlianai.zjdoll.domain.msg.MsgRoom;
+import com.imlianai.rpc.support.common.BaseModel;
+import com.imlianai.supply.rabbitMq.iface.RabbitMqFroZJDollRemoteService;
+import com.imlianai.zjdoll.app.modules.publics.msg.leancloud.IMMsgService;
+
+import org.apache.log4j.Logger;
+
+import java.util.concurrent.TimeUnit;
+
+/**
+ * Created by zhicheng on 2018/4/4.
+ */
+public class SendRoomMsgTask implements Runnable {
+
+    private static Logger logger = Logger.getLogger(SendRoomMsgTask.class);
+    private static final String MSG_ROOM_QUEUE_NAME="zjdollapp-roommsg-queue";
+
+    private RabbitMqFroZJDollRemoteService rabbitMqRemoteService;
+    private IMMsgService iMMsgService;
+
+    public SendRoomMsgTask(RabbitMqFroZJDollRemoteService rabbitMqRemoteService, IMMsgService iMMsgService) {
+        this.rabbitMqRemoteService = rabbitMqRemoteService;
+        this.iMMsgService = iMMsgService;
+    }
+
+    @Override
+    public void run() {
+        while (!Thread.currentThread().isInterrupted()){
+                try {
+                    TimeUnit.MILLISECONDS.sleep(300);
+                } catch (InterruptedException e) {
+                    logger.error("InterruptedException");
+                }
+                MsgRoom msg=null;
+                try{
+                    BaseModel baseModel = rabbitMqRemoteService.getMsgFromRabbit(MSG_ROOM_QUEUE_NAME);
+                    if (baseModel!=null&&(baseModel instanceof MsgRoom)){
+                        msg= (MsgRoom) baseModel;
+                        boolean sendStatus = iMMsgService.sendRoomMsg(msg);;//发送房间消息
+                        if (!sendStatus){
+                            logger.error("rabbitmq日志:room消息发送失败:messageID="+msg.getId()+" 发送者uid="+msg.getUid()+" BusId="+msg.getBusId());
+                        }else{
+                            logger.info("rabbitmq日志:发送room消息messageID="+msg.getId()+" 发送者uid="+msg.getUid()+" BusId="+msg.getBusId());
+                        }
+                    }
+                }catch (Exception e){
+                    logger.error("rabbitmq日志:room消息发送失败"+e);
+                }
+        }
+    }
+}

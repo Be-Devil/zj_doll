@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: com.imlianai:supply-iface-rabbitMq:1.0.0-SNAPSHOT">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/supply-iface-rabbitMq/1.0.0-SNAPSHOT/supply-iface-rabbitMq-1.0.0-20180508.082511-391.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/supply-iface-rabbitMq/1.0.0-SNAPSHOT/supply-iface-rabbitMq-1.0.0-20180508.082511-391-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/com/imlianai/supply-iface-rabbitMq/1.0.0-SNAPSHOT/supply-iface-rabbitMq-1.0.0-20180508.082511-391-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

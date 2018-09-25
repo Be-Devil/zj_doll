@@ -1,0 +1,113 @@
+package com.imlianai.dollpub.app.modules.core.trade.service.impl;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.imlianai.dollpub.app.modules.core.trade.dao.TradeChargeDAO;
+import com.imlianai.dollpub.app.modules.core.trade.domain.AlipayH5Body;
+import com.imlianai.dollpub.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.dollpub.domain.trade.ChargeMchInfo;
+import com.imlianai.dollpub.domain.trade.ChargeState;
+import com.imlianai.dollpub.domain.trade.ChargeWay;
+import com.imlianai.dollpub.domain.trade.TradeCharge;
+
+@Service
+public class TradeChargeServiceImpl implements TradeChargeService {
+
+	@Resource
+	private TradeChargeDAO tradeChargeDAO;
+
+	@Override
+	public long add(TradeCharge c) {
+		return tradeChargeDAO.add(c);
+	}
+
+	@Override
+	public int updateState(long id, ChargeState state) {
+		return tradeChargeDAO.updateState(id, state);
+	}
+
+	@Override
+	public TradeCharge getById(long id) {
+		return tradeChargeDAO.getById(id);
+	}
+
+	@Override
+	public void addLog(long chargeId, long uid, String createParams,
+			String httpParams) {
+		tradeChargeDAO.addLog(chargeId, uid, createParams, httpParams);
+	}
+
+	@Override
+	public void updatelog(long chargeId, String callBackValue) {
+		tradeChargeDAO.updatelog(chargeId, callBackValue);
+	}
+
+	@Override
+	public TradeCharge getByOtherId(String otherId, ChargeWay way) {
+		return tradeChargeDAO.getByOtherId(otherId, way);
+	}
+
+	@Override
+	public long addTemp(TradeCharge c) {
+		return tradeChargeDAO.addTemp(c);
+	}
+
+	@Override
+	public TradeCharge getTempByOtherId(String otherId, ChargeWay way) {
+		return tradeChargeDAO.getTempByOtherId(otherId, way);
+	}
+
+	@Override
+	public long hasChargeSpecialAmt(long uid, int code) {
+		return tradeChargeDAO.hasChargeSpecialAmt(uid, code);
+	}
+
+	@Override
+	public int addAlipayH5Body(long id, String body,long uid,int price) {
+		return tradeChargeDAO.addAlipayH5Body(id, body, uid, price);
+	}
+
+	@Override
+	public AlipayH5Body getAlipayH5Body(long id) {
+		return tradeChargeDAO.getAlipayH5Body(id);
+	}
+
+	@Override
+	public ChargeMchInfo getChargeMchInfo(int customerId) {
+		return tradeChargeDAO.getChargeMchInfo(customerId);
+	}
+
+	@Override
+	public ChargeMchInfo getChargeMchInfo(String mchId) {
+		return tradeChargeDAO.getChargeMchInfo(mchId);
+	}
+
+	@Override
+	public int hasCharge(long uid) {
+		return tradeChargeDAO.hasCharge(uid);
+	}
+
+	@Override
+	public long hasChargeToday(long uid, int code) {
+		return tradeChargeDAO.hasChargeToday(uid, code);
+	}
+
+	@Override
+	public void addTradeChargeSrc(long uid, int code, int srcPrice, int traget,
+			int customerId, String srcId) {
+		tradeChargeDAO.addTradeChargeSrc(uid, code, srcPrice, traget, customerId, srcId);
+	}
+
+	@Override
+	public int hasChargeSrc(long uid, int code) {
+		return tradeChargeDAO.hasChargeSrc(uid, code);
+	}
+
+	@Override
+	public int hasChargeSrcToday(long uid, int code) {
+		return tradeChargeDAO.hasChargeSrcToday(uid, code);
+	}
+
+}

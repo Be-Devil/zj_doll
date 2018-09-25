@@ -1,0 +1,236 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.service.impl;
+
+import com.google.common.collect.Maps;
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinFruitsConfigDao;
+import com.imlianai.dollpub.app.modules.core.coinfactory.dao.PushCoinVirtualFruitsDao;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinFruitService;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.VirtualFruitsQueryReqVO;
+import com.imlianai.dollpub.domain.coinfactory.PushCoinFruitsConfig;
+import com.imlianai.dollpub.domain.coinfactory.virtual.fruits.PushCoinFruitsResult;
+import com.imlianai.dollpub.domain.coinfactory.virtual.fruits.PushCoinFruitsWin;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.utils.StringUtil;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 水果机相关服务实现
+ * @author wurui
+ * @create 2018-06-19 10:18
+ **/
+@Service
+public class PushCoinFruitServiceImpl implements PushCoinFruitService {
+
+
+    @Resource
+    private PushCoinFruitsConfigDao pushCoinFruitsConfigDao;
+
+
+    @Resource
+    private PushCoinVirtualFruitsDao pushCoinVirtualFruitsDao;
+
+    private Map<Integer,List<PushCoinFruitsResult>> fruitResultMap = Maps.newConcurrentMap();
+
+    private BaseLogger logger = BaseLogger.getLogger(getClass());
+
+
+
+    public static void main(String[] args) {
+        int total = 0;
+        int no = 0;
+        int f2 = 0;
+        int f3 = 0;
+        int hat = 0;
+        int jp1 = 0;
+        int jp2 = 0;
+        int jp3 = 0;
+
+        for (int i = 1;i<=7;i++){
+            for (int j = 1;j<=7;j++){
+                for (int k = 1;k<=7;k++){
+                    total++;
+                    if (i != 7  && i != j){
+                        no++;
+                    }
+                    //二个相同的
+                    if (i==j && k != 7 && i != k && i != 7){
+                        f2++;
+                    }
+                    //三个相同的
+                    if (i == j && i == k && i !=7 ){
+                        f3++;
+                    }
+                    if (i == j && i != k && k==7  ){
+                        hat++;
+                    }
+                    //一丑
+                    if ((i == 7 && j!=7)){
+                        jp1++;
+                    }
+                    //二丑
+                    if (i==7 && j==7  && k != 7){
+                        jp2++;
+                    }
+                    //三丑
+                    if (i == 7 && j == 7 && k==7){
+                        jp3++;
+                    }
+                }
+            }
+        }
+
+        System.out.println();
+        System.out.println("总共=>" + total + "结果");
+        System.out.println("不中奖水果=>" + no);
+        System.out.println("中相同二果=>" + f2);
+        System.out.println("中相同三果=>" + f3);
+        System.out.println("中帽子戏法=>" + hat);
+        System.out.println("中1丑=>" + jp1);
+        System.out.println("中2丑=>" + jp2);
+        System.out.println("中3丑=>" + jp3);
+    }
+
+    @Override
+    public BaseRespVO query(VirtualFruitsQueryReqVO reqVO) {
+        int total = 0;
+        for (int i = 1;i<=7;i++){
+            for (int j = 1;j<=7;j++){
+                for (int k = 1;k<=7;k++){
+                    total++;
+                    PushCoinFruitsResult result= new PushCoinFruitsResult();
+
+                    result.setA(i);
+                    result.setB(j);
+                    result.setC(k);
+                    result.setAssembly("[" + i + "," + j + "," + k + "]");
+
+                    //1:不中奖水果,2:相同2个水果,3:相同3个水果,4:帽子戏法,5:中1丑,6:中2丑,7:中3丑
+
+                    //不中奖的结果
+                    if (i != 7  && i != j){
+                        result.setType(1);
+                        result.setRemark("不中奖结果");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                    //二个相同的
+                    if (i==j && k != 7 && i != k && i != 7){
+                        result.setType(2);
+                        result.setRemark("相同2个水果");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                    //三个相同的
+                    if (i == j && i == k && i !=7 ){
+                        result.setType(3);
+                        result.setRemark("相同3个水果");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                    if (i == j && i != k && k==7  ){
+                        result.setType(4);
+                        result.setRemark("帽子戏法");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                    //一丑
+                    if ((i == 7 && j!=7)){
+                        result.setType(5);
+                        result.setRemark("中1丑");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                    //二丑
+                    if (i==7 && j==7  && k != 7){
+                        result.setType(6);
+                        result.setRemark("中2丑");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                    //三丑
+                    if (i == 7 && j == 7 && k==7){
+                        result.setType(7);
+                        result.setRemark("中3丑");
+                        pushCoinVirtualFruitsDao.addResult(result);
+                    }
+                }
+            }
+        }
+
+        logger.info("initFruitResult 生成=>" + total + " 种结果");
+        return new BaseRespVO(200,true,"initFruitResult 生成=>" + total + " 种结果");
+    }
+
+
+    /**
+     * 初始化水果机结果
+     */
+    private void initFruitResult(){
+//        int total = 0;
+//        for (int i = 1;i<=7;i++){
+//            for (int j = 1;j<=7;j++){
+//                for (int k = 1;k<=7;k++){
+//                    total++;
+//                    PushCoinFruitsResult result= new PushCoinFruitsResult();
+//
+//                    result.setA(i);
+//                    result.setB(j);
+//                    result.setC(k);
+//                    result.setAssembly("[" + i + "," + j + "," + k + "]");
+//
+//                    //1:不中奖水果,2:相同2个水果,3:相同3个水果,4:帽子戏法,5:中1丑,6:中2丑,7:中3丑
+//
+//                    //不中奖的结果
+//                    if (i != 7  && i != j){
+//                        result.setType(1);
+//                        result.setRemark("不中奖结果");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                    //二个相同的
+//                    if (i==j && k != 7 && i != k && i != 7){
+//                        result.setType(2);
+//                        result.setRemark("相同2个水果");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                    //三个相同的
+//                    if (i == j && i == k && i !=7 ){
+//                        result.setType(3);
+//                        result.setRemark("相同3个水果");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                    if (i == j && i != k && k==7  ){
+//                        result.setType(4);
+//                        result.setRemark("帽子戏法");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                    //一丑
+//                    if ((i == 7 && j!=7)){
+//                        result.setType(5);
+//                        result.setRemark("中1丑");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                    //二丑
+//                    if (i==7 && j==7  && k != 7){
+//                        result.setType(6);
+//                        result.setRemark("中2丑");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                    //三丑
+//                    if (i == 7 && j == 7 && k==7){
+//                        result.setType(7);
+//                        result.setRemark("中3丑");
+//                        pushCoinVirtualFruitsDao.addResult(result);
+//                    }
+//                }
+//            }
+//        }
+//
+//        logger.info("initFruitResult 生成=>" + total + " 种结果");
+
+        for (PushCoinFruitsResult.FruitsResultType resultType : PushCoinFruitsResult.FruitsResultType.values()){
+            fruitResultMap.put(resultType.type,pushCoinVirtualFruitsDao.getResultByType(resultType.type));
+        }
+        if (!StringUtil.isNullOrEmpty(fruitResultMap)){
+            logger.info("初始化水果机结果");
+        }
+    }
+
+}

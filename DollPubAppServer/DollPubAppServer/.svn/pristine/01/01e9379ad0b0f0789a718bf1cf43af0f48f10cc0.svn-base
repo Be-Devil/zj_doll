@@ -1,0 +1,89 @@
+package com.imlianai.dollpub.app.modules.support.probability.dao.impl;
+
+import com.imlianai.dollpub.app.modules.support.probability.dao.DownClawDao;
+import com.imlianai.dollpub.domain.user.UserDownClaw;
+import com.imlianai.dollpub.domain.user.UserDownClawRecord;
+import com.imlianai.dollpub.machine.iface.domain.MachineOptRecord;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-04-10 15:40
+ **/
+@Repository
+public class DownClawDaoImpl implements DownClawDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+    @Override
+    public int init(Long uid) {
+        return jdbcHandler.executeSql("INSERT INTO down_claw_user(uid,num,createTime) VALUES(?,0,NOW())",uid);
+    }
+
+    @Override
+    public int addUserDownClawRecord(UserDownClawRecord record) {
+        return jdbcHandler.executeSql("INSERT INTO down_claw_user_record(busId,uid,optId,type,remark,createTime) VALUES(?,?,?,?,?,NOW())",
+                record.getBusId(),record.getUid(),record.getOptId(),record.getType(),record.getRemark());
+    }
+
+    @Override
+    public int updateUserDownClaw(Long uid, int num,int time) {
+        return jdbcHandler.executeSql("UPDATE down_claw_user SET num=?,time=?,updateTime=now() WHERE uid=?",num,time,uid);
+    }
+
+    @Override
+    public int updateNum(Long uid, int num) {
+        return jdbcHandler.executeSql("UPDATE down_claw_user SET num=?,updateTime=now() WHERE uid=?",num,uid);
+    }
+
+    @Override
+    public int updateTimeAddOne(Long uid) {
+        return jdbcHandler.executeSql("UPDATE down_claw_user SET time=time+1,updateTime=now() WHERE uid=?",uid);
+    }
+
+    @Override
+    public UserDownClaw get(Long uid) {
+        return jdbcHandler.queryOneBySql(UserDownClaw.class,"SELECT * FROM down_claw_user WHERE uid=?",uid);
+    }
+
+    @Override
+    public UserDownClawRecord getRecord(long uid, long optId) {
+        return jdbcHandler.queryOneBySql(UserDownClawRecord.class,"SELECT * FROM down_claw_user_record WHERE uid=? and optId=?",uid,optId);
+    }
+
+    @Override
+    public int updateResult(long uid, long optId, int result) {
+        return jdbcHandler.executeSql("UPDATE down_claw_user_record SET result=?,updateTime=NOW() WHERE uid=? AND optId=?",result,uid,optId);
+    }
+
+
+    @Override
+    public int selectDownClawCatchSuccessCount(int busId, int catchSafeTime) {
+        String select = "select count(1) from down_claw_user_record where createTime >= date_sub(now(),interval ? minute) and createTime < now() and result=1 and type in (0,3) and busId=?";
+        return jdbcHandler.queryCount(select,catchSafeTime,busId);
+    }
+
+    @Override
+    public int saveOrUpdateDownClawCount(String deviceId, int time) {
+        return jdbcHandler.executeSql("insert into down_claw_count(deviceId,time,createTime,updateTime) values(?,?,now(),now()) on duplicate key update time=?,updateTime=now()", deviceId, time, time);
+    }
+
+    @Override
+    public int getDownClawTime(String deviceId) {
+        return jdbcHandler.queryCount("select time from down_claw_count where deviceId = ?", deviceId);
+    }
+
+    @Override
+    public int saveDownClawRecord(String deviceId, int time, String typeDesc, int dateCode) {
+        return jdbcHandler.executeSql("insert into down_claw_record(deviceId,time,typeDesc,dateCode,createTime) values(?,?,?,?,now())", deviceId, time, typeDesc, dateCode);
+    }
+
+    @Override
+    public MachineOptRecord getMachineOptRecord(long optId) {
+        return jdbcHandler.queryOneBySql(MachineOptRecord.class, "select * from machine_opt_record where optId=?",optId);
+    }
+}

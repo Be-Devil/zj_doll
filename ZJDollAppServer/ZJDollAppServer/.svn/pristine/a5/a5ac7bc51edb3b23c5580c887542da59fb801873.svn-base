@@ -1,0 +1,144 @@
+package com.imlianai.zjdoll.app.modules.core.doll.bus;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.constants.DollCacheConst;
+import com.imlianai.zjdoll.domain.doll.BusOperatingRecord;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.zjdoll.domain.doll.DollBus.DollBusCompany;
+import com.imlianai.zjdoll.domain.msg.MsgRoom;
+import com.imlianai.zjdoll.domain.msg.MsgRoomType;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.manager.aspect.annotations.CacheWrite;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.DollUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.qiyiguo.QiyiguoMachine;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.ZengjingUtils;
+import com.imlianai.zjdoll.app.modules.core.doll.utils.zengjing.domain.ZengjingDollBusDTO;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+
+@Service
+public class DollBusServiceImpl implements DollBusService {
+	
+	private static BaseLogger LOG = BaseLogger.getLogger(DollBusServiceImpl.class);
+
+	@Resource
+	DollBusDao dollBusDao;
+	@Resource
+	MsgService msgService;
+	@Override
+	public int updateConversationId(int busId, String conversationId) {
+		return dollBusDao.updateConversationId(busId, conversationId);
+	}
+
+	@Override
+	public DollBus getDollBus(int busId) {
+		return dollBusDao.getDollBus(busId);
+	}
+
+	@Override
+	public List<DollBus> getDollBus(Integer type) {
+		return dollBusDao.getDollBus(type);
+	}
+
+	@Override
+	public void updateBusWatchCount(int busId, int num) {
+		dollBusDao.updateBusWatchCount(busId, num);
+	}
+
+	@Override
+	public BusOperatingRecord getBusOperatingRecord(int busId) {
+		BusOperatingRecord record=dollBusDao.getBusOperatingRecord(busId);
+		if (record!=null) {
+			operatingRecordMap.put(busId, record);
+		}
+		return record;
+	}
+
+	@Override
+	public int addBusOperatingRecord(int busId, long uid, long optId, long logId) {
+		return dollBusDao.addBusOperatingRecord(busId, uid, optId, logId);
+	}
+
+	@Override
+	public int closeBusOperatingRecord(int busId,long optId) {
+		operatingRecordMap.remove(busId);
+		return dollBusDao.closeBusOperatingRecord(busId,optId);
+	}
+
+	@Override
+	public int removeBusOperatingRecord(BusOperatingRecord record) {
+		LOG.info("removeBusOperatingRecord "+JSON.toJSONString(record));
+		if (record!=null) {
+			operatingRecordMap.remove(record.getBusId());
+			return dollBusDao.removeBusOperatingRecord(record.getBusId(),record.getOptId());
+		}
+		return 0;
+	}
+
+	@Override
+	public List<DollBus> getCurrentDevice() {
+		List<DollBus> bus = new ArrayList<DollBus>();
+		List<QiyiguoMachine> list = DollUtil.getDeviceList();
+		if (!StringUtil.isNullOrEmpty(list)) {
+			for (QiyiguoMachine qiyiguoMachine : list) {
+				bus.add(new DollBus(qiyiguoMachine.getDevice_id(),
+						qiyiguoMachine.getStatus(), qiyiguoMachine.getName(),
+						qiyiguoMachine.getImg(), DollBusCompany.QIYIGUO.type,
+						qiyiguoMachine.getStream_address_1(), qiyiguoMachine
+								.getStream_address_2(), qiyiguoMachine
+								.getStream_address_raw_1(), qiyiguoMachine
+								.getStream_address_raw_2(),qiyiguoMachine.getName()));
+			}
+		}
+		
+		List<ZengjingDollBusDTO> list2 = ZengjingUtils.getList() ;
+		if (!StringUtil.isNullOrEmpty(list2)) {
+			for (ZengjingDollBusDTO zengjingDollBusDTO : list2) {
+				bus.add(new DollBus(zengjingDollBusDTO.getBusId()+"",
+						zengjingDollBusDTO.getStatus(), zengjingDollBusDTO.getName(),
+						zengjingDollBusDTO.getName(), DollBusCompany.ZENGJING.type,
+						zengjingDollBusDTO.getStream1(), zengjingDollBusDTO.getStream2(), zengjingDollBusDTO.getStream1Realy(), zengjingDollBusDTO.getStream2Realy(),zengjingDollBusDTO.getName()));
+			}
+		}
+		return bus;
+	}
+
+	@Override
+	public List<BusOperatingRecord> getInvaildRecord() {
+		List<BusOperatingRecord> list=dollBusDao.getInvaildRecord();
+		return list;
+	}
+
+	@Override
+	public void sendReleaseMsg(BusOperatingRecord record) {
+		DollBus bus=getDollBus(record.getBusId());
+		if (bus!=null) {
+			MsgRoom msgRoom = new MsgRoom(bus, MsgRoomType.BUS_RELEASE.type, "操作到期，可以重新上机");
+			msgService.sendMsgRoom(msgRoom);
+		}
+	}
+
+	private ConcurrentHashMap<Integer, BusOperatingRecord> operatingRecordMap=new ConcurrentHashMap<Integer, BusOperatingRecord>();
+	@Override
+	public BusOperatingRecord getBusOperatingRecordLocal(int busId) {
+		/*BusOperatingRecord record=operatingRecordMap.get(busId);
+		boolean localNull=false;
+		if (record==null) {
+			record=getBusOperatingRecord(busId);
+			localNull=true;
+		}
+		if (!localNull&&record!=null) {
+			operatingRecordMap.put(busId, record);
+		}*/
+		BusOperatingRecord record = getBusOperatingRecord(busId);
+		return record;
+	}
+}

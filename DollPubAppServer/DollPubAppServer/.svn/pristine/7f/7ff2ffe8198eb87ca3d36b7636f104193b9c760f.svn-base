@@ -1,0 +1,23 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.vo;
+
+import com.imlianai.dollpub.domain.coinfactory.Unity3DCoinXYZ;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+
+import java.util.List;
+
+/**
+ * @author wurui
+ * @create 2018-05-19 16:48
+ **/
+public class Unity3DReqVO extends BaseReqVO {
+
+   private List<Unity3DCoinXYZ> list;
+
+    public List<Unity3DCoinXYZ> getList() {
+        return list;
+    }
+
+    public void setList(List<Unity3DCoinXYZ> list) {
+        this.list = list;
+    }
+}

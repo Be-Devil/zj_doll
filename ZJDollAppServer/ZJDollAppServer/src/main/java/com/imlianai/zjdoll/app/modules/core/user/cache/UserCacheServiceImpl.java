@@ -1,0 +1,112 @@
+package com.imlianai.zjdoll.app.modules.core.user.cache;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import javax.annotation.Resource;
+
+import org.springframework.stereotype.Service;
+
+import com.imlianai.zjdoll.constants.CacheConst;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.zjdoll.domain.user.UserGeneral;
+import com.imlianai.rpc.support.manager.cache.CacheManager;
+import com.imlianai.rpc.support.manager.cache.ValueWrapper;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.user.dao.UserDAO;
+import com.imlianai.zjdoll.app.modules.core.user.util.UserUtil;
+
+@Service(value="userCacheService")
+public class UserCacheServiceImpl implements UserCacheService{
+
+	@Resource
+	private UserDAO userDAO;
+	@Resource
+	private	CacheManager cacheManager;
+	
+	@Override
+	public Map<Long, UserGeneral> getUserGeneralMap(List<Long> uids) {
+		List<Long> uidsNew = new ArrayList<Long>(uids);
+		Map<Long, UserGeneral> userMap = new HashMap<Long, UserGeneral>(uidsNew.size());
+		List<UserGeneral> users =  cacheManager.getBeans(CacheConst.USER_GENERAL_CACHE + ":", uidsNew,UserGeneral.class);
+		if(uidsNew!=null && !uidsNew.isEmpty()){
+			Map<Long, UserGeneral> userMapNew = userDAO.getUserGeneralMap(uidsNew);
+			if(userMapNew!=null && !userMapNew.isEmpty()){
+				Collection<UserGeneral> usersNew = userMapNew.values();
+				users.addAll(usersNew);
+				for(UserGeneral userNew : usersNew){
+					UserUtil.checkHead(userNew);
+					String keyUser = CacheConst.USER_GENERAL_CACHE + ":" + userNew.getUid();
+					cacheManager.setCache(keyUser, userNew, 21600);
+				}
+			}
+		}
+		for(UserGeneral user : users){
+			userMap.put(user.getUid(), user);
+		}
+		return userMap;
+	}
+	
+	@Override
+	public Map<Long, UserBase> getUserBaseMap(List<Long> uids) {
+		List<Long> uidsNew = new ArrayList<Long>(uids);
+		Map<Long, UserBase> userMap = new HashMap<Long, UserBase>(uidsNew.size());
+		List<UserBase> users = cacheManager.getBeans(CacheConst.USER_BASE_CACHE + ":", uidsNew,UserBase.class);
+		if(uidsNew!=null && !uidsNew.isEmpty()){
+			Map<Long, UserBase> userMapNew = userDAO.getUserBaseMap(uidsNew);
+			if(userMapNew!=null && !userMapNew.isEmpty()){
+				Collection<UserBase> usersNew = userMapNew.values();
+				users.addAll(usersNew);
+				for(UserBase userNew : usersNew){
+					String keyUser = CacheConst.USER_BASE_CACHE + ":"+userNew.getUid();
+					cacheManager.setCache(keyUser, userNew, 21600);
+				}
+			}
+		}
+		for(UserBase user : users){
+			userMap.put(user.getUid(), user);
+		}
+		return userMap;
+	}
+
+	@Override
+	public UserGeneral getUserGeneral(long uid) {
+		String key = CacheConst.USER_GENERAL_CACHE + ":" +uid;
+		UserGeneral user = cacheManager.getCache(key,UserGeneral.class);
+		if(StringUtil.isNullOrEmpty(user))
+			user = updateUserGeneral(uid);
+		return user;
+	}
+	
+	@Override
+	public UserGeneral updateUserGeneral(long uid) {
+		UserGeneral user = userDAO.getUserGeneral(uid);
+		String key = CacheConst.USER_GENERAL_CACHE + ":"+uid;
+		if(!StringUtil.isNullOrEmpty(user)){
+			UserUtil.checkHead(user);
+			cacheManager.setCache(key, user, 21600);
+		}
+		return user;
+	}
+	
+	@Override
+	public UserBase getUserBase(long uid) {
+		String key = CacheConst.USER_BASE_CACHE + ":"+uid;
+		UserBase userBase = cacheManager.getCache(key,UserBase.class);
+		if(StringUtil.isNullOrEmpty(userBase))
+			userBase = updateUserBase(uid);
+		return userBase;
+	}
+	
+	@Override
+	public UserBase updateUserBase(long uid) {
+		UserBase userBase = userDAO.getUserBase(uid);
+		String key = CacheConst.USER_BASE_CACHE + ":"+uid;
+		if(!StringUtil.isNullOrEmpty(userBase))
+			cacheManager.setCache(key, userBase, 21600);
+		return userBase;
+	}
+}

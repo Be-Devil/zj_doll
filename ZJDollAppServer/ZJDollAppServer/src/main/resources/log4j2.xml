@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 记录log4j2本身的event信息，默认是OFF，设置成“WARN” -->
+<!-- 每隔1800秒（半小时），自动监控该配置文件是否有变化 -->
+<Configuration status="WARN" monitorInterval="1800" packages="com.imlianai.rpc.support.manager.log4j2">
+    <!-- 配置全局日志格式 -->
+    <Properties>
+        <Property name="pattern_detail">[%d{yyyy-MM-dd HH:mm:ss}] %t %5p %c: %m%n</Property>
+        <Property name="pattern_console">[%d{yyyy-MM-dd HH:mm:ss}] %-5p %c{2} %m%n</Property>
+        
+        <!-- 开发环境 -->
+        <Property name="log4j_dir">${log4j2.logs.rootdir}</Property>
+        <!-- 测试 线上打印区分 -->
+        <Property name="log4j_additivity">${log4j2.logs.additivity}</Property>
+        
+        <Property name="tomcat_log4i">${log4j_dir}/logs/log4i.log</Property>
+        <Property name="tomcat_log4e">${log4j_dir}/logs/log4e.log</Property>
+        <Property name="tomcat_payment">${log4j_dir}/logs/trade/paymentLog.log</Property>
+        <Property name="tomcat_jdbchandler">${log4j_dir}/logs/jdbchandler.log</Property>
+        <Property name="tomcat_dubboLogs">${log4j_dir}/logs/dubboLogs.log</Property>
+        
+        <Property name="log_envlevel">${log4j2.env.level}</Property>
+        <Property name="logstash_address">${log4j2.logstash.address}</Property>
+        <Property name="logstash_port">${log4j2.logstash.port}</Property>
+        <Property name="logstash_sysenv">${log4j2.logstash.sysenv}</Property>
+        <Property name="logstash_sysapp">doll-app-ser</Property>
+        <Property name="logstash_syslogname">logstashErrLog.log</Property>
+    </Properties>
+    
+    <Appenders>
+	    <RollingFile name="infoLog" fileName="${tomcat_log4i}" filePattern="${tomcat_log4i}.%d{yyyy-MM-dd}.gz">
+	        <PatternLayout pattern="${pattern_detail}"/>
+      		<ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+            <TimeBasedTriggeringPolicy interval="1" modulate="true" />    
+	    </RollingFile>
+	    <RollingFile name="errorLog" fileName="${tomcat_log4e}" filePattern="${tomcat_log4e}.%d{yyyy-MM-dd}.gz">
+	      <PatternLayout pattern="${pattern_detail}"/>
+    	  <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+	      <TimeBasedTriggeringPolicy interval="1" modulate="true" />   
+	    </RollingFile>
+		<RollingFile name="paymentLog" fileName="${tomcat_payment}" filePattern="${tomcat_payment}.%d{yyyy-MM-dd}.gz">
+	      <PatternLayout pattern="${pattern_detail}"/>
+	      <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+	      <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+	    </RollingFile>
+		<RollingFile name="jdbchandlerLog" fileName="${tomcat_jdbchandler}" filePattern="${tomcat_jdbchandler}.%d{yyyy-MM-dd}.gz">
+	      <PatternLayout pattern="${pattern_detail}"/>
+	      <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+	      <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+	    </RollingFile>
+		<RollingFile name="dubboLogsLog" fileName="${tomcat_dubboLogs}" filePattern="${tomcat_dubboLogs}.%d{yyyy-MM-dd}.gz">
+	      <PatternLayout pattern="${pattern_detail}"/>
+	      <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
+	      <TimeBasedTriggeringPolicy interval="1" modulate="true" />
+	    </RollingFile>
+	    
+	    
+        <Console name="consoleLog">
+	      <PatternLayout pattern="${pattern_console}"/>
+	      <ThresholdFilter level="trace" onMatch="ACCEPT" onMismatch="DENY"/>
+	    </Console>
+	    <Socket name="logstashError" host="${logstash_address}" port="${logstash_port}">
+      		<JSONLog4j2Layout singleLine="false">
+      			<UserField key="s_sysapp" value="${logstash_sysapp}" />
+	      		<UserField key="s_sysenv" value="${logstash_sysenv}" />
+	      		<UserField key="s_syslogname" value="${logstash_syslogname}" />
+      		</JSONLog4j2Layout>
+	      <ThresholdFilter level="error" onMatch="ACCEPT" onMismatch="DENY"/>
+		</Socket>	    
+    </Appenders>
+	    
+    <Loggers>
+    	<!-- Async 异步输出日志  main方法 程序是main方法启动测试的时候，当程序执行完毕，会有日志没有及时刷进去的可能 -->
+        <AsyncRoot level="INFO" includeLocation="true">
+            <AppenderRef ref="consoleLog"/>
+            <AppenderRef ref="infoLog"/>
+            <AppenderRef ref="errorLog"/>
+            <AppenderRef ref="logstashError"/>
+        </AsyncRoot>
+      	<AsyncLogger name="payLog" level="INFO" additivity="false" includeLocation="true"><!-- paymentLog -->
+      		<AppenderRef ref="paymentLog"/>
+      		<AppenderRef ref="logstashError"/>
+      	</AsyncLogger>
+      	<AsyncLogger name="com.alibaba.dubbo" level="INFO" additivity="false" includeLocation="true"><!-- dubboLogsLog -->
+      		<AppenderRef ref="dubboLogsLog"/>
+      		<AppenderRef ref="logstashError"/>
+      	</AsyncLogger>
+      	<AsyncLogger name="com.imlianai.rpc.support.manager.dbhandler" level="INFO" additivity="${log4j_additivity}" includeLocation="true"><!-- jdbchandlerLog -->
+      		<AppenderRef ref="jdbchandlerLog"/>
+      		<AppenderRef ref="logstashError"/>
+      		<AppenderRef ref="infoLog"/>
+            <AppenderRef ref="errorLog"/>
+      	</AsyncLogger>
+      	
+      	<AsyncLogger name="org.springframework" level="ERROR" includeLocation="true"/>
+      	<AsyncLogger name="org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping" level="INFO" includeLocation="true"/>
+      	<AsyncLogger name="com.suanguo" level="${log_envlevel}" includeLocation="true"/>
+      	<AsyncLogger name="com.imlianai.rpc" level="${log_envlevel}" includeLocation="true"/>
+      	
+      	<!-- drop info outPut -->
+      	<AsyncLogger name="org.apache.zookeeper" level="ERROR" includeLocation="true"/>
+      	<AsyncLogger name="org.I0Itec.zkclient.ZkClient" level="ERROR" includeLocation="true"/>
+      	<AsyncLogger name="com.alibaba.dubbo.monitor.dubbo.DubboMonitor" level="ERROR" includeLocation="true"/>
+      	<AsyncLogger name="com.alibaba.dubbo.registry.zookeeper.ZookeeperRegistry" level="ERROR" includeLocation="true"/>
+      	<AsyncLogger name="com.alibaba.dubbo.config.AbstractConfig" level="ERROR" includeLocation="true"/>
+    </Loggers>
+</Configuration>

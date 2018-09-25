@@ -1,0 +1,152 @@
+package com.imlianai.dollpub.app.modules.core.coinfactory.cmd;
+
+import com.alibaba.dubbo.config.annotation.Reference;
+import com.imlianai.dollpub.app.controller.RootCmd;
+import com.imlianai.dollpub.app.modules.core.user.customer.service.CustomerService;
+import com.imlianai.dollpub.app.modules.core.coinfactory.service.PushCoinMachineService;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.OperateReqVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.OperateRespVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.PushCoinBusQueryReqVO;
+import com.imlianai.dollpub.app.modules.core.coinfactory.vo.PushCoinBusQueryRespVO;
+import com.imlianai.dollpub.domain.coinfactory.MachinePushCoin;
+import com.imlianai.dollpub.domain.customer.Customer;
+import com.imlianai.dollpub.machine.iface.IMachineConnectRemoteService;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.manager.aspect.annotations.ApiHandle;
+import io.swagger.annotations.ApiOperation;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
+import javax.ws.rs.Path;
+
+/**
+ * @author wurui
+ * @create 2018-03-28 18:17
+ **/
+@Component("pushCoin")
+public class PushCoinCmd extends RootCmd {
+
+    @Resource
+    private PushCoinMachineService pushCoinMachineService;
+
+    @Resource
+    private CustomerService customerService;
+
+    @Reference
+    private IMachineConnectRemoteService iMachineConnectRemoteService;
+
+
+
+
+//    --------------------------------------------------- 正式(含记录流水) ----------------------------------------------
+
+
+    @ApiHandle
+    @Path("api/pushCoin/apply")
+    @ApiOperation(value = "上机",notes = "上机成功后返回操作ID",httpMethod = "POST",response = OperateRespVO.class,position = 1)
+    public BaseRespVO apply(OperateReqVO vo){
+        Customer customer = customerService.getCustomerById(vo.getCustomerId());
+        if (customer == null) {
+            return new BaseRespVO(-1, false, "上机失败：商户不存在=>" + vo.getCustomerId());
+        }
+
+//        if(pushCoinMachineService.getUserCoin(vo.getUid()) < 10){
+//            return new BaseRespVO(0,false,"余额必须大于10才能上机哦~");
+//        }
+
+        return pushCoinMachineService.apply(vo.getUid(),vo.getBusId(),customer);
+    }
+
+
+    @ApiHandle
+    @Path("api/pushCoin/push")
+    @ApiOperation(value = "投币",notes = "投币相当于上机，投币之后超过10秒未继续投币则自动结束上机",httpMethod = "POST",response = OperateRespVO.class,position = 2)
+    public BaseRespVO push(OperateReqVO vo){
+        Customer customer = customerService.getCustomerById(vo.getCustomerId());
+        if (customer == null) {
+            return new BaseRespVO(-1, false, "上机失败：商户不存在=>" + vo.getCustomerId());
+        }
+//        if(pushCoinMachineService.getUserCoin(vo.getUid()) < 10){
+//            return new BaseRespVO(0,false,"余额必须大于10才能上机哦~");
+//        }
+//        if (pushCoinMachineService.isCanPushCoin(vo.getUid(),vo.getBusId())){
+//            int flag = pushCoinMachineService.consumeHandle(vo.getUid(),vo.getBusId(),"");
+//            if (flag > 0){
+//                return pushCoinMachineService.putCoin(vo.getUid(),vo.getBusId(),customer);
+//            }else {
+//                return new BaseRespVO(0,false,"余额不足,投币失败!");
+//            }
+//        }
+//        return new BaseRespVO(0,false,"投币失败");
+        return pushCoinMachineService.putCoin(vo.getUid(),vo.getBusId(),customer);
+    }
+
+    @ApiHandle
+    @Path("api/pushCoin/operate")
+    @ApiOperation(value = "摆动",notes = "摆动",httpMethod = "POST",response = BaseRespVO.class,position = 3)
+    public BaseRespVO operate(OperateReqVO vo){
+        return pushCoinMachineService.operate(vo.getUid(),vo.getBusId());
+    }
+
+    @ApiHandle
+    @Path("api/pushCoin/query")
+    @ApiOperation(value = "查询结果",notes = "查询结果",httpMethod = "POST",response = PushCoinBusQueryRespVO.class,position = 4)
+    public BaseRespVO query(PushCoinBusQueryReqVO vo){
+        Customer customer = customerService.getCustomerById(vo.getCustomerId());
+        if (customer != null){
+            MachinePushCoin machinePushCoin = pushCoinMachineService.getOptRecordRouter(customer.getGroupId(),vo.getOptId());
+            if (machinePushCoin != null){
+                PushCoinBusQueryRespVO pushCoinBusQueryRespVO = new PushCoinBusQueryRespVO(machinePushCoin);
+                pushCoinBusQueryRespVO.setResult(100);
+                pushCoinBusQueryRespVO.setState(true);
+                pushCoinBusQueryRespVO.setMsg("数据请求成功!");
+                return pushCoinBusQueryRespVO;
+            }
+        }
+        return new BaseRespVO(0,false,"无操作记录!");
+    }
+
+
+    @ApiHandle
+    @Path("api/pushCoin/finish")
+    @ApiOperation(value = "查询结果",notes = "查询结果",httpMethod = "POST",response = PushCoinBusQueryRespVO.class,position = 4)
+    public BaseRespVO finish(OperateReqVO vo){
+        Customer customer = customerService.getCustomerById(vo.getCustomerId());
+        if (customer != null){
+            return pushCoinMachineService.finish(vo.getUid(),vo.getBusId());
+        }
+        return new BaseRespVO(0,false,"当前商户不存在=>" + vo.getCustomerId());
+    }
+
+
+
+
+//    ----------------------------------------  测试指令(不含流水) -------------------------------------------------
+
+
+
+//    @ApiHandle
+//    @Path("api/pushCoin/cast")
+//    @ApiOperation(value = "投币(测试)",notes = "该投币不记录流水，只是单独发投币指令",httpMethod = "POST",response = BaseRespVO.class,position = 5)
+//    public BaseRespVO cast(OperateReqVO vo){
+//        iMachineConnectRemoteService.handleDirective(vo.getBusId(), PushCoinCmdConst.PUT_COIN_CMD,"");
+//        return new BaseRespVO(0,false,"投币(测试)!");
+//    }
+//
+//    @ApiHandle
+//    @Path("api/pushCoin/down")
+//    @ApiOperation(value = "下币(测试)",notes = "该下币不记录流水，只是单独发下币指令",httpMethod = "POST",response = BaseRespVO.class,position = 6)
+//    public BaseRespVO down(OperateReqVO vo){
+//        iMachineConnectRemoteService.handleDirective(vo.getBusId(), PushCoinCmdConst.OUTPUT_SIGNAL_COIN,"");
+//        return new BaseRespVO(0,false,"下币(测试)!");
+//    }
+//
+//    @ApiHandle
+//    @Path("api/pushCoin/put")
+//    @ApiOperation(value = "摇摆(测试)",notes = "单独发摇摆指令",httpMethod = "POST",response = BaseRespVO.class,position = 7)
+//    public BaseRespVO put(OperateReqVO vo){
+//        iMachineConnectRemoteService.handleDirective(vo.getBusId(), PushCoinCmdConst.OUTPUT_SIGNAL,"");
+//        return new BaseRespVO(0,false,"摇摆(测试)!");
+//    }
+
+}

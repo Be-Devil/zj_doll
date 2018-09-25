@@ -1,0 +1,438 @@
+package com.imlianai.zjdoll.app.modules.core.user.service.impl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang.StringUtils;
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.domain.invite.InvitePreRecord;
+import com.imlianai.zjdoll.domain.log.LogPage;
+import com.imlianai.zjdoll.domain.log.LogUserReg;
+import com.imlianai.zjdoll.domain.msg.MsgBodyForbid;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.redpacket.RedpacketRes;
+import com.imlianai.zjdoll.domain.redpacket.UserRedpacket;
+import com.imlianai.zjdoll.domain.redpacket.UserRedpacketLog;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.user.UserAttribute;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.zjdoll.domain.user.UserBase.UserSrcType;
+import com.imlianai.zjdoll.domain.user.UserCode;
+import com.imlianai.zjdoll.domain.user.UserCommon;
+import com.imlianai.zjdoll.domain.user.UserGeneral;
+import com.imlianai.zjdoll.domain.user.UserPhone;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.utils.DateUtils;
+import com.imlianai.rpc.support.utils.LivePropsUtil;
+import com.imlianai.rpc.support.utils.MD5_HexUtil;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.pattern.service.DollBusPatternService;
+import com.imlianai.zjdoll.app.modules.core.trade.catalog.service.ChargeCatalogService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeChargeService;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.attribute.UserAttributeService;
+import com.imlianai.zjdoll.app.modules.core.user.phone.UserPhoneService;
+import com.imlianai.zjdoll.app.modules.core.user.phone.code.UserCodeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserLoginService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.core.user.util.RandomImageGenerator;
+import com.imlianai.zjdoll.app.modules.core.user.vo.UserLoginCheckReqVO;
+import com.imlianai.zjdoll.app.modules.core.user.vo.UserLoginReqVO;
+import com.imlianai.zjdoll.app.modules.core.user.vo.UserLoginRespVO;
+import com.imlianai.zjdoll.app.modules.core.user.vo.UserLoginSyncData;
+import com.imlianai.zjdoll.app.modules.core.user.vo.UserRegisterReqVO;
+import com.imlianai.zjdoll.app.modules.publics.log.service.LogService;
+import com.imlianai.zjdoll.app.modules.publics.msg.leancloud.IMCommonService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.publics.security.SecurityManager;
+import com.imlianai.zjdoll.app.modules.support.busowner.service.BusOwnerService;
+import com.imlianai.zjdoll.app.modules.support.dailytask.service.DailytaskService;
+import com.imlianai.zjdoll.app.modules.support.invite.service.InviteService;
+import com.imlianai.zjdoll.app.modules.support.invite.util.InviteUtil;
+import com.imlianai.zjdoll.app.modules.support.redpacket.constants.RedpacketConstants;
+import com.imlianai.zjdoll.app.modules.support.redpacket.enm.RedpacketEnm;
+import com.imlianai.zjdoll.app.modules.support.redpacket.service.RedpacketService;
+import com.imlianai.zjdoll.app.modules.support.report.service.ReportService;
+import com.imlianai.zjdoll.app.modules.support.signin.service.UserSigninService;
+import com.imlianai.zjdoll.app.modules.support.version.service.VersionService;
+
+@Service
+public class UserLoginServiceImpl implements UserLoginService {
+	
+
+	private final BaseLogger logger = BaseLogger.getLogger(UserLoginServiceImpl.class);
+	
+	private static String SHOP_URL = LivePropsUtil.getString("shop.url"); // 兑换商城h5
+			
+	@Resource
+	private LogService logService;
+	@Resource
+	private UserService userService;
+	@Resource
+	private SecurityManager securityManager;
+	@Resource
+	private UserPhoneService userPhoneService;
+	@Resource
+	private UserCodeService userCodeService;
+	@Resource
+	private IMCommonService iMCommonService;
+	@Resource
+	private TradeService tradeService;
+	@Resource
+	private InviteService inviteService;
+	@Resource
+	private MsgService msgService;
+	@Resource
+	UserSigninService userSigninService;
+	@Resource
+	VersionService versionService;
+	@Resource
+	ChargeCatalogService chargeCatalogService;
+	@Resource
+	RedpacketService redpacketService;
+	@Resource
+	DailytaskService dailytaskService;
+	@Resource
+	DollBusPatternService dollBusPatternService;
+	@Resource
+	UserAttributeService userAttributeService;
+	@Resource
+	ReportService reportService;
+	@Resource
+	TradeChargeService tradeChargeService;
+	@Resource
+	BusOwnerService busOwnerService;
+	
+	@Override
+	public BaseRespVO handleUserRegister(UserRegisterReqVO reqVO) {
+		if(reportService.isForbidImei(reqVO.getImei())){
+			UserLoginRespVO respVo = new UserLoginRespVO();
+			respVo.setResult(ResCodeEnum.LOGIN_BLOCK.getResult());
+			respVo.setMsg(ResCodeEnum.LOGIN_BLOCK.getMsg());
+			respVo.setState(false);
+			MsgBodyForbid msgBodyForbid = new MsgBodyForbid(0, "本设备已被封禁，无法登陆任何账号", "2050-01-01 08:00:00");
+			respVo.setForbid(msgBodyForbid);
+			return respVo;
+		}
+		if (!StringUtil.isNullOrEmpty(reqVO.getNumber())) {
+			Pattern p = Pattern.compile("^[1][0-9]{10}$");
+			Matcher m = p.matcher(reqVO.getNumber());
+			long number = Long.parseLong(reqVO.getNumber());
+			if (m.matches()) {
+				if (userService.getUserBaseByNumber(number) != null) {
+					return new BaseRespVO()
+							.getRespVO(ResCodeEnum.NUMBER_IS_EXISTS);
+				}
+			} else {
+				return new BaseRespVO().getRespVO(ResCodeEnum.NUMBER_IS_ERROR);
+			}
+		} else {
+			return new BaseRespVO().getRespVO(ResCodeEnum.NUMBER_IS_ERROR);
+		}
+		long number = Long.parseLong(reqVO.getNumber());
+		UserPhone userPhone = userPhoneService.getPhoneByNum(number);
+		/*
+		 * if (userPhone.getRegState() != 1) { return new
+		 * BaseRespVO().getRespVO(ResCodeEnum.NUMBER_IS_EXISTS); }
+		 */
+		if (userPhone==null||userPhone.getCheckCode() != reqVO.getCheckCode()) {
+			return new BaseRespVO().getRespVO(ResCodeEnum.CHECKCODE_IS_ERROR);
+		}
+		UserBase userBase = new UserBase(number, reqVO.getPwd());
+		UserGeneral user = new UserGeneral();
+		userService.initUser(userBase, user);
+		if (userBase.getUid() > 0) {// 注册成功
+			long uid = userBase.getUid();
+			String loginKey = securityManager.getLoginSecurityCodeNew(uid);
+			user=userService.getUserGeneral(uid);
+			userBase.setLoginKey(loginKey);
+			UserCommon userCommon = new UserCommon(user, userBase);
+			UserLoginRespVO respVo = new UserLoginRespVO();
+			respVo.setLoginKey(loginKey);
+			respVo.setUser(userCommon);
+			// 登陆同步数据操作
+			UserLoginSyncData resMap = commonLoginProcessSync(user, userBase,
+					reqVO, true);
+			// 登录异步数据操作
+			commonLoginProcessAsyn(user, userBase, reqVO, true);
+			respVo.setAdditionData(resMap);
+			return respVo;
+		} else {
+			return new BaseRespVO().getRespVO(ResCodeEnum.REGISTER_IS_ERROR);
+		}
+	}
+
+	@Override
+	public BaseRespVO handleUserLogin(UserLoginReqVO reqVO) {
+		UserBase userBase = null;
+		if(reportService.isForbidImei(reqVO.getImei())){
+			UserLoginRespVO respVo = new UserLoginRespVO();
+			respVo.setResult(ResCodeEnum.LOGIN_BLOCK.getResult());
+			respVo.setMsg(ResCodeEnum.LOGIN_BLOCK.getMsg());
+			respVo.setState(false);
+			MsgBodyForbid msgBodyForbid = new MsgBodyForbid(0, "本设备已被封禁，无法登陆任何账号", "2050-01-01 08:00:00");
+			respVo.setForbid(msgBodyForbid);
+			return respVo;
+		}
+		boolean isRgister = false;
+		if (reqVO.getSrcType() == UserSrcType.PHONE.type) {// 手机验证码登录
+			if (!StringUtil.isNumber(reqVO.getNumber())) {
+				return new BaseRespVO().getRespVO(ResCodeEnum.NUMBER_IS_ERROR);
+			}
+			UserCode userCode=userCodeService.getCode(reqVO.getNumber());
+			if (!StringUtil.isNullOrEmpty(reqVO.getNumber())) {
+				if (userCode!=null&&userCode.getCount()>=3) {//需要填写验证码但验证码为空
+					if (StringUtil.isNullOrEmpty(reqVO.getLoginCode())) {
+						BaseRespVO respVO=new BaseRespVO(ResCodeEnum.PWD_IS_WRONG_FORBIND);
+						respVO.setData(RandomImageGenerator.getCheckCodeUrl(reqVO.getNumber()));
+						return respVO;
+					}
+					logger.info("handleUserLogin userCode:"+JSON.toJSONString(userCode)+" getLoginCode:"+JSON.toJSONString(reqVO.getLoginCode()));
+					if (!userCode.getCode().equals(reqVO.getLoginCode())) {//验证码错误
+						BaseRespVO respVO=new BaseRespVO(ResCodeEnum.PWD_IS_WRONG_FORBIND);
+						respVO.setData(RandomImageGenerator.getCheckCodeUrl(reqVO.getNumber()));
+						return respVO;
+					}
+				}
+				userCodeService.updateCode(reqVO.getNumber(), null);
+				Pattern p = Pattern.compile("^[1][0-9]{10}$");
+				Matcher m = p.matcher(reqVO.getNumber());
+				long number = Long.parseLong(reqVO.getNumber());
+				if (m.matches()) {
+					userBase = userService.getUserBaseByNumber(number);
+				}
+				if (!m.matches() || userBase == null) {
+					userBase = userService.getUserBase(number);
+				}
+				if (userBase == null) {
+					return new BaseRespVO().getRespVO(ResCodeEnum.PWD_IS_WRONG);
+				}
+			} else {
+				return new BaseRespVO().getRespVO(ResCodeEnum.NUMBER_IS_ERROR);
+			}
+			if ((StringUtils.isBlank(userBase.getPwd()) || !userBase.getPwd()
+					.equals(MD5_HexUtil.xor_MD5((String) reqVO.getPwd())))) {
+				if (userCode.getCount()>=3) {
+					BaseRespVO respVO=new BaseRespVO(ResCodeEnum.PWD_IS_WRONG_FORBIND);
+					respVO.setData(RandomImageGenerator.getCheckCodeUrl(reqVO.getNumber()));
+					return respVO;
+				}
+				return new BaseRespVO().getRespVO(ResCodeEnum.PWD_IS_WRONG);
+			}
+			userCodeService.delCode(reqVO.getNumber());
+		} else {// 第三方登录
+			userBase = userService.getUserBaseBySrc(reqVO.getSrcType(),
+					reqVO.getSrcId(), reqVO.getSrcUnionId());
+			if (userBase == null) {// 第三方自动注册
+				BaseRespVO vo = userService.initUser(reqVO.getSrcType(),
+						reqVO.getSrcId(), reqVO.getSrcUnionId(),
+						reqVO.getSrcToken());
+				if (vo.isState()) {
+					userBase = userService.getUserBaseBySrc(reqVO.getSrcType(),
+							reqVO.getSrcId(), reqVO.getSrcUnionId());
+					userBase.setVersion(reqVO.getVersion());
+					if(reqVO.getSrcType() == 1) { // 微信
+						InvitePreRecord invitePreRecord = inviteService.getInvitePreRecordByUnionId(reqVO.getSrcUnionId());
+						if(invitePreRecord != null && invitePreRecord.getRegState() == 0) {
+							if(inviteService.updatePreInviteRecord(reqVO.getSrcUnionId(), userBase.getUid()) > 0) {
+								redpacketService.saveUserRedpacketRewardRecord(invitePreRecord.getTid(), userBase.getUid());
+								UserGeneral userGeneral = userService.getUserGeneral(userBase.getUid());
+								String textString = "小主成功邀请好友" + userGeneral.getName() + "，快去领红包吧~~";
+								MsgNotice msg=new MsgNotice(invitePreRecord.getTid(), MsgType.NOTICE_SYS.type, textString);
+								msg.setJumpMyRedpacket();
+								msg.setPushMsg(textString);
+								msgService.sendMsg(msg);
+							}
+						}
+					}
+					isRgister = true;
+				} else {
+					return vo;
+				}
+			}
+		}
+		UserGeneral user = userService.getUserGeneral(userBase.getUid());
+		
+		UserAttribute userAttribute =userAttributeService.getUserAttribute(user.getUid());
+		if (user.getValid() != 0) {
+			//获取封禁信息
+			if (userAttribute!=null) {
+				if (StringUtil.isNullOrEmpty(userAttribute.getBanTime())||DateUtils.minuteBetween(userAttribute.getBanTime())>=0) {//已过封号期自动解封
+					List<Long> uids=new ArrayList<Long>();
+					uids.add(userBase.getUid());
+					userService.removeUserBan(uids, null);
+				}else{
+					UserLoginRespVO respVo = new UserLoginRespVO();
+					respVo.setResult(ResCodeEnum.LOGIN_BLOCK.getResult());
+					respVo.setState(false);
+					respVo.setMsg(ResCodeEnum.LOGIN_BLOCK.getMsg());
+					MsgBodyForbid msgBodyForbid = new MsgBodyForbid(userAttribute);
+					respVo.setForbid(msgBodyForbid);
+					return respVo;
+				}
+			}
+		}
+		String loginKey = securityManager.getLoginSecurityCodeNew(userBase
+				.getUid());
+		userBase.setLoginKey(loginKey);
+		UserCommon userCommon = new UserCommon(user, userBase);
+		UserLoginRespVO respVo = new UserLoginRespVO();
+		respVo.setLoginKey(loginKey);
+		respVo.setUser(userCommon);
+		// 登陆同步数据操作
+		UserLoginSyncData resMap = commonLoginProcessSync(user, userBase,
+				reqVO, isRgister);
+		// 登录异步数据操作
+		commonLoginProcessAsyn(user, userBase, reqVO, isRgister);
+		respVo.setAdditionData(resMap);
+		return respVo;
+	}
+
+	@Override
+	public BaseRespVO handleUserLoginCheck(UserLoginCheckReqVO reqVO) {
+		String loginKey = securityManager.getLoginSecurityCode(reqVO.getUid());
+		UserGeneral user = userService.getUserGeneral(reqVO.getUid());
+		if(reportService.isForbidImei(reqVO.getImei())){
+			UserLoginRespVO respVo = new UserLoginRespVO();
+			respVo.setResult(ResCodeEnum.LOGIN_BLOCK.getResult());
+			respVo.setMsg(ResCodeEnum.LOGIN_BLOCK.getMsg());
+			respVo.setState(false);
+			MsgBodyForbid msgBodyForbid = new MsgBodyForbid(user.getUid(), "本设备已被封禁，无法登陆任何账号", "2050-01-01 08:00:00");
+			respVo.setForbid(msgBodyForbid);
+			return respVo;
+		}
+		UserAttribute userAttribute =userAttributeService.getUserAttribute(user.getUid());
+		if (user.getValid() != 0) {
+			//获取封禁信息
+			if (userAttribute!=null) {
+				if (DateUtils.minuteBetween(userAttribute.getBanTime())>=0) {//已过封号期自动解封
+					List<Long> uids=new ArrayList<Long>();
+					uids.add(user.getUid());
+					userService.removeUserBan(uids, null);
+				}else{
+					UserLoginRespVO respVo = new UserLoginRespVO();
+					respVo.setResult(ResCodeEnum.LOGIN_BLOCK.getResult());
+					respVo.setState(false);
+					MsgBodyForbid msgBodyForbid = new MsgBodyForbid(userAttribute);
+					respVo.setForbid(msgBodyForbid);
+					return respVo;
+				}
+			}
+		}
+		UserBase userBase = userService.getUserBase(reqVO.getUid());
+		userBase.setLoginKey(loginKey);
+		UserCommon userCommon = new UserCommon(user, userBase);
+		UserLoginRespVO respVo = new UserLoginRespVO();
+		respVo.setLoginKey(loginKey);
+		respVo.setUser(userCommon);
+		// 登陆同步数据操作
+		UserLoginSyncData resMap = commonLoginProcessSync(user, userBase,
+				reqVO, false);
+		// 登录异步数据操作
+		commonLoginProcessAsyn(user, userBase, reqVO, false);
+		respVo.setAdditionData(resMap);
+		return respVo;
+	}
+
+	// 登录异步数据操作
+	@Override
+	public void commonLoginProcessAsyn(UserGeneral user, UserBase userBase,
+			BaseReqVO reqVo, boolean isRegister) {
+		// 登陆数据更新
+		userService.updateUserDevice(user.getUid(), reqVo);
+		// 日志记录
+		if (isRegister) {
+			LogUserReg log = new LogUserReg(user, reqVo, 0);
+			logService.addWithCity(LogPage.REGISTER, log, this.getClass());
+			tradeChargeService.addUserFirstChargeMsg(user.getUid());
+		} else {
+			logService.add(LogPage.LOGIN, reqVo, this.getClass());
+			logger.info("commonLoginProcessAsyn:handleLoginReward:uid-" + user.getUid());
+			chargeCatalogService.handleLoginReward(user.getUid());
+		}
+	}
+
+	// 登陆同步数据操作
+	@Override
+	public UserLoginSyncData commonLoginProcessSync(UserGeneral user,
+			UserBase userBase, BaseReqVO reqVo, boolean isRegister) {
+		userBase.setImei(reqVo.getImei());
+		UserLoginSyncData reSyncData=new UserLoginSyncData();
+		logger.info("commonLoginProcessSync:uid-" + user.getUid() + ",isRegister=" + isRegister);
+		if (isRegister) {
+			int reward=inviteService.handleRegReward(user, userBase, reqVo);
+			if (reward>0) {
+				reSyncData.setRegReward(reward);
+				reSyncData.setInviteReward(InviteUtil.getInviteTimeLimit()*InviteUtil.getRegReward());
+				reSyncData.setInviteTotalReward(InviteUtil.getInviteTimeLimit()*InviteUtil.getRegReward());
+			}
+			if(reqVo.getVersion() >= 110) { // 版本号1.1.0以上
+				RedpacketRes redpacketRes = new RedpacketRes(RedpacketConstants.REG_AWARD_REDPACK_AMT, RedpacketConstants.REG_AWARD_REDPACK_TITLE, 
+						RedpacketConstants.REG_AWARD_REDPACK_CONTENT);
+				reSyncData.setRedpacketRes(redpacketRes);
+				redpacketService.saveOrUpdateUserRedpacket(user.getUid(), RedpacketConstants.REG_AWARD_REDPACK_AMT, "注册获得" + RedpacketConstants.REG_AWARD_REDPACK_AMT + "元", RedpacketEnm.REWARD_REDPACKET.type, 0);
+				String textString = "恭喜小主获得" + RedpacketConstants.REG_AWARD_REDPACK_AMT +"元红包，合计可提现金额为" + RedpacketConstants.REG_AWARD_REDPACK_AMT + "元。";
+				MsgNotice msg=new MsgNotice(user.getUid(), MsgType.NOTICE_SYS.type, textString);
+				msg.setJumpWithdraw();
+				msg.setPush("新用户红包", textString);
+				msgService.sendMsg(msg);
+			}
+		}
+		TradeAccount account = tradeService.getAccount(user.getUid());
+		if (account != null) {
+			reSyncData.setCoin(account.getCoin());
+		}
+		int signinStatus = 0;
+		/*if(versionService.isAudit(reqVo.getOsType(), reqVo.getChannel(), reqVo.getVersion())) {
+			signinStatus = 2;
+		} else {
+			if(userSigninService.isSignin(user.getUid())) {
+				signinStatus = 1;
+			}
+		}
+		logger.info("commonLoginProcessSync-uid:" + user.getUid() + ",signinStatus=" + signinStatus);*/
+		if(userSigninService.isSignin(user.getUid())) {
+			signinStatus = 1;
+		}
+		reSyncData.setSigninStatus(signinStatus); // 签到状态
+		
+		if(!isRegister && reqVo.getVersion() >= 110) { // 新版本上线红包奖励
+			UserRedpacketLog log = redpacketService.getUserRedpacketLog(user.getUid(), RedpacketEnm.REWARD_REDPACKET.type);
+			if(log == null) {
+				redpacketService.saveOrUpdateUserRedpacket(user.getUid(), RedpacketConstants.REG_AWARD_REDPACK_AMT, "新版本上线获得" + RedpacketConstants.REG_AWARD_REDPACK_AMT + "元红包", RedpacketEnm.REWARD_REDPACKET.type, 0);
+				UserRedpacket userRedPacket = redpacketService.getUserRedpacket(user.getUid()); // 用户红包
+				String textString = "恭喜小主获得" + RedpacketConstants.REG_AWARD_REDPACK_AMT +"元红包，合计可提现金额为" + userRedPacket.getAmount() + "元。";
+				MsgNotice msg=new MsgNotice(user.getUid(), MsgType.NOTICE_SYS.type, textString);
+				msg.setJumpWithdraw();
+				msg.setPushMsg(textString);
+				msgService.sendMsg(msg);
+				RedpacketRes redpacketRes = new RedpacketRes(RedpacketConstants.REG_AWARD_REDPACK_AMT, RedpacketConstants.EVENT_START_AWARD_TITLE, 
+						RedpacketConstants.REG_AWARD_REDPACK_CONTENT);
+				reSyncData.setRedpacketRes(redpacketRes);
+			}
+		}
+		UserRedpacket userRedPacket = redpacketService.getUserRedpacket(user.getUid()); // 用户红包
+		if (userRedPacket != null) {
+			reSyncData.setRedPacketAmt(userRedPacket.getAmount());
+		}
+		reSyncData.setShopUrl(SHOP_URL + "?uid="+user.getUid()+"&loginKey="+userBase.getLoginKey());
+		if(userBase != null && userBase.getVersion() >= 120) {
+			reSyncData.setTaskNum(dailytaskService.getCount(userBase.getUid())); // 可领取活跃度的任务数量
+		}
+		if(busOwnerService.isBusOwner(userBase.getUid())) { // 判断是否为萌主
+			reSyncData.setBusOwnerRes(busOwnerService.getBusOwnerRes(userBase.getUid()));
+		}
+		logger.info("commonLoginProcessSync:reSyncData-" + JSON.toJSONString(reSyncData));
+		return reSyncData;
+	}
+}

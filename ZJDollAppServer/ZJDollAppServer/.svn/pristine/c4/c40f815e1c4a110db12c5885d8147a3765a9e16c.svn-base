@@ -1,0 +1,70 @@
+package com.imlianai.zjdoll.app.modules.core.push.dao.impl;
+
+
+import com.imlianai.dollpub.domain.coinfactory.MachinePushCoin;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import com.imlianai.zjdoll.app.modules.core.push.dao.PushCoinOptRouterDao;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+
+/**
+ * @author wurui
+ * @create 2018-04-03 16:56
+ **/
+@Repository
+public class PushCoinOptRouterDaoImpl implements PushCoinOptRouterDao {
+
+    @Resource
+    private JdbcHandler jdbcHandler;
+
+
+    @Override
+    public long insert(MachinePushCoin pushCoin) {
+        String insert = "INSERT INTO push_coin_opt_88 (optId,deviceId,busId,uid,customerId,price,rate,startTime,createTime) VALUES(?,?,?,?,?,?,?,NOW(),NOW())";
+        return jdbcHandler.executeSql(insert,pushCoin.getOptId(),pushCoin.getDeviceId(),pushCoin.getBusId(),pushCoin.getUid(),pushCoin.getCustomerId(),pushCoin.getPrice(),pushCoin.getRate());
+    }
+
+    private String select = "SELECT * FROM push_coin_opt_88";
+
+    @Override
+    public MachinePushCoin getOne(long optId) {
+        return jdbcHandler.queryOneBySql(MachinePushCoin.class,select + " WHERE optId=?",optId);
+    }
+
+    @Override
+    public MachinePushCoin getOne(long optId, long uid) {
+        return jdbcHandler.queryOneBySql(MachinePushCoin.class,select + " WHERE optId=? AND uid=?",optId,uid);
+    }
+
+
+    @Override
+    public int updateCoin(long optId, int eCoin,int vCoin, int type) {
+        String intoCoin = "UPDATE push_coin_opt_88 SET intoCoin=intoCoin+?,vIntoCoin=vIntoCoin+?,endTime=NOW() WHERE state<>1 AND optId=?";
+        String outCoin = "UPDATE push_coin_opt_88 SET outCoin=outCoin+?,vOutCoin=vOutCoin+?,endTime=NOW() WHERE state<>1 AND optId=?";
+        //投币
+        if (type == 0){
+            return jdbcHandler.executeSql(intoCoin,eCoin,vCoin,optId);
+        }
+        //出币
+        if (type == 1){
+            return jdbcHandler.executeSql(outCoin,eCoin,vCoin,optId);
+        }
+        return 0;
+    }
+
+    @Override
+    public int updateState(long optId) {
+        return jdbcHandler.executeSql("UPDATE push_coin_opt_88 SET state=1,endTime=NOW() WHERE state<>1 AND optId=?",optId);
+    }
+
+    @Override
+    public int updateJewel(int jewel,long optId) {
+        return jdbcHandler.executeSql("UPDATE push_coin_opt_88 SET jewel=jewel+?,endTime=NOW() WHERE jewelStatus<>1 AND state<>1 AND optId=?",jewel,optId);
+    }
+
+    @Override
+    public int updateJewelStatus(long optId) {
+        return jdbcHandler.executeSql("UPDATE push_coin_opt_88 SET jewelStatus=1,endTime=NOW() WHERE jewelStatus<>1 AND optId=?",optId);
+    }
+}

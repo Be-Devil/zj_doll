@@ -1,0 +1,594 @@
+package com.imlianai.zjdoll.app.modules.support.invite.service;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+
+import javax.annotation.Resource;
+
+
+import org.springframework.stereotype.Service;
+
+import com.alibaba.fastjson.JSON;
+import com.imlianai.zjdoll.constants.ChannelConstants;
+import com.imlianai.zjdoll.domain.invite.InvitePreRecord;
+import com.imlianai.zjdoll.domain.invite.InviteRelation;
+import com.imlianai.zjdoll.domain.invite.InviteRewardRecord;
+import com.imlianai.zjdoll.domain.invite.InviteRewardRecord.InviteRewardState;
+import com.imlianai.zjdoll.domain.invite.OfficialCode;
+import com.imlianai.zjdoll.domain.msg.MsgNotice;
+import com.imlianai.zjdoll.domain.msg.MsgType;
+import com.imlianai.zjdoll.domain.trade.TradeCostType;
+import com.imlianai.zjdoll.domain.trade.TradeRecord;
+import com.imlianai.zjdoll.domain.trade.TradeType;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import com.imlianai.zjdoll.domain.user.UserBase.UserSrcType;
+import com.imlianai.zjdoll.domain.user.UserGeneral;
+import com.imlianai.rpc.support.common.BaseLogger;
+import com.imlianai.rpc.support.common.cmd.BaseReqVO;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.common.cmd.ResCodeEnum;
+import com.imlianai.rpc.support.common.exception.PrintException;
+import com.imlianai.rpc.support.common.exception.TradeOperationException;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.app.modules.publics.msg.service.MsgService;
+import com.imlianai.zjdoll.app.modules.support.event.invite20180320.domain.Event20180320InviteEnergyRank;
+import com.imlianai.zjdoll.app.modules.support.event.invite20180320.domain.Event20180320InviteUsedTimes;
+import com.imlianai.zjdoll.app.modules.support.event.invite20180320.service.Event20180320InviteEnergyService;
+import com.imlianai.zjdoll.app.modules.support.event.invite20180320.util.Event20180320InviteUtil;
+import com.imlianai.zjdoll.app.modules.support.invite.dao.InviteDAO;
+import com.imlianai.zjdoll.app.modules.support.invite.util.InviteUtil;
+import com.imlianai.zjdoll.app.modules.support.redpacket.constants.RedpacketConstants;
+import com.imlianai.zjdoll.app.modules.support.redpacket.enm.RedpacketEnm;
+import com.imlianai.zjdoll.app.modules.support.redpacket.service.RedpacketService;
+
+@Service
+public class InviteServiceImpl implements InviteService {
+
+    private final BaseLogger logger = BaseLogger
+            .getLogger(InviteServiceImpl.class);
+    @Resource
+    private InviteDAO inviteDAO;
+    @Resource
+    private UserService userService;
+
+    @Resource
+    private TradeService tradeService;
+
+    @Resource
+    private MsgService msgService;
+    @Resource
+    RedpacketService redpacketService;
+
+    @Resource
+    private Event20180320InviteEnergyService event20180320InviteEnergyService;
+
+    @Override
+    public BaseRespVO addInvite(long uid, long inviteUid, long code) {
+        if (inviteDAO.updateInviteUsedTimes(inviteUid) > 0) {
+            if (inviteDAO.addInvite(uid, inviteUid) > 0) {
+
+                int eventStatus = Event20180320InviteUtil.eventStatus();
+                if (eventStatus == 1) {
+
+                    //邀请者的上限  >=30 自己不再获币,但是可以获得能量值
+                    InviteRelation relation = getInviteRelationByUid(inviteUid);
+                    if (event20180320InviteEnergyService.init(inviteUid) > 0){
+
+                        int usedTimes = event20180320InviteEnergyService.getUsedTimeByUid(inviteUid).getUsedTimes();
+
+                        if (Event20180320InviteUtil.isTopLimit(usedTimes)) {
+                            event20180320InviteEnergyService.inviteUidEnergyHandle(uid, inviteUid, code, "邀请>30人，获200能量值");
+
+                            //自己不的币 好友得币
+                            TradeRecord tradeRecord = new TradeRecord(uid, uid,
+                                    TradeType.INVITE_REWARD.type, (int) code,
+                                    InviteUtil.getRegReward(),
+                                    TradeCostType.COST_COIN.type, "输入好友邀请码" + code);
+                            try {
+                                tradeService.charge(tradeRecord);
+                                String bodyString = "使用了邀请码，获得" + InviteUtil.getRegReward()
+                                        + "币。";
+                                MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type,
+                                        bodyString);
+                                msg.setPushMsg(bodyString);
+                                msg.setJumpInvite();
+                                msgService.sendMsg(msg);
+                            } catch (TradeOperationException e) {
+                                PrintException.printException(logger, e);
+                            }
+                        } else {
+
+                            //能量奖励
+                            event20180320InviteEnergyService.inviteUidEnergyHandle(uid, inviteUid, code, "邀请奖励能量值");
+
+
+                            InviteRewardRecord record = new InviteRewardRecord(uid,
+                                    inviteUid, InviteUtil.getRegReward(), 1, "邀请注册");
+                            record.setState(InviteRewardState.WAIT_GAIN.type);
+                            inviteDAO.addRewardRecord(record);
+                            inviteDAO.addInviteTotalRecord(record);
+
+                            record = new InviteRewardRecord(uid, inviteUid,
+                                    InviteUtil.getSuccessReward(), 2, "邀请助攻");
+                            inviteDAO.addRewardRecord(record);
+                            TradeRecord tradeRecord = new TradeRecord(uid, uid,
+                                    TradeType.INVITE_REWARD.type, (int) code,
+                                    InviteUtil.getRegReward(),
+                                    TradeCostType.COST_COIN.type, "输入好友邀请码" + code);
+                            try {
+                                tradeService.charge(tradeRecord);
+                                String bodyString = "使用了邀请码，获得" + InviteUtil.getRegReward()
+                                        + "币。";
+                                MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type,
+                                        bodyString);
+                                msg.setPushMsg(bodyString);
+                                msg.setJumpInvite();
+                                msgService.sendMsg(msg);
+                            } catch (TradeOperationException e) {
+                                PrintException.printException(logger, e);
+                            }
+                        }
+                        UserGeneral user = userService.getUserGeneral(uid);
+                        //  >30 判断
+                        if (Event20180320InviteUtil.isTopLimit(usedTimes)) {
+
+                            //邀请活动消息
+                            event20180320InviteEnergyService.sendInviteSuccessMsg(user, Event20180320InviteUtil.getEnergyValue(usedTimes));
+
+                        } else {
+
+                            String bodyString = "成功邀请朋友 " + user.getName() + " 加入，快来领取"
+                                    + InviteUtil.getRegReward() + "币吧~~朋友抓到第1个娃娃您还会有"
+                                    + InviteUtil.getSuccessReward() + "币奖励哟~~";
+                            MsgNotice msg = new MsgNotice(inviteUid,
+                                    MsgType.NOTICE_SYS.type, bodyString);
+                            msg.setPushMsg(bodyString);
+                            msg.setJumpInvite();
+                            msgService.sendMsg(msg);
+
+                            //邀请活动消息
+                            event20180320InviteEnergyService.sendInviteSuccessMsg(user, Event20180320InviteUtil.getEnergyValue(usedTimes));
+
+                        }
+                        BaseRespVO respVO = new BaseRespVO(0, true, "成功输入邀请码，获得"
+                                + InviteUtil.getRegReward() + "币奖励~~");
+                        respVO.setData(InviteUtil.getRegReward());
+                        userService.updateInviteNotice(inviteUid, 1);
+                        return respVO;
+
+                    }else {
+
+                    }
+                }
+
+
+                // 以下跟活动无关
+
+                InviteRewardRecord record = new InviteRewardRecord(uid,
+                        inviteUid, InviteUtil.getRegReward(), 1, "邀请注册");
+                record.setState(InviteRewardState.WAIT_GAIN.type);
+                inviteDAO.addRewardRecord(record);
+                inviteDAO.addInviteTotalRecord(record);
+
+                record = new InviteRewardRecord(uid, inviteUid,
+                        InviteUtil.getSuccessReward(), 2, "邀请助攻");
+                inviteDAO.addRewardRecord(record);
+                TradeRecord tradeRecord = new TradeRecord(uid, uid,
+                        TradeType.INVITE_REWARD.type, (int) code,
+                        InviteUtil.getRegReward(),
+                        TradeCostType.COST_COIN.type, "输入好友邀请码" + code);
+                try {
+                    tradeService.charge(tradeRecord);
+                    String bodyString = "使用了邀请码，获得" + InviteUtil.getRegReward()
+                            + "币。";
+                    MsgNotice msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type,
+                            bodyString);
+                    msg.setPushMsg(bodyString);
+                    msg.setJumpInvite();
+                    msgService.sendMsg(msg);
+                } catch (TradeOperationException e) {
+                    PrintException.printException(logger, e);
+                }
+                UserGeneral user = userService.getUserGeneral(uid);
+                String bodyString = "成功邀请朋友 " + user.getName() + " 加入，快来领取"
+                        + InviteUtil.getRegReward() + "币吧~~朋友抓到第1个娃娃您还会有"
+                        + InviteUtil.getSuccessReward() + "币奖励哟~~";
+                MsgNotice msg = new MsgNotice(inviteUid,
+                        MsgType.NOTICE_SYS.type, bodyString);
+                msg.setPushMsg(bodyString);
+                msg.setJumpInvite();
+                msgService.sendMsg(msg);
+                BaseRespVO respVO = new BaseRespVO(0, true, "成功输入邀请码，获得"
+                        + InviteUtil.getRegReward() + "币奖励~~");
+                respVO.setData(InviteUtil.getRegReward());
+                userService.updateInviteNotice(inviteUid, 1);
+
+                return respVO;
+
+            } else {
+                return new BaseRespVO(ResCodeEnum.INVITE_EXHAUST);
+            }
+        } else {
+            return new BaseRespVO(ResCodeEnum.INVITE_EXHAUST);
+        }
+    }
+
+    @Override
+    public long getInviteId(long uid) {
+        logger.info("getInviteId uid:" + uid);
+        initInviteCode(uid);
+        return inviteDAO.getInviteId(uid);
+    }
+
+    @Override
+    public void handleCatchDollSuccess(long uid) {
+        InviteRewardRecord record = inviteDAO.getInviteRewardRecord(uid, 2);
+        if (record != null
+                && record.getState() == InviteRewardState.NO_OAUTH.type) {
+            if (inviteDAO.updateRewardRecord(record.getId(),
+                    InviteRewardState.WAIT_GAIN.type) > 0) {
+                UserGeneral user = userService.getUserGeneral(uid);
+                try{
+
+                    int eventStatus = Event20180320InviteUtil.eventStatus();
+                    if (eventStatus == 1) {
+                        InviteRelation relation_1 = getInviteRelationByUid(uid);
+                        if (null != relation_1 &&  relation_1.getInviteUid() > 0){
+                            Event20180320InviteUsedTimes inviteUsedTimes = event20180320InviteEnergyService.getUsedTimeByUid(relation_1.getInviteUid());
+                            if (null != inviteUsedTimes){
+                                int usedTimes = inviteUsedTimes.getUsedTimes();
+                                logger.info("邀请的好友抓到第一个娃娃=>" + JSON.toJSONString(relation_1) + ", usedTimes=>" + usedTimes);
+
+                                if (Event20180320InviteUtil.isTopLimit(usedTimes)) {
+                                    //消息
+                                    event20180320InviteEnergyService.handleCatchDollSuccess(uid);
+                                    //邀请活动---邀请的好友成功抓到第一个娃娃奖励50能量
+                                    event20180320InviteEnergyService.successEnergyHandle(uid);
+
+                                } else {
+                                    String bodyString = "您邀请的朋友 " + user.getName()
+                                            + " 抓到第1个娃娃啦，快来领取" + InviteUtil.getSuccessReward()
+                                            + "币奖励吧~~";
+                                    MsgNotice msg = new MsgNotice(record.getInviteUid(),
+                                            MsgType.NOTICE_SYS.type, bodyString);
+                                    msg.setPushMsg(bodyString);
+                                    msg.setJumpInvite();
+                                    msgService.sendMsg(msg);
+                                    userService.updateInviteNotice(record.getInviteUid(), 1);
+                                    user = userService.getUserGeneral(record.getInviteUid());
+                                    bodyString = "您抓到了第1个娃娃，邀请您到萌趣抓娃娃的好友 " + user.getName()
+                                            + " 获得了" + InviteUtil.getSuccessReward() + "币奖励~~";
+                                    msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type, bodyString);
+                                    msg.setPushMsg(bodyString);
+                                    msg.setJumpInvite();
+                                    msgService.sendMsg(msg);
+                                    inviteDAO.addInviteTotalRecord(record);
+
+
+                                    //邀请活动---邀请的好友成功抓到第一个娃娃奖励50能量
+                                    event20180320InviteEnergyService.successEnergyHandle(uid);
+                                }
+                            }
+                        }
+                    } else {
+
+                        String bodyString = "您邀请的朋友 " + user.getName()
+                                + " 抓到第1个娃娃啦，快来领取" + InviteUtil.getSuccessReward()
+                                + "币奖励吧~~";
+                        MsgNotice msg = new MsgNotice(record.getInviteUid(),
+                                MsgType.NOTICE_SYS.type, bodyString);
+                        msg.setPushMsg(bodyString);
+                        msg.setJumpInvite();
+                        msgService.sendMsg(msg);
+                        userService.updateInviteNotice(record.getInviteUid(), 1);
+                        user = userService.getUserGeneral(record.getInviteUid());
+                        bodyString = "您抓到了第1个娃娃，邀请您到萌趣抓娃娃的好友 " + user.getName()
+                                + " 获得了" + InviteUtil.getSuccessReward() + "币奖励~~";
+                        msg = new MsgNotice(uid, MsgType.NOTICE_SYS.type, bodyString);
+                        msg.setPushMsg(bodyString);
+                        msg.setJumpInvite();
+                        msgService.sendMsg(msg);
+                        inviteDAO.addInviteTotalRecord(record);
+
+                    }
+                }catch (Exception e){
+                    logger.info(e.getMessage());
+                }
+            }
+        }
+    }
+
+    @Override
+    public BaseRespVO gainInviteReward(long uid, long rewardId) {
+        InviteRewardRecord record = inviteDAO.getInviteRewardRecord(rewardId);
+        if (record != null && record.getInviteUid() == uid) {
+            if (record.getState() == InviteRewardState.WAIT_GAIN.type) {
+                if (inviteDAO.updateRewardRecord(rewardId,
+                        InviteRewardState.GAINED.type) > 0) {
+                    UserGeneral user = userService.getUserGeneral(record
+                            .getUid());
+                    String tradeRemark = "成功邀请好友"
+                            + user.getName();
+                    String bodyString = "恭喜你~成功邀请好友 " + user.getName()
+                            + "，获得" + record.getReward() + "币。";
+                    if (record.getType() == 1) {//注册
+                        tradeRemark = "成功邀请好友"
+                                + user.getName();
+                        bodyString = "恭喜你~成功邀请好友 " + user.getName()
+                                + "，获得" + record.getReward() + "币。";
+                    } else if (record.getType() == 2) {//捉取成功
+                        tradeRemark = "好友"
+                                + user.getName() + " 成功抓到娃娃";
+                        bodyString = "恭喜你~成功领取好友 " + user.getName()
+                                + "的助攻奖励，获得" + record.getReward() + "币。";
+                    }
+                    TradeRecord tradeRecord = new TradeRecord(uid, uid,
+                            TradeType.INVITE_REWARD.type,
+                            (int) record.getUid(), record.getReward(),
+                            TradeCostType.COST_COIN.type, tradeRemark);
+                    try {
+                        tradeService.charge(tradeRecord);
+
+                        MsgNotice msg = new MsgNotice(uid,
+                                MsgType.NOTICE_SYS.type, bodyString);
+                        msg.setPushMsg(bodyString);
+                        msg.setJumpInvite();
+                        msgService.sendMsg(msg);
+                    } catch (TradeOperationException e) {
+                        PrintException.printException(logger, e);
+                    }
+                    BaseRespVO respVO = new BaseRespVO(0, true, "成功领取"
+                            + record.getReward() + "币");
+                    respVO.setData(record.getReward());
+                    userService.updateInviteNotice(uid, -1);
+                    return respVO;
+                } else {
+                    return new BaseRespVO(0, false, "领取失败");
+                }
+            } else {
+                return new BaseRespVO(0, false, "您尚未达到领取条件或已领取");
+            }
+        }
+        return new BaseRespVO(0, false, "您不能领取该笔奖励");
+    }
+
+    @Override
+    public List<InviteRewardRecord> getInviteRewardRecords(long uid, int type,
+                                                           int page, int pageSize) {
+        List<InviteRewardRecord> res = new ArrayList<InviteRewardRecord>();
+        List<InviteRewardRecord> list = inviteDAO.getInviteRewardRecords(uid,
+                type, page, pageSize);
+        if (!StringUtil.isNullOrEmpty(list)) {
+            List<Long> uidsList = new ArrayList<Long>();
+            for (InviteRewardRecord inviteRewardRecord : list) {
+                uidsList.add(inviteRewardRecord.getUid());
+            }
+            Map<Long, UserGeneral> userMap = userService
+                    .getUserGeneralMap(uidsList);
+            for (InviteRewardRecord inviteRewardRecord : list) {
+                UserGeneral userGeneral = userMap.get(inviteRewardRecord
+                        .getUid());
+                if (userGeneral != null) {
+                    inviteRewardRecord.setName(userGeneral.getName());
+                    inviteRewardRecord.setHead(userGeneral.getHead());
+                    res.add(inviteRewardRecord);
+                }
+            }
+        }
+        return res;
+    }
+
+    private static final int rewardCoin = InviteUtil.getRewardFirstReg();// 30;
+
+    @Override
+    public int handleRegReward(UserGeneral user, UserBase base, BaseReqVO reqVo) {
+        logger.info("handleRegReward uid:" + base.getUid() + " imei:" + base.getImei());
+        int reward = 0;
+        if (base != null) {
+            if (inviteDAO.hasGainRegReward(base.getImei()) == 0) {
+                reward = rewardCoin;
+                logger.info("handleRegReward uid:" + base.getUid() + " imei:" + base.getImei() + " reward:" + reward);
+                inviteDAO.addGainRegReward(base.getUid(), base.getImei());
+                TradeRecord record = new TradeRecord(base.getUid(),
+                        base.getUid(), TradeType.REG_REWARD.type, 0, reward,
+                        TradeCostType.COST_COIN.type, "新用户注册奖励" + reward + "币");
+                try {
+                    tradeService.charge(record);
+                    
+                    String channNameString="萌趣抓娃娃";
+                    try {
+                    	ChannelConstants channelConstants = ChannelConstants.getByThread();
+                    	if (channelConstants!=null&&!StringUtil.isNullOrEmpty(channelConstants.appName())) {
+                        	channNameString=channelConstants.appName();
+    					}
+					} catch (Exception e) {
+					}
+                    String bodyString = "欢迎来到"+channNameString+"，新用户奖励" + rewardCoin + "币，邀请好友注册最高可获" + InviteUtil.getRegReward() * InviteUtil.getInviteTimeLimit() + "币哟~~";
+                    MsgNotice msg = new MsgNotice(base.getUid(),
+                            MsgType.NOTICE_SYS.type, bodyString);
+                    msg.setPushMsg(bodyString);
+                    msg.setJumpInvite();
+                    msgService.sendMsg(msg);
+                } catch (TradeOperationException e) {
+                    PrintException.printException(logger, e);
+                }
+            }
+        }
+        return reward;
+    }
+
+    /**
+     * 初始化邀请码
+     *
+     * @param uid
+     */
+    private void initInviteCode(long uid) {
+        InviteRelation inviteRelation = inviteDAO.getInviteRelationByUid(uid);
+        logger.info("initInviteCode uid:" + uid + " inviteRelation:"
+                + JSON.toJSONString(inviteRelation));
+        if (inviteRelation == null || inviteRelation.getCode() == 0) {
+            UserBase base = userService.getUserBase(uid);
+            if (base != null && base.getSrcType() == UserSrcType.WECHAT.type) {
+                long code = 0;
+                for (int i = 0; i < 10; i++) {// 最多重试10次
+                    long location = StringUtil.getRanDom(10423527, 98833998);
+                    code = inviteDAO.getInviteCode(location);
+                    if (code > 0)
+                        break;
+                }
+                if (code > 0) {
+                    inviteDAO.initInviteCode(uid, code);
+                }
+            }
+        }
+    }
+
+    @Override
+    public InviteRelation getInviteRelationByCode(long code) {
+        return inviteDAO.getInviteRelationByCode(code);
+    }
+
+    @Override
+    public InviteRelation getInviteRelationByUid(long uid) {
+        initInviteCode(uid);
+        return inviteDAO.getInviteRelationByUid(uid);
+    }
+
+    @Override
+    public BaseRespVO addOfficalCode(long uid, String imei, long code) {
+        OfficialCode officialCode = inviteDAO.getOfficialCode(code);
+        if (officialCode != null) {
+            if (officialCode.getNumber() >= officialCode.getConsumeNum()) {
+                if (inviteDAO.hasGainOfficialCode(uid, officialCode.getId()) == 0
+                        && inviteDAO.hasGainOfficialCode(imei,
+                        officialCode.getId()) == 0) {
+                    if (inviteDAO.consumeOfficialCode(officialCode.getId(),
+                            code) > 0) {
+                        int coin = 0;
+                        try {
+                            if (officialCode
+                                    .getCoinMax() - officialCode.getCoinMin() == 0) {
+                                coin = officialCode.getCoinMin();
+                            } else {
+                                coin = new Random().nextInt(officialCode
+                                        .getCoinMax() - officialCode.getCoinMin())
+                                        + officialCode.getCoinMin();
+                            }
+                        } catch (Exception e) {
+                            PrintException.printException(logger, e);
+                        }
+                        if (coin == 0) {
+                            return new BaseRespVO(ResCodeEnum.INVITE_EXHAUST);
+                        }
+                        TradeRecord record = new TradeRecord(uid, uid,
+                                TradeType.INVITE_OFFICAL_REWARD.type,
+                                (int) code, coin, TradeCostType.COST_COIN.type,
+                                "使用了官方福利码" + code + "，获得" + coin + "币。");
+                        try {
+                            tradeService.charge(record);
+                            inviteDAO.addGainOfficialRecord(uid, imei,
+                                    officialCode.getId(), code, coin);
+                            inviteDAO.updateOfficialCodeCoin(
+                                    officialCode.getId(), coin);
+                            String bodyString = "使用了官方福利码，获得" + coin + "币。";
+                            MsgNotice msg = new MsgNotice(uid,
+                                    MsgType.NOTICE_SYS.type, bodyString);
+                            msg.setPushMsg(bodyString);
+                            msg.setJumpInvite();
+                            msgService.sendMsg(msg);
+                            BaseRespVO respVO = new BaseRespVO(0, true, "成功领取"
+                                    + coin + "币");
+                            respVO.setData(coin);
+                            return respVO;
+                        } catch (Exception e) {
+                            PrintException.printException(logger, e);
+                        }
+                    }
+                } else {
+                    return new BaseRespVO(0, false, "您已使用过该福利码");
+                }
+            }
+            return new BaseRespVO(ResCodeEnum.INVITE_EXHAUST);
+        } else {
+            return new BaseRespVO(ResCodeEnum.INVITE_ERROR_DOLL);
+        }
+    }
+
+    @Override
+    public List<InviteRewardRecord> getInviteRewardRecords(int type, int page,
+                                                           int pageSize) {
+        List<InviteRewardRecord> list = inviteDAO.getInviteRewardRecords(type,
+                page, pageSize);
+        List<InviteRewardRecord> res = new ArrayList<InviteRewardRecord>();
+        if (!StringUtil.isNullOrEmpty(list)) {
+            List<Long> uidsList = new ArrayList<Long>();
+            for (InviteRewardRecord inviteRewardRecord : list) {
+                uidsList.add(inviteRewardRecord.getUid());
+                uidsList.add(inviteRewardRecord.getInviteUid());
+            }
+            Map<Long, UserGeneral> userMap = userService
+                    .getUserGeneralMap(uidsList);
+            for (InviteRewardRecord inviteRewardRecord : list) {
+                UserGeneral userGeneral = userMap.get(inviteRewardRecord
+                        .getUid());
+                UserGeneral userGenerali = userMap.get(inviteRewardRecord
+                        .getInviteUid());
+                if (userGeneral != null && userGenerali != null) {
+                    inviteRewardRecord.setName(userGeneral.getName());
+                    inviteRewardRecord.setHead(userGenerali.getName());
+                    res.add(inviteRewardRecord);
+                }
+            }
+        }
+        return res;
+    }
+
+    @Override
+    public int addInviteCodeWrongTimes(long uid) {
+        return inviteDAO.getInviteCodeWrongTimes(uid);
+    }
+
+    @Override
+    public int getInviteCodeWrongTimes(long uid) {
+        return inviteDAO.getInviteCodeWrongTimes(uid);
+    }
+
+    @Override
+    public int addPreInviteRecord(long tid, String unionId) {
+        return inviteDAO.addPreInviteRecord(tid, unionId);
+    }
+
+    @Override
+    public int updatePreInviteRecord(String unionId, long regUid) {
+        return inviteDAO.updatePreInviteRecord(unionId, regUid);
+    }
+
+    @Override
+    public List<InvitePreRecord> getInvitePreRecordList(Long uid, int regState, int size) {
+        return inviteDAO.getInvitePreRecordList(uid, regState, size);
+    }
+
+    @Override
+    public InvitePreRecord getInvitePreRecordByUnionId(String unionId) {
+        return inviteDAO.getInvitePreRecordByUnionId(unionId);
+    }
+
+    @Override
+    public int getInvitePreRecordByUid(Long uid, int regState) {
+        return inviteDAO.getInvitePreRecordByUid(uid, regState);
+    }
+
+	@Override
+	public void handleUserParent(long uid, long sourceUid) {
+		UserBase base=userService.getUserBase(sourceUid);
+		if (base!=null) {
+			String parentChannel=StringUtil.isNullOrEmpty(base.getParentChannel())?base.getChannel():base.getParentChannel();
+			userService.updateParentChannel(uid, parentChannel);
+		}
+	}
+
+}

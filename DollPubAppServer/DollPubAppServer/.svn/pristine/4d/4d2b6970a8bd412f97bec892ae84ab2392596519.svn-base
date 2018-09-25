@@ -1,0 +1,36 @@
+package com.imlianai.dollpub.app.modules.support.robot.dao;
+
+import com.imlianai.dollpub.domain.user.UserGeneral;
+import com.imlianai.rpc.support.manager.dbhandler.JdbcHandler;
+import org.springframework.stereotype.Repository;
+
+import javax.annotation.Resource;
+import java.util.List;
+
+@Repository
+public class DollRobotDaoImpl implements DollRobotDao {
+
+	@Resource
+	private JdbcHandler jdbcHandler;
+
+	@Override
+	public List<UserGeneral> getInitUserData() {
+		return jdbcHandler.queryBySql(UserGeneral.class, "select * from robot_user_general");
+	}
+
+	@Override
+	public void addRobotPool(long uid, int gender) {
+		jdbcHandler.executeSql("insert into robot_user_pool (uid,gender,status,time) value (?,?,?,now())", uid, gender,0);
+	}
+
+	@Override
+	public List<Long> getRobotPool() {
+		return jdbcHandler.queryBySql(Long.class, "select uid from robot_user_pool");
+	}
+
+	@Override
+	public Long getRobotPoolUid(long uid) {
+		return jdbcHandler.queryOneBySql(Long.class,"select uid from robot_user_pool where uid=?",uid);
+	}
+
+}

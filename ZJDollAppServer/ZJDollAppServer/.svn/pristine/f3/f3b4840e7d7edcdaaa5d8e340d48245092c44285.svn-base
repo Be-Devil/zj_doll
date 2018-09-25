@@ -1,0 +1,84 @@
+package com.imlianai.zjdoll.app.modules.core.push.virtual.service;
+
+import com.google.common.collect.Maps;
+import com.imlianai.rpc.support.common.cmd.BaseRespVO;
+import com.imlianai.rpc.support.utils.StringUtil;
+import com.imlianai.zjdoll.app.modules.core.doll.bus.DollBusService;
+import com.imlianai.zjdoll.app.modules.core.doll.service.DollService;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.util.ZengjingVirtualUtils;
+import com.imlianai.zjdoll.app.modules.core.push.virtual.vo.EntryVirtualRoomReqVO;
+import com.imlianai.zjdoll.app.modules.core.trade.service.TradeService;
+import com.imlianai.zjdoll.app.modules.core.user.service.UserService;
+import com.imlianai.zjdoll.domain.doll.DollBus;
+import com.imlianai.zjdoll.domain.trade.TradeAccount;
+import com.imlianai.zjdoll.domain.user.UserBase;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.Map;
+
+/**
+ * @author wurui
+ * @create 2018-07-04 11:53
+ **/
+@Service
+public class PushCoinVirtualServiceImpl implements PushCoinVirtualService {
+
+    @Resource
+    private DollBusService dollBusService;
+
+    @Resource
+    private UserService userService;
+
+    @Resource
+    private DollService dollService;
+
+    @Resource
+    private TradeService tradeService;
+
+    @Override
+    public BaseRespVO entryVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO) {
+        DollBus dollBus = dollBusService.getDollBus(reqVO.getBusId());
+        if (dollBus != null && dollBus.getVirtual() == 1 && dollBus.getValid() == 1 && dollBus.getType() == 1){
+            UserBase userBase = userService.getUserBase(reqVO.getUid());
+            if (userBase != null){
+                BaseRespVO respVO = ZengjingVirtualUtils.entryVirtualCoinPushRoom(userBase.getUid(),Integer.parseInt(dollBus.getDeviceId()));
+                if (!StringUtil.isNullOrEmpty(respVO)){
+                    if (respVO.isState()){
+
+                        Map<String,Object> respMap = Maps.newHashMap();
+
+                        dollService.enterBus(userBase.getUid(),dollBus.getBusId());
+                        TradeAccount tradeAccount = tradeService.getAccount(reqVO.getUid());
+                        if (tradeAccount != null) {
+                            respMap.put("coin",tradeAccount.getCoin());
+                            respMap.put("jewel",tradeAccount.getJewel());
+                        }
+
+                        return new BaseRespVO(respMap);
+
+                    }
+                }
+            }
+        }
+        return new BaseRespVO(0,false,"房间类型错误或机器已下架");
+    }
+
+    @Override
+    public BaseRespVO laveVirtualCoinPushRoom(EntryVirtualRoomReqVO reqVO) {
+        DollBus dollBus = dollBusService.getDollBus(reqVO.getBusId());
+        if (dollBus != null && dollBus.getVirtual() == 1 && dollBus.getValid() == 1 && dollBus.getType() == 1){
+            UserBase userBase = userService.getUserBase(reqVO.getUid());
+            if (userBase != null){
+                BaseRespVO respVO = ZengjingVirtualUtils.laveVirtualCoinPushRoom(userBase.getUid(),Integer.parseInt(dollBus.getDeviceId()));
+                if (!StringUtil.isNullOrEmpty(respVO)){
+                    if (respVO.isState()){
+                        dollService.leaveBus(userBase.getUid(),dollBus.getBusId(),false);
+                    }
+                    return respVO;
+                }
+            }
+        }
+        return new BaseRespVO(0,false,"房间类型错误或机器已下架");
+    }
+}

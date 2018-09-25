@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>萌趣抓娃娃-全国包邮</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=0">
+    <meta name="description" content="在线抓娃娃">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="在线抓娃娃">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta http-equiv="Cache-Control" content="no-siteapp">
+    <meta http-equiv="Cache-Control" content="no-transform">
+    <meta name="format-detection" content="telephone=no" />
+    <link rel="icon" href="http://lianai-image-sys.qiniudn.com/wa/favicon.ico" type="image/x-icon" />
+    <script type="text/javascript" src="http://lianai-image-sys.qiniudn.com/zjgw/jsmpeg.min.js"></script>
+    <script type="text/javascript" src="http://res.wx.qq.com/open/js/jweixin-1.2.0.js"></script>
+</head>
+
+<body>
+    <canvas id="video" style="border-radius: 0.24rem; width: 356.25px; height: 475px;"></canvas>
+
+</body>
+    <script type="text/javascript">
+    var canvas = document.getElementById('video');
+    //需要动态更换的播放地址
+    var url = 'ws://193.112.67.177:1050';
+    var player = new JSMpeg.Player(url, {
+        canvas: canvas,
+        protocols: 'binary',
+    });
+
+    //api
+
+    //start playback
+   /* function play() {
+        player.play()
+    }
+    //pause playback
+    function pause() {
+        player.pause()
+    }
+    //stop playback and seek to the beginning
+    function stop() {
+        player.stop()
+    }
+    //stops playback, disconnects the source and cleans up WebGL and WebAudio state. The player can not be used afterwards.
+    function destroy() {
+        player.destroy()
+    }*/
+    </script>
+</html>
